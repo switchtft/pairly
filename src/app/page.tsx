@@ -13,7 +13,7 @@ export default function Home() {
           <a href="#features" className="hover:text-[#e6915b] transition">Features</a>
           <a href="#testimonials" className="hover:text-[#e6915b] transition">Testimonials</a>
           <a href="#login" className="hover:text-[#e6915b] transition">Login</a>
-          <Button className="bg-[#e6915b] hover:bg-[#d8824a]">Create Account</Button>
+          <Button className="bg-[#e6915b] hover:bg-[#d8824a]">Create Account!</Button>
         </div>
       </nav>
 
