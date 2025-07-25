@@ -54,10 +54,9 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Testimonials */}
       <section id="testimonials" className="py-20 px-6 bg-[#121212] text-center">
-        <h3 className="text-3xl font-bold mb-10">What our users say</h3>
+        <h3 className="text-3xl font-bold mb-10">What our users say:</h3>
         <div className="flex flex-col md:flex-row justify-center gap-6">
           <Testimonial
             name="Joana L."
