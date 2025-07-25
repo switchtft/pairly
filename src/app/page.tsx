@@ -37,20 +37,20 @@ export default function Home() {
           <h3 className="text-3xl font-bold mb-12">What Pairly Offers:</h3> 
           <div className="grid md:grid-cols-3 gap-8">
             <Feature 
-  icon={<Users className="w-10 h-10" />} 
-  title="Duo Services" 
-  desc="Our teammates consistently rank among the top 1% of the games they play." 
-/>
-<Feature 
-  icon={<BookOpen className="w-10 h-10" />} 
-  title="Coaching" 
-  desc="Our coaches count with 200 years of collective experience ;) At Pairly, we have coaches for every role and playstyle available!" 
-/>
-<Feature 
-  icon={<Trophy className="w-10 h-10" />} 
-  title="Tournaments" 
-  desc="From free, 4fun tournaments, to competitive experiences offering money rewards and sponsorships, we got them all!" 
-/>
+              icon={<Users className="w-10 h-10" />} 
+              title="Duo Services" 
+              desc="Our teammates consistently rank among the top 1% of the games they play." 
+            />
+            <Feature 
+              icon={<BookOpen className="w-10 h-10" />} 
+              title="Coaching" 
+              desc="Our coaches count with 200 years of collective experience ;) At Pairly, we have coaches for every role and playstyle available!" 
+            />
+            <Feature 
+              icon={<Trophy className="w-10 h-10" />} 
+              title="Tournaments" 
+              desc="From free, 4fun tournaments, to competitive experiences offering money rewards and sponsorships, we got them all!" 
+            />
           </div>
         </div>
       </section>
