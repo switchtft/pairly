@@ -13,3 +13,85 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  password         String
+  username         String         @unique
+  rank             String?
+  game             String?
+  role             String?
+  isPro            Boolean        @default(false)
+  // Relacionamentos
+  clientSessions   Session[]      @relation("ClientSessions")
+  proSessions      Session[]      @relation("ProTeammateSessions")
+  reviewsGiven     Review[]       @relation("ReviewsGiven")
+  reviewsReceived  Review[]       @relation("ReviewsReceived")
+  payments         Payment[]
+  sentMessages     ChatMessage[]  @relation("MessageSender")
+  createdAt        DateTime       @default(now())
+}
+
+model Session {
+  id              Int            @id @default(autoincrement())
+  // Relacionamentos com User
+  client          User           @relation("ClientSessions", fields: [clientId], references: [id])
+  clientId        Int
+  proTeammate     User?          @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
+  proTeammateId   Int?
+  // Campos normais
+  game            String
+  mode            String
+  status          String         @default("Pending")
+  startTime       DateTime
+  endTime         DateTime?
+  price           Float
+  // Outros relacionamentos
+  reviews         Review[]
+  payments        Payment[]
+  chatMessages    ChatMessage[]  @relation("SessionMessages")
+  createdAt       DateTime       @default(now())
+}
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  rating      Int
+  comment     String?
+  // Relacionamentos com User
+  reviewer    User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewerId  Int
+  reviewed    User     @relation("ReviewsReceived", fields: [reviewedId], references: [id])
+  reviewedId  Int
+  // Relacionamento com Session
+  session     Session  @relation(fields: [sessionId], references: [id])
+  sessionId   Int
+  createdAt   DateTime @default(now())
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  // Relacionamentos
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  session     Session? @relation(fields: [sessionId], references: [id])
+  sessionId   Int?
+  // Campos normais
+  amount      Float
+  method      String
+  status      String   @default("Pending")
+  createdAt   DateTime @default(now())
+}
+
+model ChatMessage {
+  id          Int      @id @default(autoincrement())
+  // Relacionamentos
+  session     Session  @relation("SessionMessages", fields: [sessionId], references: [id])
+  sessionId   Int
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id])
+  senderId    Int
+  // Campos normais
+  content     String
+  createdAt   DateTime @default(now())
+}
+
