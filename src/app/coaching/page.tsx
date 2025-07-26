@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
+
 export default function CoachingPage() {
   return (
     <div className="max-w-7xl mx-auto py-12 px-6">
@@ -88,3 +89,4 @@ export default function CoachingPage() {
     </div>
   );
 }
+
