@@ -49,7 +49,7 @@ export default function TournamentsPage() {
         </h1>
         <p className="text-lg text-gray-300 max-w-2xl mx-auto">
           Join our competitive tournaments with cash prizes and sponsorship opportunities. 
-          Whether you're looking for casual fun or serious competition, we have events for every skill level.
+          Whether you&apos;re looking for casual fun or serious competition, we have events for every skill level.
         </p>
       </div>
       
