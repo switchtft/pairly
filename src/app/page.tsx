@@ -13,7 +13,7 @@ export default function Home() {
         {/* Background with top alignment */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <Image
-            src="/images/Banner4.jpg"
+            src="/images/Banner4.png"
             alt="Esports arena"
             fill
             className="object-cover object-top drop-shadow-none"
