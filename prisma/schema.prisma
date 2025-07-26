@@ -98,10 +98,9 @@ model ChatMessage {
 model Package {
   id          Int      @id @default(autoincrement())
   title       String   @unique
-  price       String // Armazenamos como String para incluir o "$"
-  description String   @map("desc") // No DB será "desc" para manter compatibilidade
-  features    String[] // Array de features
-  isFeatured  Boolean  @default(false) // Para o destaque visual (border-2 e scale-105)
+  price       String   // Ex: "$25" (mantido como String para símbolo de moeda)
+  description String   // Descrição longa
+  features    String[] // Array de features (ex: ["2 sessions", "Basic mechanics"])
+  isFeatured  Boolean  @default(false) // Para destacar um pacote (ex: border-2)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
