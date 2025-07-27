@@ -1,92 +1,161 @@
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+'use client';
 
+import { useState } from 'react';
+import HorizontalGameSelector from '@/components/HorizontalGameSelector';
+import { Button } from '@/components/ui/button';
+
+type Coach = {
+  id: string;
+  name: string;
+  rank: string;
+  rating: number;
+  sessions: number;
+  specialties: string[];
+  hourlyRate: string;
+  lastOnline: string;
+};
 
 export default function CoachingPage() {
+  const [selectedGame, setSelectedGame] = useState<string>('league');
+  
+  const games = [
+    { id: 'valorant', name: 'Valorant', imageUrl: '/images/games/valorant.jpg' },
+    { id: 'league', name: 'League of Legends', imageUrl: '/images/games/league.jpg' },
+    { id: 'csgo', name: 'CS:GO 2', imageUrl: '/images/games/csgo.jpg' },
+  ];
+
+  // Mock coach data
+  const coaches: Coach[] = [
+    {
+      id: '1',
+      name: 'MasterYiPro',
+      rank: 'Challenger',
+      rating: 4.9,
+      sessions: 142,
+      specialties: ['Laning Phase', 'Jungle Pathing', 'Team Fighting'],
+      hourlyRate: '$30',
+      lastOnline: 'Online now'
+    },
+    {
+      id: '2',
+      name: 'MidlaneMentor',
+      rank: 'Grandmaster',
+      rating: 4.8,
+      sessions: 87,
+      specialties: ['Champion Pool', 'Map Awareness', 'Roaming'],
+      hourlyRate: '$25',
+      lastOnline: '1 hour ago'
+    },
+    {
+      id: '3',
+      name: 'SupportSensei',
+      rank: 'Master',
+      rating: 4.7,
+      sessions: 65,
+      specialties: ['Warding', 'Engage Timing', 'Peeling'],
+      hourlyRate: '$22',
+      lastOnline: 'Online now'
+    },
+    {
+      id: '4',
+      name: 'ADCProfessor',
+      rank: 'Challenger',
+      rating: 5.0,
+      sessions: 203,
+      specialties: ['Positioning', 'CS Practice', 'Kiting'],
+      hourlyRate: '$35',
+      lastOnline: '30 minutes ago'
+    },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      <div className="grid md:grid-cols-2 gap-16 items-center mb-20">
-        <div className="order-2 md:order-1">
-          <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-[#6b8ab0]/30">
-            <Image
-              src="/images/coaching.jpg"
-              alt="Gaming coaching session"
-              fill
-              className="object-cover"
-            />
-          </div>
+    <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
+            Level Up Your Game with Expert Coaching
+          </h1>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Learn from the best players in your game.
+          </p>
         </div>
         
-        <div className="order-1 md:order-2">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#6b8ab0] to-[#8a675e]">
-            Level Up Your Game
-          </h1>
-          <p className="text-lg text-gray-300 mb-8">
-            Learn from professional coaches who have competed at the highest levels. Our personalized coaching sessions are designed to help you master mechanics, strategy, and game sense.
-          </p>
-          <div className="space-y-4 mb-8">
-            {[
-              "Personalized 1-on-1 sessions",
-              "VOD reviews and analysis",
-              "Role-specific training",
-              "Game sense development",
-              "Custom practice routines"
-            ].map((item, index) => (
-              <div key={index} className="flex items-center">
-                <div className="mr-4 text-[#6b8ab0] text-xl">✓</div>
-                <p>{item}</p>
-              </div>
-            ))}
-          </div>
-          <Button className="bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e] px-8 py-6 text-lg">
-            Find a Coach
-          </Button>
+        {/* Game Selector */}
+        <div className="mb-10">
+          <HorizontalGameSelector 
+            games={games}
+            onGameSelect={setSelectedGame}
+            selectedGameId={selectedGame}
+          />
         </div>
-      </div>
-      
-      <div className="mb-20">
-        <h2 className="text-3xl font-bold mb-8 text-center">Coaching Packages</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            { 
-              title: "Beginner", 
-              price: "$25", 
-              desc: "Perfect for new players looking to build strong fundamentals",
-              features: ["2 sessions", "Basic mechanics", "Game introduction"]
-            },
-            { 
-              title: "Intermediate", 
-              price: "$45", 
-              desc: "For players looking to climb the ranked ladder",
-              features: ["4 sessions", "Role specialization", "VOD reviews", "Strategy sessions"]
-            },
-            { 
-              title: "Advanced", 
-              price: "$80", 
-              desc: "For competitive players aiming for the top ranks",
-              features: ["8 sessions", "Advanced strategies", "Team play", "Tournament prep", "Personalized training"]
-            }
-          ].map((packageItem, index) => (
-            <div key={index} className={`p-8 rounded-xl ${index === 1 ? 'border-2 border-[#e6915b] scale-105' : 'border border-[#6b8ab0]/30'}`}>
-              <h3 className="text-2xl font-bold mb-2">{packageItem.title}</h3>
-              <p className="text-4xl font-bold mb-4 text-[#e6915b]">{packageItem.price}</p>
-              <p className="text-gray-400 mb-6">{packageItem.desc}</p>
-              <ul className="space-y-3 mb-8">
-                {packageItem.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center">
-                    <div className="mr-3 text-[#6b8ab0]">•</div>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button className="w-full bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e]">
-                Choose Plan
-              </Button>
+        
+        {/* Coaches List */}
+        <div className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#2a2a2a]">
+          <div className="p-6 bg-[#2a2a2a]">
+            <h2 className="text-2xl font-bold flex items-center">
+              Available Coaches
+              <span className="ml-4 text-sm font-normal bg-[#6b8ab0] text-black px-3 py-1 rounded-full">
+                {coaches.length} Professionals Available
+              </span>
+            </h2>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {coaches.map(coach => (
+                <div 
+                  key={coach.id} 
+                  className="bg-[#1f1f1f] rounded-lg border border-[#333] hover:border-[#e6915b] transition-all"
+                >
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-bold text-xl">{coach.name}</h3>
+                        <div className="flex items-center mt-1">
+                          <span className="text-[#e6915b] font-medium">{coach.rank}</span>
+                          <span className="mx-2 text-gray-600">|</span>
+                          <span className="text-yellow-500">
+                            {coach.rating.toFixed(1)} ★ ({coach.sessions} sessions)
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {coach.lastOnline}
+                        </div>
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {coach.hourlyRate}<span className="text-sm font-normal">/hour</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-5">
+                      <p className="text-gray-500 text-sm mb-2">Specializes in:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {coach.specialties.map(specialty => (
+                          <span 
+                            key={specialty} 
+                            className="bg-gradient-to-r from-[#6b8ab0]/30 to-[#8a675e]/30 px-3 py-1 rounded-full text-sm border border-[#6b8ab0]/50"
+                          >
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                      <Button className="flex-1 bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e]">
+                        Book Session
+                      </Button>
+                      <Button variant="outline" className="flex-1 border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10">
+                        View Profile
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
