@@ -310,7 +310,7 @@ export default function DuoPage() {
                     
                     <h3 className="text-2xl font-bold text-[#e6915b] mb-2">Match Found!</h3>
                     <p className="text-[#e6915b]/80 mb-6">
-                      We've found the perfect teammates for your next {bundleSize} game{bundleSize > 1 ? 's' : ''}
+                      We&apos;ve found the perfect teammates for your next {bundleSize} game{bundleSize > 1 ? 's' : ''}
                     </p>
                     
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
