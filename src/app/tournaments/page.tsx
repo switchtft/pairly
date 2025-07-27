@@ -404,7 +404,7 @@ export default function TournamentsPage() {
             </div>
             <h3 className="text-2xl font-bold mb-2">No tournaments found</h3>
             <p className="text-gray-400 mb-6 max-w-md mx-auto">
-              Try adjusting your filters or search term to find what you're looking for.
+              Try adjusting your filters or search term to find what you&apos;re looking for.
             </p>
             <Button 
               onClick={resetFilters}
