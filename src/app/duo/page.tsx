@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import HorizontalGameSelector from '@/components/HorizontalGameSelector';
 import { Button } from '@/components/ui/button';
+import { Loader2, CheckCircle2, XCircle, Clock, User, Crown, Play } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type Player = {
   id: string;
@@ -12,25 +14,27 @@ type Player = {
   mainRole: string;
   secondaryRole: string;
   online: boolean;
-  lastOnline: string; // e.g., "2 hours ago"
+  lastOnline: string;
   personalPrice: string;
   inQueue: boolean;
   queuePrice: string;
+  game: string;
 };
 
 export default function DuoPage() {
+  const router = useRouter();
   const [selectedGame, setSelectedGame] = useState<string>('valorant');
   const [bundleSize, setBundleSize] = useState<number>(1);
   const [isInQueue, setIsInQueue] = useState<boolean>(false);
   const [queueTime, setQueueTime] = useState<number>(0);
-  const [showPayment, setShowPayment] = useState<boolean>(false);
-  const [paymentCompleted, setPaymentCompleted] = useState<boolean>(false);
+  const [matchFound, setMatchFound] = useState<boolean>(false);
+  const [searching, setSearching] = useState<boolean>(false);
   
   // Mock player data
   const players: Player[] = [
     {
       id: '1',
-      name: 'RadiantPhoenix',
+      name: 'CapyChill',
       rank: 'Diamond 3',
       winRate: '67%',
       mainRole: 'Duelist',
@@ -39,11 +43,12 @@ export default function DuoPage() {
       lastOnline: 'Online now',
       personalPrice: '$15/hr',
       inQueue: true,
-      queuePrice: '$10/hr'
+      queuePrice: '$10/hr',
+      game: 'valorant'
     },
     {
       id: '2',
-      name: 'ShadowStrike',
+      name: 'CapyZen',
       rank: 'Immortal 1',
       winRate: '72%',
       mainRole: 'Controller',
@@ -52,11 +57,12 @@ export default function DuoPage() {
       lastOnline: 'Online now',
       personalPrice: '$18/hr',
       inQueue: true,
-      queuePrice: '$10/hr'
+      queuePrice: '$10/hr',
+      game: 'valorant'
     },
     {
       id: '3',
-      name: 'NeonBlitz',
+      name: 'CapyNap',
       rank: 'Ascendant 2',
       winRate: '61%',
       mainRole: 'Initiator',
@@ -65,11 +71,12 @@ export default function DuoPage() {
       lastOnline: '3 hours ago',
       personalPrice: '$12/hr',
       inQueue: false,
-      queuePrice: '$10/hr'
+      queuePrice: '$10/hr',
+      game: 'valorant'
     },
     {
       id: '4',
-      name: 'CypherMind',
+      name: 'CapyKing',
       rank: 'Radiant',
       winRate: '80%',
       mainRole: 'Sentinel',
@@ -78,7 +85,22 @@ export default function DuoPage() {
       lastOnline: 'Online now',
       personalPrice: '$20/hr',
       inQueue: false,
-      queuePrice: '$10/hr'
+      queuePrice: '$10/hr',
+      game: 'valorant'
+    },
+    {
+      id: '5',
+      name: 'CapyLeaf',
+      rank: 'Master',
+      winRate: '75%',
+      mainRole: 'Jungle',
+      secondaryRole: 'Top',
+      online: true,
+      lastOnline: 'Online now',
+      personalPrice: '$16/hr',
+      inQueue: true,
+      queuePrice: '$12/hr',
+      game: 'league'
     },
   ];
 
@@ -88,23 +110,22 @@ export default function DuoPage() {
     { id: 'csgo', name: 'CS:GO 2', imageUrl: '/images/games/csgo.jpg' },
   ];
 
-  const filteredPlayers = players.filter(p => p.inQueue || !isInQueue);
-  
+  // Filter players by selected game and queue status
+  const filteredPlayers = useCallback(() => {
+    return players.filter(p => 
+      p.game === selectedGame && (p.inQueue || !isInQueue)
+    );
+  }, [selectedGame, isInQueue]);
+
   // Calculate total price based on bundle size
-  const calculateTotal = () => {
+  const calculateTotal = useCallback(() => {
     const basePrice = 10; // $10 per game
     return `$${(basePrice * bundleSize).toFixed(2)}`;
-  };
+  }, [bundleSize]);
 
   // Handle joining the queue
   const handleJoinQueue = () => {
-    setShowPayment(true);
-  };
-
-  // Handle payment completion
-  const handlePaymentComplete = () => {
-    setPaymentCompleted(true);
-    setShowPayment(false);
+    setSearching(true);
     setIsInQueue(true);
     
     // Start queue timer
@@ -112,10 +133,13 @@ export default function DuoPage() {
       setQueueTime(prev => prev + 1);
     }, 1000);
     
-    // Clear timer after 10 seconds for demo
+    // Simulate match found after 8-15 seconds
+    const matchTime = 8000 + Math.random() * 7000;
     setTimeout(() => {
+      setMatchFound(true);
+      setSearching(false);
       clearInterval(timer);
-    }, 10000);
+    }, matchTime);
   };
 
   // Format time for display
@@ -125,20 +149,44 @@ export default function DuoPage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Reset queue
+  const resetQueue = () => {
+    setIsInQueue(false);
+    setMatchFound(false);
+    setQueueTime(0);
+  };
+
+  // Navigate to queue page
+  const goToQueuePage = () => {
+    router.push('/queue');
+  };
+
   return (
-    <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
+    <div className="bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] min-h-screen pt-20 pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 md:mb-12">
+          <div className="flex justify-center mb-4">
+            <div className="relative">
+              <div className="w-24 h-16 bg-[#e6915b] rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-[#5a3d2b] rounded-full mr-2"></div>
+                <div className="w-6 h-6 bg-[#5a3d2b] rounded-full"></div>
+              </div>
+              <div className="absolute -bottom-2 left-0 right-0 flex justify-center">
+                <div className="w-8 h-8 bg-[#e6915b] rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#e6915b] mb-3">
             Find Your Perfect Duo Partner
           </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Connect with skilled players who match your playstyle and ranking.
+          <p className="text-[#e6915b]/80 max-w-2xl mx-auto text-lg">
+            Connect with friendly players who match your playstyle
           </p>
         </div>
         
         {/* Game Selector */}
-        <div className="mb-10">
+        <div className="mb-8 md:mb-12">
           <HorizontalGameSelector 
             games={games}
             onGameSelect={setSelectedGame}
@@ -147,207 +195,259 @@ export default function DuoPage() {
         </div>
         
         {/* Queue Section */}
-        <div className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#2a2a2a] mb-12">
-          <div className="p-6 bg-[#2a2a2a]">
-            <h2 className="text-2xl font-bold">Queue System</h2>
-            <p className="text-gray-400 mt-2">
+        <div className="bg-[#1a1a1a] rounded-2xl overflow-hidden border-2 border-[#e6915b]/30 shadow-lg mb-10">
+          <div className="p-5 sm:p-6 bg-[#e6915b]">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center justify-center text-[#1a1a1a]">
+              <Clock className="mr-2" size={24} />
+              Queue System
+            </h2>
+            <p className="text-[#1a1a1a]/90 mt-1 text-center text-base">
               Get matched with teammates at a discounted rate
             </p>
           </div>
           
-          <div className="p-6">
+          <div className="p-5 sm:p-6">
             {!isInQueue ? (
               <div>
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">Select Bundle Size</h3>
-                  <div className="flex gap-3">
-                    {[1, 3, 5].map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setBundleSize(size)}
-                        className={`px-6 py-3 rounded-lg ${
-                          bundleSize === size
-                            ? 'bg-gradient-to-r from-[#6b8ab0] to-[#8a675e]'
-                            : 'bg-[#2a2a2a] hover:bg-[#333]'
-                        }`}
-                      >
-                        {size} Game{size > 1 ? 's' : ''}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="bg-[#2a2a2a] rounded-lg p-6 mb-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-semibold">Order Summary</h4>
-                    <span className="text-[#e6915b] font-bold">{calculateTotal()}</span>
-                  </div>
-                  <p className="text-gray-400 text-sm">
-                    {bundleSize} game{bundleSize > 1 ? 's' : ''} at $10/game
-                  </p>
-                </div>
-                
-                {!showPayment ? (
-                  <Button 
-                    onClick={handleJoinQueue}
-                    className="w-full bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e] py-4 text-lg"
-                  >
-                    Join Queue
-                  </Button>
-                ) : (
-                  <div className="bg-[#2a2a2a] rounded-lg p-6">
-                    <h4 className="text-lg font-semibold mb-4">Complete Payment</h4>
-                    <div className="mb-6">
-                      <label className="block text-gray-400 mb-2">Card Number</label>
-                      <input 
-                        type="text" 
-                        placeholder="1234 5678 9012 3456" 
-                        className="w-full bg-[#1a1a1a] rounded-lg px-4 py-3 border border-[#333]"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div>
-                        <label className="block text-gray-400 mb-2">Expiry Date</label>
-                        <input 
-                          type="text" 
-                          placeholder="MM/YY" 
-                          className="w-full bg-[#1a1a1a] rounded-lg px-4 py-3 border border-[#333]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 mb-2">CVC</label>
-                        <input 
-                          type="text" 
-                          placeholder="CVC" 
-                          className="w-full bg-[#1a1a1a] rounded-lg px-4 py-3 border border-[#333]"
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      onClick={handlePaymentComplete}
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 py-4 text-lg"
+                  <h3 className="text-md sm:text-lg font-semibold mb-3 text-center text-[#e6915b]">
+                    How many games do you want to play?
+                  </h3>
+                  <div className="flex items-center justify-center space-x-4">
+                    <button
+                      onClick={() => setBundleSize(prev => Math.max(1, prev - 1))}
+                      className="w-12 h-12 rounded-full bg-[#2a2a2a] text-[#e6915b] flex items-center justify-center text-2xl hover:bg-[#e6915b] hover:text-[#1a1a1a] transition-all border-2 border-[#e6915b]/50"
                     >
-                      Pay {calculateTotal()}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="mb-6">
-                  <div className="text-4xl font-bold text-[#e6915b] mb-2">
-                    {formatTime(queueTime)}
-                  </div>
-                  <p className="text-gray-400">Searching for teammates...</p>
-                </div>
-                
-                <div className="mb-8">
-                  <div className="w-full bg-gray-700 rounded-full h-2.5">
-                    <div 
-                      className="bg-[#6b8ab0] h-2.5 rounded-full" 
-                      style={{ width: `${Math.min(queueTime * 10, 100)}%` }}
-                    ></div>
+                      -
+                    </button>
+                    
+                    <div className="text-3xl font-bold bg-[#2a2a2a] px-8 py-3 rounded-xl border-2 border-[#e6915b]/30 text-[#e6915b]">
+                      {bundleSize} Game{bundleSize > 1 ? 's' : ''}
+                    </div>
+                    
+                    <button
+                      onClick={() => setBundleSize(prev => Math.min(10, prev + 1))}
+                      className="w-12 h-12 rounded-full bg-[#2a2a2a] text-[#e6915b] flex items-center justify-center text-2xl hover:bg-[#e6915b] hover:text-[#1a1a1a] transition-all border-2 border-[#e6915b]/50"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
                 
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4">Players in Queue</h3>
-                  <div className="flex justify-center gap-4">
-                    {players.filter(p => p.inQueue).map(player => (
-                      <div key={player.id} className="flex flex-col items-center">
-                        <div className="bg-gray-700 w-16 h-16 rounded-full mb-2"></div>
-                        <span className="text-sm">{player.name}</span>
-                      </div>
-                    ))}
+                <div className="bg-[#2a2a2a] rounded-xl p-4 sm:p-5 mb-6 border-2 border-[#e6915b]/30">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-md sm:text-lg font-semibold text-[#e6915b]">Order Summary</h4>
+                    <span className="text-[#e6915b] font-bold text-2xl">{calculateTotal()}</span>
+                  </div>
+                  <div className="flex justify-between text-[#e6915b]/80 text-sm">
+                    <span>{bundleSize} game{bundleSize > 1 ? 's' : ''} × $10/game</span>
+                    <span className="text-[#e6915b] font-medium">Save {bundleSize > 1 ? (bundleSize * 2) : 0}%</span>
                   </div>
                 </div>
                 
                 <Button 
-                  onClick={() => setIsInQueue(false)}
-                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                  onClick={handleJoinQueue}
+                  className="w-full bg-[#e6915b] hover:bg-[#d18251] py-4 text-lg font-bold text-[#1a1a1a] shadow-lg hover:shadow-[#e6915b]/40 transition-all rounded-xl"
                 >
-                  Cancel Queue
+                  Join Queue
                 </Button>
+              </div>
+            ) : (
+              <div className="text-center py-6 sm:py-8">
+                {searching ? (
+                  <>
+                    <div className="mb-6">
+                      <div className="text-3xl sm:text-4xl font-bold text-[#e6915b] mb-2 flex justify-center items-center">
+                        <Loader2 className="animate-spin mr-3" size={32} />
+                        {formatTime(queueTime)}
+                      </div>
+                      <p className="text-[#e6915b]/80 text-base">Searching for the perfect teammates...</p>
+                    </div>
+                    
+                    <div className="mb-8 max-w-md mx-auto">
+                      <div className="w-full bg-[#2a2a2a] rounded-full h-3 mb-3">
+                        <div 
+                          className="bg-[#e6915b] h-3 rounded-full transition-all duration-1000" 
+                          style={{ width: `${Math.min(queueTime * 5, 100)}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-[#e6915b]/80 text-sm">
+                        <span>Estimated: 1-3 min</span>
+                        <span>{Math.min(queueTime * 5, 100)}%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center mb-6">
+                      <div className="relative w-40 h-24">
+                        <div className="absolute w-16 h-10 bg-[#e6915b] rounded-full top-4 left-0 animate-bounce-slow"></div>
+                        <div className="absolute w-16 h-10 bg-[#e6915b] rounded-full top-8 left-8 animate-bounce-slow animation-delay-200"></div>
+                        <div className="absolute w-16 h-10 bg-[#e6915b] rounded-full top-4 left-16 animate-bounce-slow animation-delay-400"></div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={resetQueue}
+                      className="bg-[#2a2a2a] hover:bg-[#e6915b] text-[#e6915b] hover:text-[#1a1a1a] border-2 border-[#e6915b]/50 rounded-xl py-3 px-6 font-medium"
+                    >
+                      Cancel Queue
+                    </Button>
+                  </>
+                ) : matchFound ? (
+                  <div className="bg-[#2a2a2a] rounded-2xl p-6 sm:p-8 border-2 border-[#e6915b] shadow-lg max-w-lg mx-auto">
+                    <div className="flex justify-center mb-4">
+                      <div className="relative">
+                        <div className="w-20 h-12 bg-[#e6915b] rounded-full flex items-center justify-center">
+                          <div className="w-4 h-4 bg-[#5a3d2b] rounded-full mr-1"></div>
+                          <div className="w-4 h-4 bg-[#5a3d2b] rounded-full"></div>
+                        </div>
+                        <div className="absolute -bottom-2 left-0 right-0 flex justify-center">
+                          <div className="w-8 h-8 bg-[#e6915b] rounded-full flex items-center justify-center">
+                            <Play size={16} className="text-[#1a1a1a]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold text-[#e6915b] mb-2">Match Found!</h3>
+                    <p className="text-[#e6915b]/80 mb-6">
+                      We've found the perfect teammates for your next {bundleSize} game{bundleSize > 1 ? 's' : ''}
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button 
+                        onClick={goToQueuePage}
+                        className="bg-[#e6915b] hover:bg-[#d18251] text-[#1a1a1a] rounded-xl py-3 px-6 font-bold"
+                      >
+                        Go to Queue Page
+                      </Button>
+                      <Button 
+                        onClick={resetQueue}
+                        className="bg-[#2a2a2a] hover:bg-[#e6915b] text-[#e6915b] hover:text-[#1a1a1a] border-2 border-[#e6915b]/50 rounded-xl py-3 px-6 font-medium"
+                      >
+                        Find Different Team
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
         </div>
         
         {/* Available Teammates */}
-        <div className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#2a2a2a]">
-          <div className="p-6 bg-[#2a2a2a]">
-            <h2 className="text-2xl font-bold flex items-center">
+        <div className="bg-[#1a1a1a] rounded-2xl overflow-hidden border-2 border-[#e6915b]/30 shadow-lg">
+          <div className="p-5 sm:p-6 bg-[#e6915b]">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center justify-center text-[#1a1a1a]">
+              <User className="mr-2" size={24} />
               Available Teammates
-              <span className="ml-4 text-sm font-normal bg-[#e6915b] text-black px-3 py-1 rounded-full">
-                {players.filter(p => p.online).length} Online Now
+              <span className="ml-4 text-sm font-medium bg-[#1a1a1a] text-[#e6915b] px-3 py-1 rounded-full">
+                {players.filter(p => p.online && p.game === selectedGame).length} Online Now
               </span>
             </h2>
           </div>
           
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredPlayers.map(player => (
-                <div 
-                  key={player.id} 
-                  className="bg-[#1f1f1f] rounded-lg border border-[#333] hover:border-[#e6915b] transition-all"
-                >
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-bold text-xl flex items-center">
-                          {player.name}
-                          {player.online ? (
-                            <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
-                          ) : (
-                            <span className="ml-2 w-2 h-2 bg-gray-500 rounded-full"></span>
-                          )}
-                        </h3>
-                        <div className="flex items-center mt-1">
-                          <span className="text-[#e6915b] font-medium">{player.rank}</span>
-                          <span className="mx-2 text-gray-600">|</span>
-                          <span className="text-green-500">{player.winRate} WR</span>
+          <div className="p-4 sm:p-6">
+            {filteredPlayers().length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                {filteredPlayers().map(player => (
+                  <div 
+                    key={player.id} 
+                    className="bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-2xl border-2 border-[#e6915b]/30 hover:border-[#e6915b]/70 transition-all duration-300 hover:-translate-y-1 shadow-md hover:shadow-lg"
+                  >
+                    <div className="p-4 sm:p-5">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="font-bold text-lg flex items-center text-[#e6915b]">
+                            {player.name}
+                            {player.online ? (
+                              <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
+                            ) : (
+                              <span className="ml-2 w-2 h-2 bg-gray-400 rounded-full"></span>
+                            )}
+                            {player.rank.includes('Radiant') || player.rank.includes('Grandmaster') ? (
+                              <Crown className="ml-2 text-[#e6915b]" size={16} />
+                            ) : null}
+                          </h3>
+                          <div className="flex items-center mt-1 text-sm">
+                            <span className="text-[#e6915b] font-medium">{player.rank}</span>
+                            <span className="mx-2 text-gray-600">|</span>
+                            <span className="text-green-500">{player.winRate} WR</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {player.online ? 'Online now' : `Last online: ${player.lastOnline}`}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                          {player.online ? 'Online now' : `Last online: ${player.lastOnline}`}
+                        <div className="bg-[#2a2a2a] w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-[#e6915b] border-2 border-[#e6915b]/30">
+                          {player.name.charAt(0)}
                         </div>
-                      </div>
-                      <div className="bg-gray-900 w-12 h-12 rounded-full flex items-center justify-center text-xl">
-                        {player.name.charAt(0)}
-                      </div>
-                    </div>
-                    
-                    <div className="mb-5">
-                      <div className="flex items-center text-sm mb-2">
-                        <span className="text-gray-500 w-24">Main Role:</span>
-                        <span className="font-medium">{player.mainRole}</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <span className="text-gray-500 w-24">Secondary:</span>
-                        <span className="font-medium">{player.secondaryRole}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="text-xl font-bold">
-                        {player.inQueue ? player.queuePrice : player.personalPrice}
-                        <span className="text-sm font-normal ml-1 text-gray-500">/hr</span>
-                        {player.inQueue && (
-                          <div className="text-xs text-green-500">Queue Discount</div>
-                        )}
                       </div>
                       
-                      <Button className="bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e]">
-                        {player.inQueue ? 'Join Queue' : 'Book Now'}
-                      </Button>
+                      <div className="mb-4">
+                        <div className="flex items-center text-sm mb-2">
+                          <span className="text-gray-400 w-20">Main Role:</span>
+                          <span className="font-medium text-[#e6915b]">{player.mainRole}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="text-gray-400 w-20">Secondary:</span>
+                          <span className="font-medium text-[#e6915b]">{player.secondaryRole}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="text-lg font-bold text-[#e6915b]">
+                            {player.inQueue ? player.queuePrice : player.personalPrice}
+                            <span className="text-sm font-normal ml-1 text-gray-500">/hr</span>
+                          </div>
+                          {player.inQueue && (
+                            <div className="text-xs text-green-500 flex items-center">
+                              <span className="bg-green-900/30 px-1.5 py-0.5 rounded">Queue Discount</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Button 
+                          className={`py-2 px-4 text-sm bg-[#e6915b] hover:bg-[#d18251] text-[#1a1a1a] rounded-xl`}
+                        >
+                          {player.inQueue ? 'Join Queue' : 'Book Now'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="bg-[#2a2a2a] rounded-2xl p-8 max-w-md mx-auto border-2 border-[#e6915b]/30">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-10 bg-[#e6915b] rounded-full"></div>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-[#e6915b]">No Players Available</h3>
+                  <p className="text-[#e6915b]/80 mb-6">
+                    There are currently no players available for {games.find(g => g.id === selectedGame)?.name}.
+                    Check back later or try another game.
+                  </p>
+                  <Button 
+                    onClick={() => setSelectedGame(games.find(g => g.id !== selectedGame)?.id || 'valorant')}
+                    className="bg-[#e6915b] hover:bg-[#d18251] text-[#1a1a1a] rounded-xl py-2 px-6"
+                  >
+                    Switch Game
+                  </Button>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
+      
+      {/* Capybara footer */}
+      <div className="mt-12 text-center">
+        <div className="inline-flex">
+          <div className="w-8 h-4 bg-[#e6915b] rounded-full mx-1"></div>
+          <div className="w-8 h-4 bg-[#e6915b] rounded-full mx-1"></div>
+          <div className="w-8 h-4 bg-[#e6915b] rounded-full mx-1"></div>
+        </div>
+        <p className="text-[#e6915b]/70 mt-2 text-sm">Made with ♥ for gamers and capybaras</p>
       </div>
     </div>
   );
