@@ -15,7 +15,13 @@ type Game = {
   }[];
 };
 
-export default function GameSelector() {
+export default function GameSelector({ 
+  onGameSelect,
+  showPriceOptions = true
+}: { 
+  onGameSelect?: (gameId: string) => void;
+  showPriceOptions?: boolean;
+}) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   
   const games: Game[] = [
@@ -41,7 +47,7 @@ export default function GameSelector() {
     },
     {
       id: 'csgo',
-      name: 'CS:GO',
+      name: 'CS:GO 2',
       imageUrl: '/images/games/csgo.jpg',
       priceOptions: [
         { id: '1', label: '1 Hour Duo', price: '$8' },
@@ -50,6 +56,13 @@ export default function GameSelector() {
       ],
     },
   ];
+
+  const handleGameSelect = (game: Game) => {
+    setSelectedGame(game);
+    if (onGameSelect) {
+      onGameSelect(game.id);
+    }
+  };
 
   return (
     <section id="games" className="py-20 bg-[#1a1a1a]">
@@ -66,7 +79,7 @@ export default function GameSelector() {
                   ? 'ring-4 ring-[#e6915b] scale-105'
                   : 'ring-2 ring-transparent hover:ring-[#6b8ab0] hover:scale-102'
               }`}
-              onClick={() => setSelectedGame(game)}
+              onClick={() => handleGameSelect(game)}
             >
               <div className="relative h-48">
                 <Image 
@@ -83,8 +96,8 @@ export default function GameSelector() {
           ))}
         </div>
 
-        {/* Price Options */}
-        {selectedGame && (
+        {/* Price Options - Only show if enabled */}
+        {showPriceOptions && selectedGame && (
           <div className="mt-16 animate-fadeIn">
             <h4 className="text-2xl font-bold mb-6 text-center text-[#e6915b]">
               {selectedGame.name} Services
