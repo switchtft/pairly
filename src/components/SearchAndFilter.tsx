@@ -241,7 +241,7 @@ export default function SearchAndFilter({
         <div className="mt-4 flex flex-wrap gap-2">
           {searchQuery && (
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#e6915b]/20 text-[#e6915b] rounded-full text-sm">
-              Search: "{searchQuery}"
+              Search: &quot;{searchQuery}&quot;
               <button onClick={() => onSearchChange('')}>
                 <X size={14} />
               </button>
