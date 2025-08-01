@@ -66,11 +66,27 @@ CREATE TABLE "ChatMessage" (
     CONSTRAINT "ChatMessage_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Package" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "price" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "features" TEXT[],
+    "isFeatured" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Package_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Package_title_key" ON "Package"("title");
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
