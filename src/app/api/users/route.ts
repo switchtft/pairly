@@ -1,17 +1,15 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// src/app/api/users/route.ts
+import { NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'  // Use the singleton
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const game = searchParams.get('game');
-    const onlineOnly = searchParams.get('onlineOnly') === 'true';
     
     const users = await prisma.user.findMany({
       where: {
-        isPro: true, // Only get pro players
+        isPro: true,
         ...(game && { game: game }),
       },
       select: {
@@ -22,7 +20,6 @@ export async function GET(request: Request) {
         role: true,
         isPro: true,
         createdAt: true,
-        // Add any other fields you need
       },
       orderBy: {
         createdAt: 'desc'
@@ -33,5 +30,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect(); // Disconnect after each request
   }
 }
