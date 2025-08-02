@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Clock, User, Play, Users, Crown, Shield, Star } from 'lucide-react';
 import { calculateBundleDiscount, formatCurrency, getRankColor } from '@/lib/utils';
+import React from 'react';
 
 // Simplified components to avoid import issues
 function LoadingSpinner({ size = 20 }: { size?: number }) {
@@ -36,8 +37,12 @@ function CardSkeleton() {
   );
 }
 
-function EmptyState({ icon: Icon, title, message }: { 
-  icon: any; 
+function EmptyState({ 
+  icon: Icon, 
+  title, 
+  message 
+}: { 
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; // ✅ Fixed type
   title: string; 
   message: string; 
 }) {
