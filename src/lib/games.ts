@@ -7,7 +7,8 @@ export interface Game {
 }
 
 export const GAMES: Game[] = [
-  { id: 'lol', name: 'League of Legends!!', imageUrl: '/images/games/league.jpg' },
+  { id: 'lol', name: 'League of Legends', imageUrl: '/images/games/league.jpg' },
   { id: 'valorant', name: 'Valorant', imageUrl: '/images/games/valorant.jpg' },
   { id: 'csgo', name: 'CS:GO 2', imageUrl: '/images/games/csgo.jpg' },
+  { id: 'rocket', name: 'Rocket League', imageUrl: '/images/games/rocket.jpg' },
 ];
