@@ -41,6 +41,15 @@ async function main() {
       role: 'Jungle',
       isPro: true,
     },
+    {
+      email: 'capyking@example.com',
+      password: 'hashedpassword123',
+      username: 'CapyKing',
+      rank: 'Radiant',
+      game: 'valorant',
+      role: 'Sentinel',
+      isPro: true,
+    },
   ];
 
   for (const player of proPlayers) {
