@@ -5,6 +5,7 @@ import "./globals.css";
 import ResponsiveNavbar from "@/components/ResponsiveNavbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,12 +36,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased bg-[#0d0d0d] text-white min-h-screen flex flex-col">
-        <ResponsiveNavbar />
-        <main className="flex-grow pt-24 pb-8">
-          {children}
-        </main>
-        <Footer />
-        <ScrollToTop />
+        <AuthProvider>
+          <ResponsiveNavbar />
+          <main className="flex-grow pt-24 pb-8">
+            {children}
+          </main>
+          <Footer />
+          <ScrollToTop />
+        </AuthProvider>
       </body>
     </html>
   );
