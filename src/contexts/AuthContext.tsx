@@ -1,0 +1,283 @@
+// src/contexts/AuthContext.tsx
+'use client';
+
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+
+interface User {
+  id: number;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  bio?: string;
+  game?: string;
+  role?: string;
+  rank?: string;
+  isPro: boolean;
+  verified: boolean;
+  discord?: string;
+  steam?: string;
+  timezone?: string;
+  languages: string[];
+  createdAt: string;
+  lastSeen: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
+  refetchUser: () => Promise<void>;
+}
+
+interface RegisterData {
+  email: string;
+  username: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  game?: string;
+  role?: string;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const isAuthenticated = !!user;
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+
+    setUser(data.user);
+  };
+
+  const register = async (userData: RegisterData) => {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Registration failed');
+    }
+
+    // Auto-login after registration
+    await login(userData.email, userData.password);
+  };
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+    }
+  };
+
+  const updateUser = async (userData: Partial<User>) => {
+    const response = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Update failed');
+    }
+
+    setUser(data.user);
+  };
+
+  const refetchUser = async () => {
+    await checkAuth();
+  };
+
+  const value = {
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    updateUser,
+    refetchUser,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+// src/hooks/useAuthForm.ts
+import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+export function useAuthForm() {
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, register } = useAuth();
+
+  const validateEmail = (email: string): string | null => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email';
+    return null;
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (!password) return 'Password is required';
+    if (password.length < 6) return 'Password must be at least 6 characters';
+    return null;
+  };
+
+  const validateUsername = (username: string): string | null => {
+    if (!username) return 'Username is required';
+    if (username.length < 3) return 'Username must be at least 3 characters';
+    if (username.length > 20) return 'Username must be less than 20 characters';
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) return 'Username can only contain letters, numbers, and underscores';
+    return null;
+  };
+
+  const handleLogin = async (email: string, password: string) => {
+    setIsSubmitting(true);
+    setErrors({});
+
+    // Validate inputs
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+
+    if (emailError || passwordError) {
+      setErrors({
+        ...(emailError && { email: emailError }),
+        ...(passwordError && { password: passwordError }),
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await login(email, password);
+    } catch (error) {
+      setErrors({ general: error instanceof Error ? error.message : 'Login failed' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRegister = async (userData: {
+    email: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+    firstName?: string;
+    lastName?: string;
+    game?: string;
+    role?: string;
+  }) => {
+    setIsSubmitting(true);
+    setErrors({});
+
+    // Validate inputs
+    const emailError = validateEmail(userData.email);
+    const usernameError = validateUsername(userData.username);
+    const passwordError = validatePassword(userData.password);
+    
+    let confirmPasswordError = null;
+    if (userData.password !== userData.confirmPassword) {
+      confirmPasswordError = 'Passwords do not match';
+    }
+
+    if (emailError || usernameError || passwordError || confirmPasswordError) {
+      setErrors({
+        ...(emailError && { email: emailError }),
+        ...(usernameError && { username: usernameError }),
+        ...(passwordError && { password: passwordError }),
+        ...(confirmPasswordError && { confirmPassword: confirmPasswordError }),
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const { confirmPassword, ...registerData } = userData;
+      await register(registerData);
+    } catch (error) {
+      setErrors({ general: error instanceof Error ? error.message : 'Registration failed' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return {
+    errors,
+    isSubmitting,
+    handleLogin,
+    handleRegister,
+    setErrors,
+  };
+}

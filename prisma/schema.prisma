@@ -1,9 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,35 +13,65 @@ model User {
   email           String        @unique
   password        String
   username        String        @unique
+  // New profile fields from Claude
+  firstName       String?
+  lastName        String?
+  avatar          String?
+  bio             String?
+  // Gaming information
   rank            String?
   game            String?
   role            String?
   isPro           Boolean       @default(false)
-  // Relacionamentos
-  clientSessions  Session[]     @relation("ClientSessions")
-  proSessions     Session[]     @relation("ProTeammateSessions")
-  reviewsGiven    Review[]      @relation("ReviewsGiven")
-  reviewsReceived Review[]      @relation("ReviewsReceived")
+  verified        Boolean       @default(false)  // From Claude
+  // New contact fields from Claude
+  discord         String?
+  steam           String?
+  // Settings from Claude
+  isOnline        Boolean       @default(false)
+  timezone        String?
+  languages       String[]      // Array of language codes
+  lastSeen        DateTime      @default(now())  // From Claude
+  
+  // Relations
+  authSessions    AuthSession[]   // Authentication sessions (from Claude)
+  clientSessions  Session[]       @relation("ClientSessions")
+  proSessions     Session[]       @relation("ProTeammateSessions")
+  reviewsGiven    Review[]        @relation("ReviewsGiven")
+  reviewsReceived Review[]        @relation("ReviewsReceived")
   payments        Payment[]
-  sentMessages    ChatMessage[] @relation("MessageSender")
-  createdAt       DateTime      @default(now())
+  sentMessages    ChatMessage[]   @relation("MessageSender")
+  tournamentParticipations TournamentParticipant[]  // From Claude
+  createdAt       DateTime        @default(now())
+}
+
+// New authentication session model from Claude
+model AuthSession {
+  id        String   @id @default(cuid())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("auth_sessions")
 }
 
 model Session {
   id            Int           @id @default(autoincrement())
-  // Relacionamentos com User
   client        User          @relation("ClientSessions", fields: [clientId], references: [id])
   clientId      Int
   proTeammate   User?         @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
   proTeammateId Int?
-  // Campos normais
   game          String
   mode          String
   status        String        @default("Pending")
-  startTime     DateTime
+  startTime     DateTime      // Equivalent to Claude's scheduledAt
   endTime       DateTime?
   price         Float
-  // Outros relacionamentos
+  // New fields from Claude
+  duration      Int?          // in minutes (optional since we have start/end times)
+  
+  // Relations
   reviews       Review[]
   payments      Payment[]
   chatMessages  ChatMessage[] @relation("SessionMessages")
@@ -57,12 +82,13 @@ model Review {
   id         Int      @id @default(autoincrement())
   rating     Int
   comment    String?
-  // Relacionamentos com User
+  // New field from Claude
+  type       String?   // 'coaching', 'duo', 'tournament'
+  
   reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
   reviewerId Int
   reviewed   User     @relation("ReviewsReceived", fields: [reviewedId], references: [id])
   reviewedId Int
-  // Relacionamento com Session
   session    Session  @relation(fields: [sessionId], references: [id])
   sessionId  Int
   createdAt  DateTime @default(now())
@@ -70,12 +96,10 @@ model Review {
 
 model Payment {
   id        Int      @id @default(autoincrement())
-  // Relacionamentos
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
   session   Session? @relation(fields: [sessionId], references: [id])
   sessionId Int?
-  // Campos normais
   amount    Float
   method    String
   status    String   @default("Pending")
@@ -84,12 +108,10 @@ model Payment {
 
 model ChatMessage {
   id        Int      @id @default(autoincrement())
-  // Relacionamentos
   session   Session  @relation("SessionMessages", fields: [sessionId], references: [id])
   sessionId Int
   sender    User     @relation("MessageSender", fields: [senderId], references: [id])
   senderId  Int
-  // Campos normais
   content   String
   createdAt DateTime @default(now())
 }
@@ -97,9 +119,40 @@ model ChatMessage {
 model Package {
   id          Int      @id @default(autoincrement())
   title       String   @unique
-  price       String   // Ex: "$25" (mantido como String para símbolo de moeda)
-  description String   // Descrição longa
-  features    String[] // Array de features (ex: ["2 sessions", "Basic mechanics"])
-  isFeatured  Boolean  @default(false) // Para destacar um pacote (ex: border-2)
+  price       String   // Ex: "$25"
+  description String
+  features    String[]
+  isFeatured  Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+// New tournament models from Claude
+model Tournament {
+  id            String   @id @default(cuid())
+  name          String
+  game          String
+  prize         Float
+  entryFee      Float
+  maxParticipants Int
+  status        String   // 'upcoming', 'ongoing', 'completed'
+  startDate     DateTime
+  endDate       DateTime?
+  region        String
+  description   String?
+  rules         String?
+  createdAt     DateTime @default(now())
+  participants  TournamentParticipant[]
+  @@map("tournaments")
+}
+
+model TournamentParticipant {
+  id           String @id @default(cuid())
+  tournamentId String
+  userId       Int
+  teamName     String?
+  joinedAt     DateTime @default(now())
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
+  @@unique([tournamentId, userId])
+  @@map("tournament_participants")
 }
