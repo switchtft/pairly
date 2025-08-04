@@ -4,8 +4,11 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Clock, User, Play, Users, Crown, Shield, Star } from 'lucide-react';
+import { Clock, User, Play, Users, Crown, Shield, Star, MessageCircle } from 'lucide-react';
 import { calculateBundleDiscount, formatCurrency, getRankColor } from '@/lib/utils';
+import { useRealTimeQueue } from '@/hooks/useRealTimeQueue';
+import { useAuth } from '@/contexts/AuthContext';
+import ChatInterface from '@/components/ChatInterface';
 import React from 'react';
 
 // Simplified components to avoid import issues
@@ -278,12 +281,35 @@ function PlayerCard({ player, onBookNow, onJoinQueue, isLoading }: {
 }
 
 export default function DuoPage() {
+  const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState('valorant');
   const [bundleSize, setBundleSize] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showChat, setShowChat] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+
+  // Queue system
+  const {
+    isInQueue,
+    queueLength,
+    estimatedWaitTime,
+    availableTeammates,
+    loading: queueLoading,
+    error: queueError,
+    joinQueue,
+    leaveQueue,
+    resetQueue
+  } = useRealTimeQueue({
+    game: selectedGame,
+    onMatchFound: (sessionId, teammate) => {
+      setCurrentSessionId(sessionId);
+      setShowChat(true);
+      alert(`Match found! You've been paired with ${teammate.username}`);
+    }
+  });
 
   // Fetch players from database
   const fetchPlayers = useCallback(async (game?: string) => {
@@ -373,6 +399,66 @@ export default function DuoPage() {
             Connect with skilled players who match your playstyle
           </p>
         </div>
+
+        {/* Queue Status */}
+        {user && (
+          <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[#e6915b]">Queue Status</h2>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-400">
+                  {availableTeammates} teammates available
+                </span>
+                <span className="text-sm text-gray-400">
+                  {queueLength} in queue
+                </span>
+              </div>
+            </div>
+
+            {queueError && (
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 mb-4">
+                <p className="text-red-400 text-sm">{queueError}</p>
+              </div>
+            )}
+
+            {isInQueue ? (
+              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-400 font-medium">In Queue</p>
+                    <p className="text-green-300 text-sm">
+                      Estimated wait time: {estimatedWaitTime} minutes
+                    </p>
+                  </div>
+                  <Button
+                    onClick={leaveQueue}
+                    disabled={queueLoading}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {queueLoading ? <LoadingSpinner size={16} /> : 'Leave Queue'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Button
+                  onClick={() => joinQueue(60, 10, 'duo')}
+                  disabled={queueLoading || !user}
+                  className="bg-[#e6915b] hover:bg-[#d8824a] text-white"
+                >
+                  {queueLoading ? <LoadingSpinner size={16} /> : 'Join Queue (1 hour - $10)'}
+                </Button>
+                <Button
+                  onClick={() => joinQueue(120, 18, 'duo')}
+                  disabled={queueLoading || !user}
+                  className="bg-[#6b8ab0] hover:bg-[#5a79a0] text-white"
+                >
+                  {queueLoading ? <LoadingSpinner size={16} /> : 'Join Queue (2 hours - $18)'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Game Selector */}
         <GameSelector 
@@ -477,6 +563,22 @@ export default function DuoPage() {
           )}
         </div>
       </div>
+
+      {/* Chat Interface */}
+      {showChat && currentSessionId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl">
+            <ChatInterface 
+              sessionId={currentSessionId} 
+              onClose={() => {
+                setShowChat(false);
+                setCurrentSessionId(null);
+                resetQueue();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

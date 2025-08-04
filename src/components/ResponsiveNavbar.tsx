@@ -194,6 +194,26 @@ export default function ResponsiveNavbar() {
                       Settings
                     </Link>
                     
+                    {user.isPro && (
+                      <Link
+                        href="/dashboard/teammate"
+                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Crown size={16} className="mr-3" />
+                        Teammate Dashboard
+                      </Link>
+                    )}
+                    
+                    {!user.isPro && (
+                      <Link
+                        href="/become-teammate"
+                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Shield size={16} className="mr-3" />
+                        Become Teammate
+                      </Link>
+                    )}
+                    
                     <div className="border-t border-[#2a2a2a] mt-2 pt-2">
                       <button
                         onClick={handleLogout}

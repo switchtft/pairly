@@ -42,6 +42,7 @@ model User {
   payments        Payment[]
   sentMessages    ChatMessage[]   @relation("MessageSender")
   tournamentParticipations TournamentParticipant[]  // From Claude
+  queueEntries    QueueEntry[]    // Queue entries for matchmaking
   createdAt       DateTime        @default(now())
 }
 
@@ -155,4 +156,20 @@ model TournamentParticipant {
   user         User      @relation(fields: [userId], references: [id])
   @@unique([tournamentId, userId])
   @@map("tournament_participants")
+}
+
+// Queue system for matchmaking
+model QueueEntry {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  game      String
+  mode      String   @default("duo") // 'duo', 'coaching'
+  duration  Int      // in minutes
+  price     Float
+  status    String   @default("waiting") // 'waiting', 'matched', 'cancelled'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("queue_entries")
 }
