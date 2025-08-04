@@ -19,7 +19,7 @@ interface User {
   discord?: string;
   steam?: string;
   timezone?: string;
-  languages: string[];
+  languages: string;
   createdAt: string;
   lastSeen: string;
 }

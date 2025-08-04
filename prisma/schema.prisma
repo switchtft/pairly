@@ -1,175 +1,214 @@
-// schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
-  id              Int           @id @default(autoincrement())
-  email           String        @unique
-  password        String
-  username        String        @unique
-  // New profile fields from Claude
-  firstName       String?
-  lastName        String?
-  avatar          String?
-  bio             String?
-  // Gaming information
-  rank            String?
-  game            String?
-  role            String?
-  isPro           Boolean       @default(false)
-  verified        Boolean       @default(false)  // From Claude
-  // New contact fields from Claude
-  discord         String?
-  steam           String?
-  // Settings from Claude
-  isOnline        Boolean       @default(false)
-  timezone        String?
-  languages       String[]      // Array of language codes
-  lastSeen        DateTime      @default(now())  // From Claude
-  
-  // Relations
-  authSessions    AuthSession[]   // Authentication sessions (from Claude)
-  clientSessions  Session[]       @relation("ClientSessions")
-  proSessions     Session[]       @relation("ProTeammateSessions")
-  reviewsGiven    Review[]        @relation("ReviewsGiven")
-  reviewsReceived Review[]        @relation("ReviewsReceived")
-  payments        Payment[]
-  sentMessages    ChatMessage[]   @relation("MessageSender")
-  tournamentParticipations TournamentParticipant[]  // From Claude
-  queueEntries    QueueEntry[]    // Queue entries for matchmaking
-  createdAt       DateTime        @default(now())
-}
-
-// New authentication session model from Claude
-model AuthSession {
-  id        String   @id @default(cuid())
-  userId    Int
-  token     String   @unique
-  expiresAt DateTime
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  rank      String?
+  role      String?
+  game      String?
+  isPro     Boolean  @default(false)
+  isAdmin   Boolean  @default(false)
+  isOnline  Boolean  @default(false)
+  lastSeen  DateTime @default(now())
+  verified  Boolean  @default(false)
+  bio       String?
+  discord   String?
+  steam     String?
+  timezone  String?
+  languages String @default("English")
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@map("auth_sessions")
+  updatedAt DateTime @updatedAt @default(now())
+
+  // Relations
+  sessions        Session[]        @relation("ClientSessions")
+  proSessions     Session[]        @relation("ProTeammateSessions")
+  queueEntries    QueueEntry[]
+  payments        Payment[]
+  chatMessages    ChatMessage[]
+  chatFiles       ChatFile[]
+  messageReactions MessageReaction[]
+  reviewsGiven    Review[]         @relation("Reviewer")
+  reviewsReceived Review[]         @relation("Reviewed")
+  discountCodeUsages DiscountCodeUsage[]
+  authSessions    AuthSession[]
+  createdDiscountCodes DiscountCode[] @relation("DiscountCodeCreator")
 }
 
 model Session {
-  id            Int           @id @default(autoincrement())
-  client        User          @relation("ClientSessions", fields: [clientId], references: [id])
+  id            Int      @id @default(autoincrement())
   clientId      Int
-  proTeammate   User?         @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
   proTeammateId Int?
   game          String
   mode          String
-  status        String        @default("Pending")
-  startTime     DateTime      // Equivalent to Claude's scheduledAt
+  status        String   @default("Pending") // Pending, Active, Completed, Cancelled
+  startTime     DateTime @default(now())
   endTime       DateTime?
   price         Float
-  // New fields from Claude
-  duration      Int?          // in minutes (optional since we have start/end times)
-  
+  duration      Int      // in minutes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   // Relations
+  client        User     @relation("ClientSessions", fields: [clientId], references: [id])
+  proTeammate   User?    @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
+  chatMessages  ChatMessage[]
+  chatFiles     ChatFile[]
   reviews       Review[]
-  payments      Payment[]
-  chatMessages  ChatMessage[] @relation("SessionMessages")
-  createdAt     DateTime      @default(now())
 }
 
-model Review {
-  id         Int      @id @default(autoincrement())
-  rating     Int
-  comment    String?
-  // New field from Claude
-  type       String?   // 'coaching', 'duo', 'tournament'
-  
-  reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
-  reviewerId Int
-  reviewed   User     @relation("ReviewsReceived", fields: [reviewedId], references: [id])
-  reviewedId Int
-  session    Session  @relation(fields: [sessionId], references: [id])
-  sessionId  Int
-  createdAt  DateTime @default(now())
+model QueueEntry {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  game            String
+  gameMode        String
+  numberOfMatches Int
+  teammatesNeeded Int
+  duration        Int      // in minutes
+  pricePerMatch   Float
+  totalPrice      Float
+  status          String   @default("waiting") // waiting, matched, cancelled
+  paymentStatus   String   @default("pending") // pending, paid, failed
+  specialRequests String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id])
+  payments        Payment[]
 }
 
 model Payment {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  session   Session? @relation(fields: [sessionId], references: [id])
-  sessionId Int?
-  amount    Float
-  method    String
-  status    String   @default("Pending")
-  createdAt DateTime @default(now())
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  queueEntryId          Int?
+  amount                Float
+  originalAmount        Float
+  discountAmount        Float    @default(0)
+  method                String   @default("stripe") // stripe, manual, paypal
+  status                String   @default("pending") // pending, completed, failed, refunded
+  stripePaymentIntentId String?
+  discountCodeId        Int?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  user                  User     @relation(fields: [userId], references: [id])
+  queueEntry            QueueEntry? @relation(fields: [queueEntryId], references: [id])
+  discountCode          DiscountCode? @relation(fields: [discountCodeId], references: [id])
 }
 
 model ChatMessage {
   id        Int      @id @default(autoincrement())
-  session   Session  @relation("SessionMessages", fields: [sessionId], references: [id])
   sessionId Int
-  sender    User     @relation("MessageSender", fields: [senderId], references: [id])
   senderId  Int
   content   String
+  type      String   @default("text") // text, file, image, voice
   createdAt DateTime @default(now())
+
+  // Relations
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sender    User     @relation(fields: [senderId], references: [id])
+  reactions MessageReaction[]
 }
 
-model Package {
-  id          Int      @id @default(autoincrement())
-  title       String   @unique
-  price       String   // Ex: "$25"
-  description String
-  features    String[]
-  isFeatured  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-}
-
-// New tournament models from Claude
-model Tournament {
-  id            String   @id @default(cuid())
-  name          String
-  game          String
-  prize         Float
-  entryFee      Float
-  maxParticipants Int
-  status        String   // 'upcoming', 'ongoing', 'completed'
-  startDate     DateTime
-  endDate       DateTime?
-  region        String
-  description   String?
-  rules         String?
-  createdAt     DateTime @default(now())
-  participants  TournamentParticipant[]
-  @@map("tournaments")
-}
-
-model TournamentParticipant {
-  id           String @id @default(cuid())
-  tournamentId String
-  userId       Int
-  teamName     String?
-  joinedAt     DateTime @default(now())
-  tournament   Tournament @relation(fields: [tournamentId], references: [id])
-  user         User      @relation(fields: [userId], references: [id])
-  @@unique([tournamentId, userId])
-  @@map("tournament_participants")
-}
-
-// Queue system for matchmaking
-model QueueEntry {
+model ChatFile {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  game      String
-  mode      String   @default("duo") // 'duo', 'coaching'
-  duration  Int      // in minutes
-  price     Float
-  status    String   @default("waiting") // 'waiting', 'matched', 'cancelled'
+  sessionId Int
+  uploadedBy Int
+  fileName  String
+  fileUrl   String
+  fileSize  Int
+  fileType  String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("queue_entries")
+
+  // Relations
+  session   Session  @relation(fields: [sessionId], references: [id])
+  uploader  User     @relation(fields: [uploadedBy], references: [id])
+}
+
+model MessageReaction {
+  id        Int      @id @default(autoincrement())
+  messageId Int
+  userId    Int
+  emoji     String
+  createdAt DateTime @default(now())
+
+  // Relations
+  message   ChatMessage @relation(fields: [messageId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId, emoji])
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  sessionId     Int
+  reviewerId    Int
+  reviewedId    Int
+  rating        Int      // 1-5 stars
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  session       Session  @relation(fields: [sessionId], references: [id])
+  reviewer      User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewed      User     @relation("Reviewed", fields: [reviewedId], references: [id])
+}
+
+model DiscountCode {
+  id             Int      @id @default(autoincrement())
+  code           String   @unique
+  discountType   String   // percentage, fixed, free
+  discountValue  Float
+  maxUses        Int?
+  currentUses    Int      @default(0)
+  validFrom      DateTime @default(now())
+  validUntil     DateTime?
+  isActive       Boolean  @default(true)
+  minAmount      Float    @default(0)
+  applicableGames String
+  createdBy      Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  creator        User?    @relation("DiscountCodeCreator", fields: [createdBy], references: [id])
+  payments       Payment[]
+  usages         DiscountCodeUsage[]
+}
+
+model DiscountCodeUsage {
+  id            Int      @id @default(autoincrement())
+  discountCodeId Int
+  userId        Int
+  orderAmount   Float
+  discountAmount Float
+  usedAt        DateTime @default(now())
+
+  // Relations
+  discountCode  DiscountCode @relation(fields: [discountCodeId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
+}
+
+model AuthSession {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
 }

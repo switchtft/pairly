@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
+import { notifyMatchFound } from '@/lib/socket';
+
+// Initialize Stripe only if secret key is available
+let stripe: any = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  const Stripe = require('stripe');
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2024-12-18.acacia',
+  });
+}
 
 // GET - Get current queue status and available teammates
 export async function GET(request: NextRequest) {
@@ -53,7 +63,8 @@ export async function GET(request: NextRequest) {
     const queueEntries = await prisma.queueEntry.findMany({
       where: {
         game: game,
-        status: 'waiting'
+        status: 'waiting',
+        paymentStatus: 'paid'
       },
       include: {
         user: {
@@ -87,7 +98,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Join the queue
+// POST - Create booking and join queue
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value;
@@ -101,9 +112,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { game, duration, price, mode = 'duo' } = body;
+    const { 
+      game, 
+      gameMode, 
+      numberOfMatches, 
+      teammatesNeeded, 
+      pricePerMatch, 
+      totalPrice, 
+      specialRequests, 
+      discountCode 
+    } = body;
 
-    if (!game || !duration || !price) {
+    if (!game || !gameMode || !numberOfMatches || !teammatesNeeded || !pricePerMatch || !totalPrice) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -119,15 +139,89 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Already in queue' }, { status: 400 });
     }
 
+    // Validate discount code if provided
+    let discountAmount = 0;
+    let discountCodeRecord = null;
+    
+    if (discountCode) {
+      const discountCodeData = await prisma.discountCode.findUnique({
+        where: { code: discountCode.toUpperCase() },
+      });
+
+      if (discountCodeData && discountCodeData.isActive) {
+        if (discountCodeData.validUntil && new Date() > discountCodeData.validUntil) {
+          return NextResponse.json({ error: 'Discount code has expired' }, { status: 400 });
+        }
+
+        if (discountCodeData.maxUses && discountCodeData.currentUses >= discountCodeData.maxUses) {
+          return NextResponse.json({ error: 'Discount code usage limit reached' }, { status: 400 });
+        }
+
+        if (totalPrice < discountCodeData.minAmount) {
+          return NextResponse.json({ 
+            error: `Minimum order amount of $${discountCodeData.minAmount} required` 
+          }, { status: 400 });
+        }
+
+        if (discountCodeData.applicableGames.length > 0 && 
+            !discountCodeData.applicableGames.includes(game)) {
+          return NextResponse.json({ 
+            error: 'Discount code does not apply to this game' 
+          }, { status: 400 });
+        }
+
+        // Calculate discount amount
+        if (discountCodeData.discountType === 'percentage') {
+          discountAmount = (totalPrice * discountCodeData.discountValue) / 100;
+        } else if (discountCodeData.discountType === 'fixed') {
+          discountAmount = discountCodeData.discountValue;
+        } else if (discountCodeData.discountType === 'free') {
+          discountAmount = totalPrice; // 100% off
+        }
+
+        discountAmount = Math.min(discountAmount, totalPrice);
+        discountCodeRecord = discountCodeData;
+      }
+    }
+
+    const finalPrice = Math.max(0, totalPrice - discountAmount);
+
+    // Create Stripe payment intent if Stripe is configured
+    let paymentIntent = null;
+    if (stripe) {
+      try {
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(finalPrice * 100), // Convert to cents
+          currency: 'usd',
+          metadata: {
+            userId: decoded.userId.toString(),
+            game,
+            gameMode,
+            numberOfMatches: numberOfMatches.toString(),
+            teammatesNeeded: teammatesNeeded.toString(),
+            discountCode: discountCode || '',
+          },
+        });
+      } catch (stripeError) {
+        console.error('Stripe error:', stripeError);
+        return NextResponse.json({ error: 'Payment service unavailable' }, { status: 500 });
+      }
+    }
+
     // Create queue entry
     const queueEntry = await prisma.queueEntry.create({
       data: {
         userId: decoded.userId,
         game,
-        duration,
-        price,
-        mode,
-        status: 'waiting'
+        gameMode,
+        numberOfMatches,
+        teammatesNeeded,
+        duration: 30, // Default 30 minutes per match
+        pricePerMatch,
+        totalPrice: finalPrice,
+        status: 'waiting',
+        paymentStatus: stripe ? 'pending' : 'paid', // If no Stripe, mark as paid
+        specialRequests,
       },
       include: {
         user: {
@@ -139,22 +233,63 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Try to find a match immediately
-    const match = await findMatch(queueEntry);
-    if (match) {
-      return NextResponse.json({ 
-        success: true, 
-        matchFound: true, 
-        sessionId: match.id,
-        teammate: match.proTeammate
+    // Create payment record
+    await prisma.payment.create({
+      data: {
+        userId: decoded.userId,
+        queueEntryId: queueEntry.id,
+        amount: finalPrice,
+        originalAmount: totalPrice,
+        discountAmount,
+        method: stripe ? 'stripe' : 'manual',
+        status: stripe ? 'pending' : 'completed',
+        stripePaymentIntentId: paymentIntent?.id,
+        discountCodeId: discountCodeRecord?.id,
+      }
+    });
+
+    // Update discount code usage if applicable
+    if (discountCodeRecord) {
+      await prisma.discountCode.update({
+        where: { id: discountCodeRecord.id },
+        data: { currentUses: { increment: 1 } }
       });
+
+      await prisma.discountCodeUsage.create({
+        data: {
+          discountCodeId: discountCodeRecord.id,
+          userId: decoded.userId,
+          orderAmount: totalPrice,
+          discountAmount,
+        }
+      });
+    }
+
+    // Try to find a match immediately if payment is not required
+    if (!stripe) {
+      const match = await findMatch(queueEntry);
+      if (match) {
+        // Notify both users via WebSocket
+        await notifyMatchFound(match.id, decoded.userId, match.proTeammateId!);
+        
+        return NextResponse.json({ 
+          success: true, 
+          matchFound: true,
+          sessionId: match.id,
+          teammate: match.proTeammate,
+          queueEntryId: queueEntry.id,
+          paymentRequired: false
+        });
+      }
     }
 
     return NextResponse.json({ 
       success: true, 
-      matchFound: false, 
-      queueEntry: queueEntry.id,
-      estimatedWaitTime: 5 // 5 minutes estimate
+      queueEntryId: queueEntry.id,
+      paymentIntentId: paymentIntent?.id,
+      clientSecret: paymentIntent?.client_secret,
+      estimatedWaitTime: 5, // 5 minutes estimate
+      paymentRequired: !!stripe // Indicate if payment is required
     });
 
   } catch (error) {

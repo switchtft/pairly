@@ -23,14 +23,18 @@ export async function POST(request: Request) {
         email: true,
         username: true,
         password: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
         game: true,
         role: true,
         rank: true,
         isPro: true,
         verified: true,
+        bio: true,
+        discord: true,
+        steam: true,
+        timezone: true,
+        languages: true,
+        createdAt: true,
+        lastSeen: true,
       }
     });
 
@@ -53,7 +57,7 @@ export async function POST(request: Request) {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'fallback-secret',
+      process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
       { expiresIn: '7d' }
     );
 
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
 
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

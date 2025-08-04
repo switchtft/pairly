@@ -8,8 +8,6 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   username: z.string().min(3, 'Username must be at least 3 characters').max(20, 'Username must be less than 20 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
   game: z.string().optional(),
   role: z.string().optional(),
 });
@@ -45,8 +43,6 @@ export async function POST(request: Request) {
         email: validatedData.email,
         username: validatedData.username,
         password: hashedPassword,
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
         game: validatedData.game,
         role: validatedData.role,
       },
@@ -54,8 +50,6 @@ export async function POST(request: Request) {
         id: true,
         email: true,
         username: true,
-        firstName: true,
-        lastName: true,
         game: true,
         role: true,
         createdAt: true,
@@ -77,7 +71,7 @@ export async function POST(request: Request) {
 
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
