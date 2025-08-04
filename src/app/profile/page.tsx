@@ -16,7 +16,6 @@ import {
   Edit3, 
   Save,
   X,
-  MapPin,
   MessageCircle,
   Crown,
   Shield,
@@ -152,7 +151,7 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         await fetchExtendedProfile();
       } else {
         console.error('Avatar upload failed');

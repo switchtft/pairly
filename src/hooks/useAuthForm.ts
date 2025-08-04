@@ -92,7 +92,7 @@ export function useAuthForm() {
     }
 
     try {
-      const { confirmPassword, ...registerData } = userData;
+      const { confirmPassword: _confirmPassword, ...registerData } = userData;
       await register(registerData);
     } catch (error) {
       setErrors({ general: error instanceof Error ? error.message : 'Registration failed' });

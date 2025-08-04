@@ -1,7 +1,7 @@
 // src/components/ResponsiveNavbar.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
@@ -193,6 +193,26 @@ export default function ResponsiveNavbar() {
                       <Settings size={16} className="mr-3" />
                       Settings
                     </Link>
+                    
+                    {user.isPro && (
+                      <Link
+                        href="/dashboard/teammate"
+                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Crown size={16} className="mr-3" />
+                        Teammate Dashboard
+                      </Link>
+                    )}
+                    
+                    {!user.isPro && (
+                      <Link
+                        href="/become-teammate"
+                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Shield size={16} className="mr-3" />
+                        Become Teammate
+                      </Link>
+                    )}
                     
                     <div className="border-t border-[#2a2a2a] mt-2 pt-2">
                       <button

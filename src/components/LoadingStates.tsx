@@ -1,7 +1,7 @@
 // src/components/LoadingStates.tsx
 'use client';
 
-import { Loader2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Generic loading spinner

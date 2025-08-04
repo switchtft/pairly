@@ -134,7 +134,7 @@ export default function RegisterPage() {
                 <div className="text-center mb-6">
                   <UserCircle className="mx-auto text-[#e6915b] mb-2" size={32} />
                   <h3 className="text-xl font-semibold text-white">Account Information</h3>
-                  <p className="text-[#e6915b] text-sm">Let's get you set up with the basics</p>
+                  <p className="text-[#e6915b] text-sm">Let&apos;s get you set up with the basics</p>
                 </div>
 
                 {/* Email Field */}
