@@ -33,7 +33,7 @@ export async function GET() {
       );
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -90,7 +90,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
     const body = await request.json();
     const validatedData = updateProfileSchema.parse(body);
 

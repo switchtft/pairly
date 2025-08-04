@@ -114,7 +114,7 @@ export default function ChatInterface({ sessionId, onClose }: ChatInterfaceProps
         pollIntervalRef.current = null;
       }
     };
-  }, [sessionId]);
+  }, [sessionId, fetchMessages]);
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], { 

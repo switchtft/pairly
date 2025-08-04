@@ -3,7 +3,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { debounce } from '@/lib/utils';
 import { REGIONS, TOURNAMENT_STATUSES } from '@/lib/constants';
 

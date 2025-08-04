@@ -38,7 +38,7 @@ export default function BecomeTeammatePage() {
       } else {
         alert('Failed to submit application. Please try again.');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to submit application. Please try again.');
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ export default function BecomeTeammatePage() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-300 mb-2">Application Submitted!</h3>
             <p className="text-gray-500 mb-6">
-              Thank you for your interest in becoming a teammate. We'll review your application and get back to you within 24-48 hours.
+              Thank you for your interest in becoming a teammate. We&apos;ll review your application and get back to you within 24-48 hours.
             </p>
             <Button 
               onClick={() => window.location.href = '/dashboard'}

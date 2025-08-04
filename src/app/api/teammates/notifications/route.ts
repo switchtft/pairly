@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
 // GET - Get pending notifications for teammates
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const pendingRequests = await prisma.queueEntry.findMany({
       where: {
-        game: teammate?.game,
+        game: teammate?.game || undefined,
         status: 'waiting'
       },
       include: {

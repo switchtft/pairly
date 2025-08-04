@@ -42,7 +42,7 @@ interface RecentActivity {
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats] = useState<DashboardStats>({
     upcomingSessions: 3,
     completedSessions: 47,
     averageRating: 4.8,
@@ -161,7 +161,7 @@ export default function DashboardPage() {
                 {user.verified && <Shield className="inline ml-2 text-blue-400" size={24} />}
                 {user.isPro && <Crown className="inline ml-2 text-yellow-400" size={24} />}
               </h1>
-              <p className="text-gray-400">Here's what's happening with your gaming profile</p>
+              <p className="text-gray-400">Here&apos;s what&apos;s happening with your gaming profile</p>
             </div>
             <div className="flex gap-3">
               <Button 

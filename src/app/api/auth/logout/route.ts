@@ -12,7 +12,7 @@ export async function POST() {
     if (token) {
       try {
         // Decode token to get user ID
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
 
         // Delete session from database
         await prisma.authSession.deleteMany({

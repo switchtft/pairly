@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
 // GET - Get current queue status and available teammates
@@ -193,7 +193,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 // Helper function to find a match
-async function findMatch(queueEntry: any) {
+async function findMatch(queueEntry: { id: number; userId: number; game: string; mode: string; price: number; duration: number }) {
   // Find available teammates
   const availableTeammates = await prisma.user.findMany({
     where: {

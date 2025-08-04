@@ -10,12 +10,12 @@ interface QueueStatus {
   availableTeammates: number;
   matchFound: boolean;
   sessionId?: number;
-  teammate?: any;
+  teammate?: { id: number; username: string; rank: string };
 }
 
 interface UseRealTimeQueueProps {
   game: string;
-  onMatchFound?: (sessionId: number, teammate: any) => void;
+  onMatchFound?: (sessionId: number, teammate: { id: number; username: string; rank: string }) => void;
   onQueueUpdate?: (status: QueueStatus) => void;
 }
 
@@ -197,7 +197,7 @@ export function useRealTimeQueue({
     if (user) {
       pollQueueStatus();
     }
-  }, [user, game]);
+  }, [user, game, pollQueueStatus]);
 
   return {
     ...status,

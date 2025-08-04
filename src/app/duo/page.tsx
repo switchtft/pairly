@@ -2,10 +2,9 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Clock, User, Play, Users, Crown, Shield, Star, MessageCircle } from 'lucide-react';
-import { calculateBundleDiscount, formatCurrency, getRankColor } from '@/lib/utils';
+import { Clock, Users, Crown, Shield, Star } from 'lucide-react';
+import { calculateBundleDiscount, formatCurrency } from '@/lib/utils';
 import { useRealTimeQueue } from '@/hooks/useRealTimeQueue';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatInterface from '@/components/ChatInterface';

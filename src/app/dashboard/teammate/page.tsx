@@ -113,7 +113,7 @@ export default function TeammateDashboard() {
       
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, fetchData]);
 
   if (!user?.isPro) {
     return (
