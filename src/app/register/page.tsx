@@ -98,7 +98,7 @@ export default function RegisterPage() {
             Pairly
           </Link>
           <h2 className="text-3xl font-bold text-white mb-2">Join the community</h2>
-          <p className="text-gray-400">Create your gaming account and find your perfect teammates</p>
+          <p className="text-[#e6915b]">Create your gaming account and find your perfect teammates</p>
         </div>
 
         {/* Progress Indicator */}
@@ -134,16 +134,16 @@ export default function RegisterPage() {
                 <div className="text-center mb-6">
                   <UserCircle className="mx-auto text-[#e6915b] mb-2" size={32} />
                   <h3 className="text-xl font-semibold text-white">Account Information</h3>
-                  <p className="text-gray-400 text-sm">Let's get you set up with the basics</p>
+                  <p className="text-[#e6915b] text-sm">Let's get you set up with the basics</p>
                 </div>
 
                 {/* Email Field */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-[#e6915b] mb-2">
                     Email Address *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]" size={20} />
                     <input
                       id="email"
                       type="email"
@@ -165,11 +165,11 @@ export default function RegisterPage() {
 
                 {/* Username Field */}
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="username" className="block text-sm font-medium text-[#e6915b] mb-2">
                     Username *
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]" size={20} />
                     <input
                       id="username"
                       type="text"
@@ -192,7 +192,7 @@ export default function RegisterPage() {
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="firstName" className="block text-sm font-medium text-[#e6915b] mb-2">
                       First Name
                     </label>
                     <input
@@ -206,7 +206,7 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="lastName" className="block text-sm font-medium text-[#e6915b] mb-2">
                       Last Name
                     </label>
                     <input
@@ -223,11 +223,11 @@ export default function RegisterPage() {
 
                 {/* Password Field */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-[#e6915b] mb-2">
                     Password *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]" size={20} />
                     <input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
@@ -244,7 +244,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#e6915b] hover:text-white transition-colors"
                       disabled={isSubmitting}
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -257,11 +257,11 @@ export default function RegisterPage() {
 
                 {/* Confirm Password Field */}
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#e6915b] mb-2">
                     Confirm Password *
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]" size={20} />
                     <input
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -278,7 +278,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#e6915b] hover:text-white transition-colors"
                       disabled={isSubmitting}
                     >
                       {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -307,12 +307,12 @@ export default function RegisterPage() {
                 <div className="text-center mb-6">
                   <Crown className="mx-auto text-[#e6915b] mb-2" size={32} />
                   <h3 className="text-xl font-semibold text-white">Gaming Profile</h3>
-                  <p className="text-gray-400 text-sm">Tell us about your gaming preferences</p>
+                  <p className="text-[#e6915b] text-sm">Tell us about your gaming preferences</p>
                 </div>
 
                 {/* Game Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[#e6915b] mb-2">
                     Primary Game
                   </label>
                   <div className="grid grid-cols-1 gap-3">
@@ -391,7 +391,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-[#2a2a2a]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-[#1a1a1a] text-gray-400">Already have an account?</span>
+              <span className="px-2 bg-[#1a1a1a] text-[#e6915b]">Already have an account?</span>
             </div>
           </div>
 

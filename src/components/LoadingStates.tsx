@@ -64,7 +64,7 @@ export function PageLoading({ message = "Loading..." }: { message?: string }) {
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center">
       <LoadingSpinner size={48} className="mb-4" />
-      <p className="text-gray-400 text-lg">{message}</p>
+              <p className="text-[#e6915b] text-lg">{message}</p>
     </div>
   );
 }
@@ -87,7 +87,7 @@ export function ErrorState({
         <AlertCircle className="h-8 w-8 text-red-400" />
       </div>
       <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>
-      <p className="text-gray-400 mb-6 max-w-md mx-auto">{message}</p>
+      <p className="text-[#e6915b] mb-6 max-w-md mx-auto">{message}</p>
       {showRetry && onRetry && (
         <Button 
           onClick={onRetry}
@@ -120,10 +120,10 @@ export function EmptyState({
   return (
     <div className="text-center py-20 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]">
       <div className="bg-gray-800 w-24 h-24 rounded-full mx-auto flex items-center justify-center mb-6">
-        <Icon className="h-12 w-12 text-gray-400" size={48} />
+        <Icon className="h-12 w-12 text-[#e6915b]" size={48} />
       </div>
       <h3 className="text-2xl font-bold mb-2 text-white">{title}</h3>
-      <p className="text-gray-400 mb-6 max-w-md mx-auto">{message}</p>
+      <p className="text-[#e6915b] mb-6 max-w-md mx-auto">{message}</p>
       {showAction && actionLabel && onAction && (
         <Button 
           onClick={onAction}

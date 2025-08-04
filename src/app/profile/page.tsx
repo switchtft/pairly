@@ -18,7 +18,6 @@ import {
   X,
   MapPin,
   MessageCircle,
-  Steam,
   Crown,
   Shield,
   Clock
@@ -259,15 +258,15 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-white">{getDisplayName()}</h1>
                   {extendedUser.verified && (
-                    <Shield className="text-blue-400" size={24} />
+                    <Shield className="text-[#e6915b]" size={24} />
                   )}
                   {extendedUser.isPro && (
                     <Crown className="text-yellow-400" size={24} />
                   )}
                 </div>
-                <p className="text-gray-400 mb-2">@{extendedUser.username}</p>
+                <p className="text-[#e6915b] mb-2">@{extendedUser.username}</p>
                 {extendedUser.bio && (
-                  <p className="text-gray-300 max-w-2xl">{extendedUser.bio}</p>
+                  <p className="text-[#e6915b]/80 max-w-2xl">{extendedUser.bio}</p>
                 )}
               </div>
               
@@ -297,7 +296,7 @@ export default function ProfilePage() {
               <div className="bg-[#2a2a2a] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="text-yellow-400" size={20} />
-                  <span className="text-gray-400 text-sm">Rating</span>
+                  <span className="text-[#e6915b] text-sm">Rating</span>
                 </div>
                 <p className="text-2xl font-bold text-white">
                   {extendedUser.stats.averageRating.toFixed(1)}
@@ -307,7 +306,7 @@ export default function ProfilePage() {
               <div className="bg-[#2a2a2a] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Trophy className="text-[#e6915b]" size={20} />
-                  <span className="text-gray-400 text-sm">Sessions</span>
+                  <span className="text-[#e6915b] text-sm">Sessions</span>
                 </div>
                 <p className="text-2xl font-bold text-white">{extendedUser.stats.totalSessions}</p>
               </div>
@@ -315,7 +314,7 @@ export default function ProfilePage() {
               <div className="bg-[#2a2a2a] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="text-[#6b8ab0]" size={20} />
-                  <span className="text-gray-400 text-sm">Reviews</span>
+                  <span className="text-[#e6915b] text-sm">Reviews</span>
                 </div>
                 <p className="text-2xl font-bold text-white">{extendedUser.stats.totalReviews}</p>
               </div>
@@ -323,7 +322,7 @@ export default function ProfilePage() {
               <div className="bg-[#2a2a2a] rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="text-green-400" size={20} />
-                  <span className="text-gray-400 text-sm">Joined</span>
+                  <span className="text-[#e6915b] text-sm">Joined</span>
                 </div>
                 <p className="text-lg font-bold text-white">{formatJoinDate(extendedUser.createdAt)}</p>
               </div>
@@ -345,7 +344,7 @@ export default function ProfilePage() {
                   onClick={() => setIsEditing(false)}
                   variant="outline"
                   size="sm"
-                  className="border-gray-600 text-gray-400"
+                  className="border-[#e6915b]/30 text-[#e6915b]"
                 >
                   <X size={16} />
                 </Button>
@@ -355,16 +354,16 @@ export default function ProfilePage() {
             <div className="space-y-4">
               {/* Email (Read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                <label className="block text-sm font-medium text-[#e6915b] mb-2">Email</label>
                 <div className="flex items-center gap-2 p-3 bg-[#2a2a2a] rounded-lg">
-                  <Mail className="text-gray-400" size={16} />
-                  <span className="text-gray-300">{extendedUser.email}</span>
+                          <Mail className="text-[#e6915b]" size={16} />
+        <span className="text-[#e6915b]/80">{extendedUser.email}</span>
                 </div>
               </div>
 
               {/* First Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
+                <label className="block text-sm font-medium text-[#e6915b] mb-2">First Name</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -374,7 +373,7 @@ export default function ProfilePage() {
                     placeholder="Enter first name"
                   />
                 ) : (
-                  <p className="text-gray-300 p-3 bg-[#2a2a2a] rounded-lg">
+                  <p className="text-[#e6915b]/80 p-3 bg-[#2a2a2a] rounded-lg">
                     {extendedUser.firstName || 'Not set'}
                   </p>
                 )}
@@ -382,7 +381,7 @@ export default function ProfilePage() {
 
               {/* Last Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
+                <label className="block text-sm font-medium text-[#e6915b] mb-2">Last Name</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -392,7 +391,7 @@ export default function ProfilePage() {
                     placeholder="Enter last name"
                   />
                 ) : (
-                  <p className="text-gray-300 p-3 bg-[#2a2a2a] rounded-lg">
+                  <p className="text-[#e6915b]/80 p-3 bg-[#2a2a2a] rounded-lg">
                     {extendedUser.lastName || 'Not set'}
                   </p>
                 )}
@@ -400,7 +399,7 @@ export default function ProfilePage() {
 
               {/* Username */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                <label className="block text-sm font-medium text-[#e6915b] mb-2">Username</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -410,13 +409,13 @@ export default function ProfilePage() {
                     placeholder="Enter username"
                   />
                 ) : (
-                  <p className="text-gray-300 p-3 bg-[#2a2a2a] rounded-lg">@{extendedUser.username}</p>
+                  <p className="text-[#e6915b]/80 p-3 bg-[#2a2a2a] rounded-lg">@{extendedUser.username}</p>
                 )}
               </div>
 
               {/* Bio */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
+                <label className="block text-sm font-medium text-[#e6915b] mb-2">Bio</label>
                 {isEditing ? (
                   <textarea
                     value={formData.bio}
@@ -426,7 +425,7 @@ export default function ProfilePage() {
                     placeholder="Tell us about yourself..."
                   />
                 ) : (
-                  <p className="text-gray-300 p-3 bg-[#2a2a2a] rounded-lg min-h-[80px]">
+                  <p className="text-[#e6915b]/80 p-3 bg-[#2a2a2a] rounded-lg min-h-[80px]">
                     {extendedUser.bio || 'No bio set'}
                   </p>
                 )}
@@ -444,7 +443,7 @@ export default function ProfilePage() {
             <div className="space-y-4">
               {/* Primary Game */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Primary Game</label>
+                <label className="block text-sm font-medium text-[#e6915b] mb-2">Primary Game</label>
                 {isEditing ? (
                   <select
                     value={formData.game}
@@ -457,7 +456,7 @@ export default function ProfilePage() {
                     ))}
                   </select>
                 ) : (
-                  <p className="text-gray-300 p-3 bg-[#2a2a2a] rounded-lg">
+                  <p className="text-[#e6915b]/80 p-3 bg-[#2a2a2a] rounded-lg">
                     {GAMES.find(g => g.id === extendedUser.game)?.name || 'Not set'}
                   </p>
                 )}
@@ -534,7 +533,7 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-gray-400 mb-2">Steam</label>
                 {isEditing ? (
                   <div className="relative">
-                    <Steam className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="text"
                       value={formData.steam}
@@ -545,7 +544,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 p-3 bg-[#2a2a2a] rounded-lg">
-                    <Steam className="text-gray-400" size={16} />
+                    <MessageCircle className="text-gray-400" size={16} />
                     <span className="text-gray-300">{extendedUser.steam || 'Not set'}</span>
                   </div>
                 )}

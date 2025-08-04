@@ -48,7 +48,7 @@ export default function LoginPage() {
             Pairly
           </Link>
           <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
-          <p className="text-gray-400">Sign in to your gaming account</p>
+          <p className="text-[#e6915b]">Sign in to your gaming account</p>
         </div>
 
         {/* Login Form */}
@@ -63,11 +63,11 @@ export default function LoginPage() {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-[#e6915b] mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]" size={20} />
                 <input
                   id="email"
                   type="email"
@@ -89,11 +89,11 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[#e6915b] mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]" size={20} />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#e6915b] hover:text-white transition-colors"
                   disabled={isSubmitting}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -154,7 +154,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-[#2a2a2a]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-[#1a1a1a] text-gray-400">Don't have an account?</span>
+              <span className="px-2 bg-[#1a1a1a] text-[#e6915b]">Don't have an account?</span>
             </div>
           </div>
 
@@ -171,7 +171,7 @@ export default function LoginPage() {
 
         {/* Demo Account Notice */}
         <div className="bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] p-4">
-          <p className="text-gray-400 text-sm text-center">
+          <p className="text-[#e6915b] text-sm text-center">
             Demo Account: Use <span className="text-[#e6915b]">demo@pairly.com</span> / <span className="text-[#e6915b]">password</span>
           </p>
         </div>

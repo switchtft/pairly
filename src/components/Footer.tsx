@@ -15,7 +15,7 @@ export default function Footer() {
                 Pairly
               </span>
             </div>
-            <p className="text-gray-400 text-sm mb-6 max-w-xs">
+            <p className="text-[#e6915b]/80 text-sm mb-6 max-w-xs">
               Connecting gamers worldwide to find teammates, coaches, and competitive tournaments.
             </p>
             <div className="flex space-x-4">
@@ -28,7 +28,7 @@ export default function Footer() {
                 <a
                   key={index}
                   href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-[#e6915b] hover:text-white transition-colors"
                   aria-label={social.label}
                 >
                   {social.icon}
@@ -44,7 +44,7 @@ export default function Footer() {
                 <li key={item}>
                   <Link 
                     href="#" 
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
+                    className="text-[#e6915b] hover:text-white text-sm transition-colors"
                   >
                     {item}
                   </Link>
@@ -60,7 +60,7 @@ export default function Footer() {
                 <li key={game}>
                   <Link 
                     href="#" 
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
+                    className="text-[#e6915b] hover:text-white text-sm transition-colors"
                   >
                     {game}
                   </Link>
@@ -71,7 +71,7 @@ export default function Footer() {
           
           <div>
             <h4 className="text-white font-semibold mb-4">Newsletter</h4>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-[#e6915b]/80 text-sm mb-4">
               Subscribe to get updates on tournaments and special offers
             </p>
             <div className="flex">
@@ -88,17 +88,17 @@ export default function Footer() {
         </div>
         
         <div className="pt-8 border-t border-[#1a1a1a] flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm mb-4 md:mb-0">
+          <p className="text-[#e6915b]/60 text-sm mb-4 md:mb-0">
             © {currentYear} Pairly Gaming. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <Link href="#" className="text-gray-500 hover:text-gray-400 text-sm">
+            <Link href="#" className="text-[#e6915b]/60 hover:text-[#e6915b] text-sm">
               Privacy Policy
             </Link>
-            <Link href="#" className="text-gray-500 hover:text-gray-400 text-sm">
+            <Link href="#" className="text-[#e6915b]/60 hover:text-[#e6915b] text-sm">
               Terms of Service
             </Link>
-            <Link href="#" className="text-gray-500 hover:text-gray-400 text-sm">
+            <Link href="#" className="text-[#e6915b]/60 hover:text-[#e6915b] text-sm">
               Cookie Policy
             </Link>
           </div>

@@ -89,7 +89,7 @@ export default function SearchAndFilter({
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         {/* Search Input */}
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b] h-5 w-5" />
           <input
             type="text"
             placeholder={placeholder}
@@ -100,7 +100,7 @@ export default function SearchAndFilter({
           {localSearchQuery && (
             <button
               onClick={() => handleSearchChange('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#e6915b] hover:text-white"
             >
               <X size={16} />
             </button>
@@ -115,7 +115,7 @@ export default function SearchAndFilter({
               hasActiveFilters ? 'ring-2 ring-[#e6915b]' : ''
             }`}
           >
-            <SlidersHorizontal className="h-5 w-5 text-gray-300" />
+            <SlidersHorizontal className="h-5 w-5 text-[#e6915b]" />
             Filters
             {activeFilterCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-[#e6915b] text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
@@ -136,7 +136,7 @@ export default function SearchAndFilter({
           
           {resultCount !== undefined && (
             <div className="flex items-center px-3 py-2 bg-[#2a2a2a] rounded-lg">
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-[#e6915b]">
                 {resultCount} result{resultCount !== 1 ? 's' : ''}
               </span>
             </div>
@@ -149,11 +149,11 @@ export default function SearchAndFilter({
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-[#2a2a2a] rounded-lg border border-[#333]">
           {/* Min Prize Filter */}
           <div>
-            <label className="block text-gray-400 text-sm mb-2 font-medium">
+            <label className="block text-[#e6915b] text-sm mb-2 font-medium">
               Min Prize Pool
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#e6915b]">$</span>
               <input
                 type="number"
                 placeholder="0"
@@ -166,7 +166,7 @@ export default function SearchAndFilter({
           
           {/* Date Filter */}
           <div>
-            <label className="block text-gray-400 text-sm mb-2 font-medium">
+            <label className="block text-[#e6915b] text-sm mb-2 font-medium">
               Starting After
             </label>
             <input
@@ -179,7 +179,7 @@ export default function SearchAndFilter({
           
           {/* Region Filter */}
           <div>
-            <label className="block text-gray-400 text-sm mb-2 font-medium">
+            <label className="block text-[#e6915b] text-sm mb-2 font-medium">
               Region
             </label>
             <select
@@ -195,7 +195,7 @@ export default function SearchAndFilter({
           
           {/* Status Filter */}
           <div>
-            <label className="block text-gray-400 text-sm mb-2 font-medium">
+            <label className="block text-[#e6915b] text-sm mb-2 font-medium">
               Status
             </label>
             <select
@@ -211,7 +211,7 @@ export default function SearchAndFilter({
           
           {/* Sort Options */}
           <div>
-            <label className="block text-gray-400 text-sm mb-2 font-medium">
+            <label className="block text-[#e6915b] text-sm mb-2 font-medium">
               Sort By
             </label>
             <div className="flex gap-2">

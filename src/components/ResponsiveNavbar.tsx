@@ -155,9 +155,9 @@ export default function ResponsiveNavbar() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <span className="text-white text-sm font-medium">{getDisplayName()}</span>
-                    {user.verified && <Shield className="text-blue-400" size={14} />}
+                    {user.verified && <Shield className="text-[#e6915b]" size={14} />}
                     {user.isPro && <Crown className="text-yellow-400" size={14} />}
-                    <ChevronDown className="text-gray-400" size={16} />
+                                          <ChevronDown className="text-[#e6915b]" size={16} />
                   </div>
                 </button>
 
@@ -166,13 +166,13 @@ export default function ResponsiveNavbar() {
                   <div className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] shadow-lg py-2">
                     <div className="px-4 py-3 border-b border-[#2a2a2a]">
                       <p className="text-white font-medium">{getDisplayName()}</p>
-                      <p className="text-gray-400 text-sm">@{user.username}</p>
-                      <p className="text-gray-500 text-xs">{user.email}</p>
+                                          <p className="text-[#e6915b] text-sm">@{user.username}</p>
+                    <p className="text-[#e6915b]/70 text-xs">{user.email}</p>
                     </div>
                     
                     <Link
                       href="/dashboard"
-                      className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
                     >
                       <Gamepad2 size={16} className="mr-3" />
                       Dashboard
@@ -180,7 +180,7 @@ export default function ResponsiveNavbar() {
                     
                     <Link
                       href="/profile"
-                      className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
                     >
                       <User size={16} className="mr-3" />
                       Profile
@@ -188,7 +188,7 @@ export default function ResponsiveNavbar() {
                     
                     <Link
                       href="/settings"
-                      className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
                     >
                       <Settings size={16} className="mr-3" />
                       Settings
@@ -233,7 +233,7 @@ export default function ResponsiveNavbar() {
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-300 hover:text-white focus:outline-none p-2 rounded-lg bg-[#1a1a1a]"
+              className="text-[#e6915b] hover:text-white focus:outline-none p-2 rounded-lg bg-[#1a1a1a]"
               aria-label={isOpen ? "Close menu" : "Open menu"}
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -252,8 +252,8 @@ export default function ResponsiveNavbar() {
                 href={link.href}
                 className={`flex items-center px-4 py-3 rounded-lg text-base font-medium ${
                   pathname === link.href
-                    ? 'bg-[#1a1a1a] text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]/50'
+                                      ? 'bg-[#1a1a1a] text-white'
+                  : 'text-[#e6915b] hover:text-white hover:bg-[#1a1a1a]/50'
                 }`}
               >
                 <span className="mr-3">{link.icon}</span>
