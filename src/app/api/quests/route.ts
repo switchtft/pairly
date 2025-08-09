@@ -16,20 +16,24 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const userType = searchParams.get('userType');
+    const userIdParam = searchParams.get('userId');
+const userType = searchParams.get('userType');
 
-    if (!userId || !userType) {
-      return NextResponse.json({ error: 'Missing userId or userType' }, { status: 400 });
-    }
+if (!userIdParam || !userType) {
+  return NextResponse.json({ error: 'Missing userId or userType' }, { status: 400 });
+}
 
-    // Get user's current quest progress
-    const userQuests = await prisma.userQuest.findMany({
-      where: { userId: parseInt(userId) },
-      include: {
-        quest: true
-      }
-    });
+const userId = Number(userIdParam);
+if (isNaN(userId)) {
+  return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
+}
+
+// Now use userId (a number) safely in Prisma queries:
+const userQuests = await prisma.userQuest.findMany({
+  where: { userId: userId },
+  include: { quest: true }
+});
+
 
     // Get all available quests
     const allQuests = await prisma.quest.findMany({
@@ -64,14 +68,14 @@ export async function GET(request: NextRequest) {
     // Get user's quest statistics
     const completedQuests = await prisma.userQuest.count({
       where: { 
-        userId: parseInt(userId)
+        userId: userId
       }
     });
 
     // Calculate total points earned from completed quests
     const completedUserQuests = await prisma.userQuest.findMany({
       where: { 
-        userId: parseInt(userId)
+        userId: userId
       },
       include: {
         quest: {
@@ -126,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     // Check if quest exists and is active
     const quest = await prisma.quest.findUnique({
-      where: { id: parseInt(questId) }
+      where: { id: questId }
     });
 
     if (!quest || !quest.isActive) {
@@ -137,7 +141,7 @@ export async function POST(request: NextRequest) {
     const existingUserQuest = await prisma.userQuest.findFirst({
       where: {
         userId: decoded.userId,
-        questId: parseInt(questId)
+        questId: questId
       }
     });
 
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
     const userQuest = await prisma.userQuest.create({
       data: {
         userId: decoded.userId,
-        questId: parseInt(questId)
+        questId: questId
       },
       include: {
         quest: true
@@ -201,7 +205,7 @@ export async function PUT(request: NextRequest) {
     const userQuest = await prisma.userQuest.findFirst({
       where: {
         userId: decoded.userId,
-        questId: parseInt(questId)
+        questId: questId
       },
       include: {
         quest: true

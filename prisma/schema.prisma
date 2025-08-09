@@ -1,395 +1,334 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  username     String   @unique
-  password     String
-  firstName    String?
-  lastName     String?
-  avatar       String?
-  rank         String?
-  role         String?
-  game         String?
-  userType     String   @default("customer") // customer, teammate, admin
-  isPro        Boolean  @default(false)
-  isAdmin      Boolean  @default(false)
-  isOnline     Boolean  @default(false)
-  lastSeen     DateTime @default(now())
-  verified     Boolean  @default(false)
-  bio          String?
-  discord      String?
-  steam        String?
-  timezone     String?
-  languages    String   @default("English")
-  hourlyRate   Float? // For teammates
-  availability String? // For teammates
-
-  // New fields for enhanced profiles
-  accountBalance Float  @default(0.00) // For customers
-  loyaltyPoints  Int    @default(0) // For customers
-  loyaltyTier    String @default("Bronze") // Bronze, Silver, Gold, Platinum, Diamond
-  gameNicknames  Json? // Store game-specific nicknames as JSON
-
-  // Additional profile fields
-  phone       String?
-  country     String?
-  preferences Json? // Store user preferences as JSON
-
-  // Add missing fields for server compatibility
-  autoAccept              Boolean? @default(false) // teammate auto-accept toggle
-  notificationPreferences Json? // notification settings
-  leaderboardPoints       Int      @default(0) // leaderboard points
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  sessions             Session[]           @relation("ClientSessions")
-  proSessions          Session[]           @relation("ProTeammateSessions")
-  queueEntries         QueueEntry[]
-  payments             Payment[]
-  chatMessages         ChatMessage[]
-  chatFiles            ChatFile[]
-  messageReactions     MessageReaction[]
-  reviewsGiven         Review[]            @relation("Reviewer")
-  reviewsReceived      Review[]            @relation("Reviewed")
-  discountCodeUsages   DiscountCodeUsage[]
-  authSessions         AuthSession[]
-  createdDiscountCodes DiscountCode[]      @relation("DiscountCodeCreator")
-
-  // New relations for favorites and blocked users
-  favoriteTeammates FavoriteTeammate[] @relation("CustomerFavorites")
-  favoriteCustomers FavoriteCustomer[] @relation("TeammateFavorites")
-  blockedTeammates  BlockedTeammate[]  @relation("CustomerBlocked")
-  blockedCustomers  BlockedCustomer[]  @relation("TeammateBlocked")
-
-  // Quest and leaderboard relations
-  questCompletions   UserQuest[]
-  leaderboardEntries LeaderboardEntry[]
-
-  // Additional relations for the new models
-  favoritedByCustomers FavoriteCustomer[] @relation("CustomerFavoritedBy")
-  favoritedByTeammates FavoriteTeammate[] @relation("TeammateFavoritedBy")
-  blockedByCustomers   BlockedCustomer[]  @relation("CustomerBlockedBy")
-  blockedByTeammates   BlockedTeammate[]  @relation("TeammateBlockedBy")
-
-  // New relations for missing models
-  loyaltyTransactions LoyaltyTransaction[]
-  payoutRequests      PayoutRequest[]
-  notifications       Notification[]
-
-  // Additional relations for queue assignments
-  assignedQueueEntries QueueEntry[] @relation("AssignedTeammateOnQueue")
+  id                      String               @id @default(cuid())
+  email                   String               @unique
+  username                String               @unique
+  password                String
+  firstName               String?
+  lastName                String?
+  avatar                  String?
+  rank                    String?
+  role                    String?
+  game                    String?
+  userType                String               @default("customer")
+  isPro                   Boolean              @default(false)
+  isAdmin                 Boolean              @default(false)
+  isOnline                Boolean              @default(false)
+  lastSeen                DateTime             @default(now())
+  verified                Boolean              @default(false)
+  bio                     String?
+  discord                 String?
+  steam                   String?
+  timezone                String?
+  languages               String               @default("English")
+  hourlyRate              Float?
+  availability            String?
+  accountBalance          Float                @default(0.00)
+  loyaltyPoints           Int                  @default(0)
+  loyaltyTier             String               @default("Bronze")
+  gameNicknames           Json?
+  phone                   String?
+  country                 String?
+  preferences             Json?
+  autoAccept              Boolean?             @default(false)
+  notificationPreferences Json?
+  leaderboardPoints       Int                  @default(0)
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  authSessions            AuthSession[]
+  blockedByCustomers      BlockedCustomer[]    @relation("CustomerBlockedBy")
+  blockedCustomers        BlockedCustomer[]    @relation("TeammateBlocked")
+  blockedTeammates        BlockedTeammate[]    @relation("CustomerBlocked")
+  blockedByTeammates      BlockedTeammate[]    @relation("TeammateBlockedBy")
+  chatFiles               ChatFile[]
+  chatMessages            ChatMessage[]
+  createdDiscountCodes    DiscountCode[]       @relation("DiscountCodeCreator")
+  discountCodeUsages      DiscountCodeUsage[]
+  favoritedByCustomers    FavoriteCustomer[]   @relation("CustomerFavoritedBy")
+  favoriteCustomers       FavoriteCustomer[]   @relation("TeammateFavorites")
+  favoriteTeammates       FavoriteTeammate[]   @relation("CustomerFavorites")
+  favoritedByTeammates    FavoriteTeammate[]   @relation("TeammateFavoritedBy")
+  leaderboardEntries      LeaderboardEntry[]
+  loyaltyTransactions     LoyaltyTransaction[]
+  messageReactions        MessageReaction[]
+  notifications           Notification[]
+  payments                Payment[]
+  payoutRequests          PayoutRequest[]
+  assignedQueueEntries    QueueEntry[]         @relation("AssignedTeammateOnQueue")
+  queueEntries            QueueEntry[]
+  reviewsReceived         Review[]             @relation("Reviewed")
+  reviewsGiven            Review[]             @relation("Reviewer")
+  sessions                Session[]            @relation("ClientSessions")
+  proSessions             Session[]            @relation("ProTeammateSessions")
+  questCompletions        UserQuest[]
 }
 
 model Session {
-  id            Int       @id @default(autoincrement())
-  clientId      Int
-  proTeammateId Int?
+  id            String        @id @default(cuid())
+  clientId      String
+  proTeammateId String?
   game          String
   mode          String
-  status        String    @default("Pending") // Pending, Active, Completed, Cancelled
-  startTime     DateTime  @default(now())
+  status        String        @default("Pending")
+  startTime     DateTime      @default(now())
   endTime       DateTime?
   price         Float
-  duration      Int // in minutes
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  client       User          @relation("ClientSessions", fields: [clientId], references: [id])
-  proTeammate  User?         @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
-  chatMessages ChatMessage[]
-  chatFiles    ChatFile[]
-  reviews      Review[]
+  duration      Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  chatFiles     ChatFile[]
+  chatMessages  ChatMessage[]
+  reviews       Review[]
+  client        User          @relation("ClientSessions", fields: [clientId], references: [id])
+  proTeammate   User?         @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
 }
 
 model QueueEntry {
-  id                 Int      @id @default(autoincrement())
-  userId             Int
+  id                 String    @id @default(cuid())
+  userId             String
   game               String
   gameMode           String
   numberOfMatches    Int
   teammatesNeeded    Int
-  duration           Int // in minutes
+  duration           Int
   pricePerMatch      Float
   totalPrice         Float
-  status             String   @default("waiting") // waiting, matched, cancelled
-  paymentStatus      String   @default("pending") // pending, paid, failed
+  status             String    @default("waiting")
+  paymentStatus      String    @default("pending")
   specialRequests    String?
-  // Add missing field for server compatibility
-  assignedTeammateId Int? // new optional FK
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  // Relations
-  user             User      @relation(fields: [userId], references: [id])
-  assignedTeammate User?     @relation("AssignedTeammateOnQueue", fields: [assignedTeammateId], references: [id])
-  payments         Payment[]
+  assignedTeammateId String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  payments           Payment[]
+  assignedTeammate   User?     @relation("AssignedTeammateOnQueue", fields: [assignedTeammateId], references: [id])
+  user               User      @relation(fields: [userId], references: [id])
 }
 
 model Payment {
-  id                    Int      @id @default(autoincrement())
-  userId                Int
-  queueEntryId          Int?
+  id                    String        @id @default(cuid())
+  userId                String
+  queueEntryId          String?
   amount                Float
   originalAmount        Float
-  discountAmount        Float    @default(0)
-  method                String   @default("stripe") // stripe, manual, paypal
-  status                String   @default("pending") // pending, completed, failed, refunded
+  discountAmount        Float         @default(0)
+  method                String        @default("stripe")
+  status                String        @default("pending")
   stripePaymentIntentId String?
-  discountCodeId        Int?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  // Relations
-  user         User          @relation(fields: [userId], references: [id])
-  queueEntry   QueueEntry?   @relation(fields: [queueEntryId], references: [id])
-  discountCode DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  discountCodeId        String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  discountCode          DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  queueEntry            QueueEntry?   @relation(fields: [queueEntryId], references: [id])
+  user                  User          @relation(fields: [userId], references: [id])
 }
 
 model ChatMessage {
-  id        Int      @id @default(autoincrement())
-  sessionId Int
-  senderId  Int
+  id        String            @id @default(cuid())
+  sessionId String
+  senderId  String
   content   String
-  type      String   @default("text") // text, file, image, voice
-  createdAt DateTime @default(now())
-
-  // Relations
-  session   Session           @relation(fields: [sessionId], references: [id])
+  type      String            @default("text")
+  createdAt DateTime          @default(now())
   sender    User              @relation(fields: [senderId], references: [id])
+  session   Session           @relation(fields: [sessionId], references: [id])
   reactions MessageReaction[]
 }
 
 model ChatFile {
-  id         Int      @id @default(autoincrement())
-  sessionId  Int
-  uploadedBy Int
+  id         String   @id @default(cuid())
+  sessionId  String
+  uploadedBy String
   fileName   String
   fileUrl    String
   fileSize   Int
   fileType   String
   createdAt  DateTime @default(now())
-
-  // Relations
-  session  Session @relation(fields: [sessionId], references: [id])
-  uploader User    @relation(fields: [uploadedBy], references: [id])
+  session    Session  @relation(fields: [sessionId], references: [id])
+  uploader   User     @relation(fields: [uploadedBy], references: [id])
 }
 
 model MessageReaction {
-  id        Int      @id @default(autoincrement())
-  messageId Int
-  userId    Int
+  id        String      @id @default(cuid())
+  messageId String
+  userId    String
   emoji     String
-  createdAt DateTime @default(now())
-
-  // Relations
-  message ChatMessage @relation(fields: [messageId], references: [id])
-  user    User        @relation(fields: [userId], references: [id])
+  createdAt DateTime    @default(now())
+  message   ChatMessage @relation(fields: [messageId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
 
   @@unique([messageId, userId, emoji])
 }
 
 model Review {
-  id         Int      @id @default(autoincrement())
-  sessionId  Int
-  reviewerId Int
-  reviewedId Int
-  rating     Int // 1-5 stars
+  id         String   @id @default(cuid())
+  sessionId  String
+  reviewerId String
+  reviewedId String
+  rating     Int
   comment    String?
   createdAt  DateTime @default(now())
-
-  // Relations
-  session  Session @relation(fields: [sessionId], references: [id])
-  reviewer User    @relation("Reviewer", fields: [reviewerId], references: [id])
-  reviewed User    @relation("Reviewed", fields: [reviewedId], references: [id])
+  reviewed   User     @relation("Reviewed", fields: [reviewedId], references: [id])
+  reviewer   User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  session    Session  @relation(fields: [sessionId], references: [id])
 }
 
 model DiscountCode {
-  id              Int       @id @default(autoincrement())
-  code            String    @unique
-  discountType    String // percentage, fixed, free
+  id              String              @id @default(cuid())
+  code            String              @unique
+  discountType    String
   discountValue   Float
   maxUses         Int?
-  currentUses     Int       @default(0)
-  validFrom       DateTime  @default(now())
+  currentUses     Int                 @default(0)
+  validFrom       DateTime            @default(now())
   validUntil      DateTime?
-  isActive        Boolean   @default(true)
-  minAmount       Float     @default(0)
+  isActive        Boolean             @default(true)
+  minAmount       Float               @default(0)
   applicableGames String
-  createdBy       Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relations
-  creator  User?               @relation("DiscountCodeCreator", fields: [createdBy], references: [id])
-  payments Payment[]
-  usages   DiscountCodeUsage[]
+  createdBy       String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  creator         User?               @relation("DiscountCodeCreator", fields: [createdBy], references: [id])
+  usages          DiscountCodeUsage[]
+  payments        Payment[]
 }
 
 model DiscountCodeUsage {
-  id             Int      @id @default(autoincrement())
-  discountCodeId Int
-  userId         Int
+  id             String       @id @default(cuid())
+  discountCodeId String
+  userId         String
   orderAmount    Float
   discountAmount Float
-  usedAt         DateTime @default(now())
-
-  // Relations
-  discountCode DiscountCode @relation(fields: [discountCodeId], references: [id])
-  user         User         @relation(fields: [userId], references: [id])
+  usedAt         DateTime     @default(now())
+  discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
 }
 
 model AuthSession {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   token     String   @unique
-  userId    Int
+  userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
-// New models for enhanced features
-
 model FavoriteTeammate {
-  id         Int      @id @default(autoincrement())
-  customerId Int
-  teammateId Int
+  id         String   @id @default(cuid())
+  customerId String
+  teammateId String
   createdAt  DateTime @default(now())
-
-  // Relations
-  customer User @relation("CustomerFavorites", fields: [customerId], references: [id])
-  teammate User @relation("TeammateFavoritedBy", fields: [teammateId], references: [id])
+  customer   User     @relation("CustomerFavorites", fields: [customerId], references: [id])
+  teammate   User     @relation("TeammateFavoritedBy", fields: [teammateId], references: [id])
 
   @@unique([customerId, teammateId])
 }
 
 model FavoriteCustomer {
-  id         Int      @id @default(autoincrement())
-  teammateId Int
-  customerId Int
+  id         String   @id @default(cuid())
+  teammateId String
+  customerId String
   createdAt  DateTime @default(now())
-
-  // Relations
-  teammate User @relation("TeammateFavorites", fields: [teammateId], references: [id])
-  customer User @relation("CustomerFavoritedBy", fields: [customerId], references: [id])
+  customer   User     @relation("CustomerFavoritedBy", fields: [customerId], references: [id])
+  teammate   User     @relation("TeammateFavorites", fields: [teammateId], references: [id])
 
   @@unique([teammateId, customerId])
 }
 
 model BlockedTeammate {
-  id         Int      @id @default(autoincrement())
-  customerId Int
-  teammateId Int
+  id         String   @id @default(cuid())
+  customerId String
+  teammateId String
   reason     String?
   createdAt  DateTime @default(now())
-
-  // Relations
-  customer User @relation("CustomerBlocked", fields: [customerId], references: [id])
-  teammate User @relation("TeammateBlockedBy", fields: [teammateId], references: [id])
+  customer   User     @relation("CustomerBlocked", fields: [customerId], references: [id])
+  teammate   User     @relation("TeammateBlockedBy", fields: [teammateId], references: [id])
 
   @@unique([customerId, teammateId])
 }
 
 model BlockedCustomer {
-  id         Int      @id @default(autoincrement())
-  teammateId Int
-  customerId Int
+  id         String   @id @default(cuid())
+  teammateId String
+  customerId String
   reason     String?
   createdAt  DateTime @default(now())
-
-  // Relations
-  teammate User @relation("TeammateBlocked", fields: [teammateId], references: [id])
-  customer User @relation("CustomerBlockedBy", fields: [customerId], references: [id])
+  customer   User     @relation("CustomerBlockedBy", fields: [customerId], references: [id])
+  teammate   User     @relation("TeammateBlocked", fields: [teammateId], references: [id])
 
   @@unique([teammateId, customerId])
 }
 
 model Quest {
-  id           Int      @id @default(autoincrement())
+  id           String      @id @default(cuid())
   title        String
   description  String
   points       Int
-  requirements Json // Store requirements as JSON
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  completions UserQuest[]
+  requirements Json
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  completions  UserQuest[]
 }
 
 model UserQuest {
-  id          Int      @id @default(autoincrement())
-  questId     Int
-  userId      Int
+  id          String   @id @default(cuid())
+  questId     String
+  userId      String
   completedAt DateTime @default(now())
-
-  // Relations
-  quest Quest @relation(fields: [questId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  quest       Quest    @relation(fields: [questId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@unique([questId, userId])
 }
 
 model LeaderboardEntry {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  period    String // weekly, monthly, all-time
+  id        String   @id @default(cuid())
+  userId    String
+  period    String
   points    Int
   rank      Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, period])
 }
 
-// New models for missing functionality
-
 model LoyaltyTransaction {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  amount    Float // consider Decimal if you want strict money type
-  type      String // e.g. "CREDIT" | "DEBIT"
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+  type      String
   reason    String?
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model PayoutRequest {
-  id          Int       @id @default(autoincrement())
-  teammateId  Int
-  teammate    User      @relation(fields: [teammateId], references: [id])
-  amount      Float // consider Decimal
-  status      String    @default("PENDING") // PENDING, COMPLETED, REJECTED
+  id          String    @id @default(cuid())
+  teammateId  String
+  amount      Float
+  status      String    @default("PENDING")
   requestedAt DateTime  @default(now())
   processedAt DateTime?
   notes       String?
+  teammate    User      @relation(fields: [teammateId], references: [id])
 }
 
 model Notification {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id])
+  id        String    @id @default(cuid())
+  userId    String
   type      String
   payload   Json
   readAt    DateTime?
   createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
 }

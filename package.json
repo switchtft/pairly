@@ -8,7 +8,8 @@
     "start": "tsx server.ts",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
-    "maintenance": "node scripts/maintenance.js"
+    "maintenance": "node scripts/maintenance.js",
+    "setup-postgresql": "node scripts/setup-postgresql.js"
   },
   "dependencies": {
     "@discordjs/voice": "^0.18.0",

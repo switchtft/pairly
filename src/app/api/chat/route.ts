@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
 interface ChatMessageRequest {
-  sessionId: number;
+  sessionId: string;
   content: string;
   type?: string;
 }
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     // Verify user is part of this session
     const session = await prisma.session.findUnique({
-      where: { id: parseInt(sessionId) },
+      where: { id: sessionId },
       select: {
         clientId: true,
         proTeammateId: true,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Get chat messages
     const messages = await prisma.chatMessage.findMany({
-      where: { sessionId: parseInt(sessionId) },
+      where: { sessionId: sessionId },
       include: {
         sender: {
           select: {
