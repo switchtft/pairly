@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "prisma generate && node server.js",
+    "dev": "prisma generate && tsx server.ts",
     "build": "prisma generate && next build",
-    "start": "node server.js",
+    "start": "tsx server.ts",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
     "maintenance": "node scripts/maintenance.js"

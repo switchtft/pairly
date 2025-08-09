@@ -1,7 +1,7 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const { initSocketServer } = require('./src/lib/socket');
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
+import { initSocketServer } from './src/lib/socket';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -16,7 +16,7 @@ app.prepare().then(() => {
     try {
       // Be sure to pass `true` as the second argument to `url.parse`.
       // This tells it to parse the query portion of the URL.
-      const parsedUrl = parse(req.url, true);
+      const parsedUrl = parse(req.url!, true);
       const { pathname, query } = parsedUrl;
 
       // Handle API routes
@@ -39,4 +39,4 @@ app.prepare().then(() => {
   server.listen(port, () => {
     console.log(`> Ready on http://${hostname}:${port}`);
   });
-}); 
+});
