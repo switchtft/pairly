@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
-  user: any; // Will be properly typed later
+  user: { id: number; username: string; email: string; role: string }; // Will be properly typed later
 }
 
 export default function AdminDashboard({ user }: AdminDashboardProps) {
@@ -64,7 +64,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     }
   };
 
-  const createUser = async (userData: any) => {
+  const createUser = async (userData: { username: string; email: string; password: string; role: string; game?: string }) => {
     try {
       const response = await fetch('/api/admin/users', {
         method: 'POST',
@@ -87,7 +87,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     }
   };
 
-  const updateUser = async (userId: string, userData: any) => {
+  const updateUser = async (userId: string, userData: { username?: string; email?: string; role?: string; game?: string; isOnline?: boolean; isPro?: boolean }) => {
     try {
       const response = await fetch(`/api/admin/users`, {
         method: 'PUT',
@@ -231,7 +231,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">System Alerts</h3>
         {systemAlerts.length > 0 ? (
           <div className="space-y-3">
-            {systemAlerts.map((alert: any) => (
+            {systemAlerts.map((alert: { id: number; type: string; message: string; timestamp: string }) => (
               <div key={alert.id} className={`p-3 rounded-lg ${
                 alert.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' :
                 alert.type === 'error' ? 'bg-red-50 border border-red-200' :
@@ -264,7 +264,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Live Orders</h3>
         {liveOrders.length > 0 ? (
           <div className="space-y-4">
-            {liveOrders.map((order: any) => (
+            {liveOrders.map((order: { id: number; customerName: string; teammateName: string; gameType: string; startTime: string; price: number; status: string }) => (
               <div key={order.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -308,7 +308,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Online Teammates</h3>
         {onlineTeammates.length > 0 ? (
           <div className="space-y-4">
-            {onlineTeammates.map((teammate: any) => (
+            {onlineTeammates.map((teammate: { id: number; username: string; game: string; lastSeen: string; rating: number; isOnline: boolean }) => (
               <div key={teammate.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -356,7 +356,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         
         {recentUsers.length > 0 ? (
           <div className="space-y-4">
-            {recentUsers.map((user: any) => (
+            {recentUsers.map((user: { id: number; username: string; email: string; userType: string; createdAt: string }) => (
               <div key={user.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">

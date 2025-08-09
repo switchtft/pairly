@@ -7,14 +7,25 @@ const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = process.env.PORT || 3000;
 
+// when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     try {
+      // Be sure to pass `true` as the second argument to `url.parse`.
+      // This tells it to parse the query portion of the URL.
       const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
+      const { pathname, query } = parsedUrl;
+
+      // Handle API routes
+      if (pathname?.startsWith('/api/')) {
+        await handle(req, res, parsedUrl);
+      } else {
+        // Handle Next.js pages
+        await handle(req, res, parsedUrl);
+      }
     } catch (err) {
       console.error('Error occurred handling', req.url, err);
       res.statusCode = 500;
@@ -23,13 +34,9 @@ app.prepare().then(() => {
   });
 
   // Initialize Socket.IO server
-  const io = initSocketServer(server);
-  
-  // Make io available globally
-  global.io = io;
+  initSocketServer(server);
 
-  server.listen(port, (err) => {
-    if (err) throw err;
+  server.listen(port, () => {
     console.log(`> Ready on http://${hostname}:${port}`);
   });
 }); 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AdminProfileProps {
-  user: any; // Will be properly typed later
+  user: { id: number; username: string; email: string; firstName?: string; lastName?: string; bio?: string; discord?: string; steam?: string; timezone?: string; languages?: string }; // Will be properly typed later
 }
 
 export default function AdminProfile({ user }: AdminProfileProps) {

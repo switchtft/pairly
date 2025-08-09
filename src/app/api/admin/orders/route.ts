@@ -35,7 +35,15 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get('dateTo');
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: {
+      status?: string;
+      game?: string;
+      paymentStatus?: string;
+      createdAt?: {
+        gte?: Date;
+        lte?: Date;
+      };
+    } = {};
     
     if (status) {
       whereClause.status = status;
@@ -72,18 +80,6 @@ export async function GET(request: NextRequest) {
             avatar: true,
             email: true,
             userType: true
-          }
-        },
-        assignedTeammate: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-            game: true,
-            rank: true,
-            hourlyRate: true
           }
         }
       },
@@ -128,15 +124,6 @@ export async function GET(request: NextRequest) {
         email: order.user.email,
         userType: order.user.userType
       },
-      teammate: order.assignedTeammate ? {
-        id: order.assignedTeammate.id,
-        username: order.assignedTeammate.username,
-        name: `${order.assignedTeammate.firstName || ''} ${order.assignedTeammate.lastName || ''}`.trim() || order.assignedTeammate.username,
-        avatar: order.assignedTeammate.avatar,
-        game: order.assignedTeammate.game,
-        rank: order.assignedTeammate.rank,
-        hourlyRate: order.assignedTeammate.hourlyRate
-      } : null,
       game: order.game,
       gameMode: order.gameMode,
       status: order.status,
@@ -200,7 +187,6 @@ export async function PUT(request: NextRequest) {
     const {
       orderId,
       status,
-      assignedTeammateId,
       notes
     } = body;
 
@@ -222,21 +208,10 @@ export async function PUT(request: NextRequest) {
       where: { id: parseInt(orderId) },
       data: {
         ...(status !== undefined && { status }),
-        ...(assignedTeammateId !== undefined && { assignedTeammateId: assignedTeammateId ? parseInt(assignedTeammateId) : null }),
-        ...(notes !== undefined && { notes }),
         updatedAt: new Date()
       },
       include: {
         user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        assignedTeammate: {
           select: {
             id: true,
             username: true,
@@ -253,8 +228,6 @@ export async function PUT(request: NextRequest) {
       order: {
         id: updatedOrder.id,
         status: updatedOrder.status,
-        assignedTeammateId: updatedOrder.assignedTeammateId,
-        notes: updatedOrder.notes,
         updatedAt: updatedOrder.updatedAt
       }
     });

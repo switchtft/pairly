@@ -64,7 +64,7 @@ function FilterSection({ filters, onFilterChange }: {
     minPrice: number;
     maxPrice: number;
   };
-  onFilterChange: (key: string, value: any) => void;
+  onFilterChange: (key: string, value: string | number) => void;
 }) {
   const sortOptions = [
     { value: 'rating', label: 'Rating' },
@@ -207,7 +207,7 @@ function FilterSection({ filters, onFilterChange }: {
 }
 
 // Coach card component
-function CoachCard({ coach }: { coach: any }) {
+function CoachCard({ coach }: { coach: Coach }) {
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -414,7 +414,7 @@ export default function CoachingPage() {
 
   // Filter coaches based on selected game and filters
   const filteredCoaches = useMemo(() => {
-    let filtered = coaches.filter(coach => {
+    const filtered = coaches.filter(coach => {
       // Filter by game
       if (coach.game !== selectedGame) return false;
 
@@ -429,7 +429,7 @@ export default function CoachingPage() {
 
     // Sort coaches
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: number, bValue: number;
       
       switch (filters.sortBy) {
         case 'rating':
@@ -454,7 +454,7 @@ export default function CoachingPage() {
     return filtered;
   }, [coaches, selectedGame, filters]);
 
-  const handleFilterChange = useCallback((key: string, value: any) => {
+  const handleFilterChange = useCallback((key: string, value: string | number) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
 

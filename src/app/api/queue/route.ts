@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 import { notifyMatchFound } from '@/lib/socket';
+import type Stripe from 'stripe';
 
 // Initialize Stripe only if secret key is available
-let stripe: any = null;
+let stripe: Stripe | null = null;
 if (process.env.STRIPE_SECRET_KEY) {
-  const Stripe = require('stripe');
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  const Stripe = await import('stripe');
+  stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2024-12-18.acacia',
   });
 }
@@ -362,7 +363,12 @@ async function findMatch(queueEntry: { id: number; userId: number; game: string;
   });
 
   // If no favorited teammates available, find any available teammates
-  let availableTeammates: any[] = [];
+  let availableTeammates: Array<{
+    id: number;
+    username: string;
+    rank?: string;
+    reviewsReceived?: Array<{ rating: number }>;
+  }> = [];
   
   if (favoriteTeammates.length > 0) {
     // Use favorited teammates

@@ -1,23 +1,29 @@
 // src/app/api/auth/login/route.ts
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
+import { generateToken } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
+interface LoginRequest {
+  email: string;
+  password: string;
+}
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = loginSchema.parse(body);
+    const body: LoginRequest = await request.json();
+    const { email, password } = body;
 
-    // Find user
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
       select: {
         id: true,
         email: true,
@@ -25,25 +31,28 @@ export async function POST(request: Request) {
         password: true,
         userType: true,
         isAdmin: true,
-        game: true,
-        role: true,
-        rank: true,
         isPro: true,
-        verified: true,
-        bio: true,
-        discord: true,
-        steam: true,
-        timezone: true,
-        languages: true,
-        createdAt: true,
+        isOnline: true,
         lastSeen: true,
+        game: true,
+        rank: true,
+        hourlyRate: true,
+        bio: true,
+        avatar: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        country: true,
+        timezone: true,
+        preferences: true,
+        createdAt: true,
         updatedAt: true,
-      }
+      },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
@@ -52,72 +61,69 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Clean up any existing sessions for this user
-    await prisma.authSession.deleteMany({
-      where: { userId: user.id }
-    });
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
-      { expiresIn: '7d' }
-    );
-
-    // Create session in database
-    await prisma.authSession.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      }
-    });
-
     // Update last seen and online status
     await prisma.user.update({
       where: { id: user.id },
-      data: { 
+      data: {
         lastSeen: new Date(),
-        isOnline: true 
-      }
+        isOnline: true,
+      },
     });
 
-    // Remove password from response
-    const { password: _password, ...userWithoutPassword } = user;
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+    });
 
+    // Create response
     const response = NextResponse.json({
       message: 'Login successful',
-      user: userWithoutPassword,
-      token
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        userType: user.userType,
+        isAdmin: user.isAdmin,
+        isPro: user.isPro,
+        isOnline: user.isOnline,
+        lastSeen: user.lastSeen,
+        game: user.game,
+        rank: user.rank,
+        hourlyRate: user.hourlyRate,
+        bio: user.bio,
+        avatar: user.avatar,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        country: user.country,
+        timezone: user.timezone,
+        preferences: user.preferences,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     });
 
-    // Set HTTP-only cookie with better compatibility
+    // Set HTTP-only cookie
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // Changed from 'strict' for better compatibility
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
 
     return response;
-
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

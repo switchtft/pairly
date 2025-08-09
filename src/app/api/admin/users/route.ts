@@ -34,7 +34,17 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: {
+      userType?: string;
+      game?: string;
+      isOnline?: boolean;
+      OR?: Array<{
+        username?: { contains: string; mode: string };
+        firstName?: { contains: string; mode: string };
+        lastName?: { contains: string; mode: string };
+        email?: { contains: string; mode: string };
+      }>;
+    } = {};
     
     if (userType) {
       whereClause.userType = userType;
@@ -82,7 +92,8 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             sessions: true,
-            reviews: true
+            reviewsGiven: true,
+            reviewsReceived: true
           }
         }
       },
@@ -110,7 +121,7 @@ export async function GET(request: NextRequest) {
       ...user,
       name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
       sessionCount: user._count.sessions,
-      reviewCount: user._count.reviews,
+      reviewCount: user._count.reviewsGiven + user._count.reviewsReceived,
       _count: undefined
     }));
 

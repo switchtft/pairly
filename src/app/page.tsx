@@ -87,7 +87,7 @@ export default function Home() {
           />
           <TestimonialCard
             name="André M."
-            text="Finally a site that understands what I'm looking for — highly recommend."
+            text="Finally a site that understands what I&apos;m looking for — highly recommend."
           />
           <TestimonialCard
             name="Gonçalo F."
@@ -101,7 +101,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto text-center">
           <h3 className="text-3xl font-bold mb-4 text-[#e6915b]">Top Players This Week</h3>
           <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
-            See who's dominating the leaderboard this week. Compete with the best and climb your way to the top!
+            See who&apos;s dominating the leaderboard this week. Compete with the best and climb your way to the top!
           </p>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

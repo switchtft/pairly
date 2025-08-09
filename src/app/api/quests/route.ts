@@ -35,61 +35,58 @@ export async function GET(request: NextRequest) {
     const allQuests = await prisma.quest.findMany({
       where: { isActive: true },
       orderBy: [
-        { difficulty: 'asc' },
-        { points: 'desc' }
+        { points: 'desc' },
+        { createdAt: 'asc' }
       ]
     });
 
     // Map quests with user progress
     const questsWithProgress = allQuests.map(quest => {
       const userQuest = userQuests.find(uq => uq.questId === quest.id);
-      const isCompleted = userQuest?.isCompleted || false;
-      const progress = userQuest?.progress || 0;
+      const isCompleted = !!userQuest;
       const completedAt = userQuest?.completedAt;
 
       return {
         id: quest.id,
         title: quest.title,
         description: quest.description,
-        type: quest.type,
-        difficulty: quest.difficulty,
         points: quest.points,
         requirements: quest.requirements,
         isActive: quest.isActive,
-        expiresAt: quest.expiresAt,
+        createdAt: quest.createdAt,
         userProgress: {
           isCompleted,
-          progress,
-          completedAt,
-          startedAt: userQuest?.startedAt
+          completedAt
         }
       };
     });
 
     // Get user's quest statistics
-    const questStats = await prisma.$transaction([
-      prisma.userQuest.count({
-        where: { 
-          userId: parseInt(userId),
-          isCompleted: true
-        }
-      }),
-      prisma.userQuest.aggregate({
-        where: { 
-          userId: parseInt(userId),
-          isCompleted: true
-        },
-        _sum: { pointsEarned: true }
-      }),
-      prisma.userQuest.count({
-        where: { 
-          userId: parseInt(userId),
-          isCompleted: false
-        }
-      })
-    ]);
+    const completedQuests = await prisma.userQuest.count({
+      where: { 
+        userId: parseInt(userId)
+      }
+    });
 
-    const [completedQuests, totalPointsEarned, activeQuests] = questStats;
+    // Calculate total points earned from completed quests
+    const completedUserQuests = await prisma.userQuest.findMany({
+      where: { 
+        userId: parseInt(userId)
+      },
+      include: {
+        quest: {
+          select: {
+            points: true
+          }
+        }
+      }
+    });
+
+    const totalPointsEarned = completedUserQuests.reduce((sum, userQuest) => {
+      return sum + (userQuest.quest?.points || 0);
+    }, 0);
+
+    const activeQuests = 0; // UserQuest model doesn't track active/in-progress quests
 
     return NextResponse.json({
       quests: questsWithProgress,
@@ -97,7 +94,7 @@ export async function GET(request: NextRequest) {
         totalQuests: allQuests.length,
         completedQuests,
         activeQuests,
-        totalPointsEarned: totalPointsEarned._sum.pointsEarned || 0
+        totalPointsEarned: totalPointsEarned
       }
     });
 
@@ -148,14 +145,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Quest already started' }, { status: 409 });
     }
 
-    // Start the quest
+    // Start the quest by creating a UserQuest entry
     const userQuest = await prisma.userQuest.create({
       data: {
         userId: decoded.userId,
-        questId: parseInt(questId),
-        startedAt: new Date(),
-        progress: 0,
-        isCompleted: false
+        questId: parseInt(questId)
       },
       include: {
         quest: true
@@ -170,14 +164,10 @@ export async function POST(request: NextRequest) {
           id: userQuest.quest.id,
           title: userQuest.quest.title,
           description: userQuest.quest.description,
-          type: userQuest.quest.type,
-          difficulty: userQuest.quest.difficulty,
           points: userQuest.quest.points,
           requirements: userQuest.quest.requirements
         },
-        startedAt: userQuest.startedAt,
-        progress: userQuest.progress,
-        isCompleted: userQuest.isCompleted
+        completedAt: userQuest.completedAt
       }
     });
 
@@ -222,71 +212,39 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Quest not found' }, { status: 404 });
     }
 
-    if (userQuest.isCompleted) {
-      return NextResponse.json({ error: 'Quest already completed' }, { status: 409 });
-    }
-
-    let newProgress = userQuest.progress;
-    let isCompleted = false;
-    let pointsEarned = 0;
-
-    switch (action) {
-      case 'increment':
-        newProgress = Math.min(userQuest.progress + 1, userQuest.quest.requirements);
-        break;
-      case 'set':
-        if (progress !== undefined) {
-          newProgress = Math.min(parseInt(progress), userQuest.quest.requirements);
+    // For now, we'll just mark the quest as completed
+    // since UserQuest model doesn't support progress tracking
+    if (action === 'complete') {
+      // Update quest to mark as completed
+      const updatedUserQuest = await prisma.userQuest.update({
+        where: { id: userQuest.id },
+        data: {
+          completedAt: new Date()
         }
-        break;
-      case 'complete':
-        newProgress = userQuest.quest.requirements;
-        break;
-      default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-    }
+      });
 
-    // Check if quest is completed
-    if (newProgress >= userQuest.quest.requirements) {
-      isCompleted = true;
-      pointsEarned = userQuest.quest.points;
-    }
-
-    // Update quest progress
-    const updatedUserQuest = await prisma.userQuest.update({
-      where: { id: userQuest.id },
-      data: {
-        progress: newProgress,
-        isCompleted,
-        completedAt: isCompleted ? new Date() : null,
-        pointsEarned: isCompleted ? pointsEarned : 0
-      }
-    });
-
-    // If quest completed, add points to user's leaderboard
-    if (isCompleted) {
+      // Add points to user's leaderboard
       await prisma.user.update({
         where: { id: decoded.userId },
         data: {
           leaderboardPoints: {
-            increment: pointsEarned
+            increment: userQuest.quest.points
           }
         }
       });
-    }
 
-    return NextResponse.json({
-      message: isCompleted ? 'Quest completed!' : 'Quest progress updated',
-      userQuest: {
-        id: updatedUserQuest.id,
-        progress: updatedUserQuest.progress,
-        isCompleted: updatedUserQuest.isCompleted,
-        completedAt: updatedUserQuest.completedAt,
-        pointsEarned: updatedUserQuest.pointsEarned
-      },
-      questCompleted: isCompleted,
-      pointsEarned
-    });
+      return NextResponse.json({
+        message: 'Quest completed!',
+        userQuest: {
+          id: updatedUserQuest.id,
+          completedAt: updatedUserQuest.completedAt
+        },
+        questCompleted: true,
+        pointsEarned: userQuest.quest.points
+      });
+    } else {
+      return NextResponse.json({ error: 'Only complete action is supported' }, { status: 400 });
+    }
 
   } catch (error) {
     console.error('Quest progress update error:', error);

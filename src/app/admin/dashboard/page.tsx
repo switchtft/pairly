@@ -4,22 +4,26 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 
+interface User {
+  id: number;
+  email: string;
+  username: string;
+  userType: string;
+  isAdmin: boolean;
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
         const userData = await response.json();
-        if (userData.userType === 'admin') {
-          setUser(userData);
+        if (userData.user.userType === 'admin') {
+          setUser(userData.user);
         } else {
           router.push('/dashboard');
         }
@@ -33,6 +37,10 @@ export default function AdminDashboardPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   if (loading) {
     return (

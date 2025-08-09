@@ -109,7 +109,7 @@ function BookingForm({ game, onBookingComplete }: {
 }) {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
-  const [selectedGameMode, setSelectedGameMode] = useState<any>(null);
+  const [selectedGameMode, setSelectedGameMode] = useState<{ id: string; name: string; description: string; basePrice: number } | null>(null);
   const [numberOfMatches, setNumberOfMatches] = useState(1);
   const [teammatesNeeded, setTeammatesNeeded] = useState(1);
   const [specialRequests, setSpecialRequests] = useState('');
@@ -122,7 +122,7 @@ function BookingForm({ game, onBookingComplete }: {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const GAME_MODES: Record<string, any[]> = {
+  const GAME_MODES: Record<string, Array<{ id: string; name: string; description: string; basePrice: number }>> = {
     valorant: [
       { id: 'unrated', name: 'Unrated', description: 'Casual matches for practice', basePrice: 15 },
       { id: 'ranked', name: 'Ranked', description: 'Competitive ranked matches', basePrice: 20 },

@@ -2,52 +2,49 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
-// GET - Get customer's match history
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value;
+    
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'No token provided' },
+        { status: 401 }
+      );
     }
 
     const decoded = verifyToken(token);
     if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    // Verify user is a customer
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { 
-        id: true, 
-        userType: true
-      }
-    });
-
-    if (!user || user.userType !== 'customer') {
-      return NextResponse.json({ error: 'Not authorized as customer' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '10');
     const game = searchParams.get('game');
     const status = searchParams.get('status');
 
     // Build where clause
-    const whereClause: any = {
-      clientId: decoded.userId
+    const whereClause: {
+      clientId: number;
+      game?: string;
+      status?: string;
+    } = {
+      clientId: decoded.userId,
     };
-
+    
     if (game) {
       whereClause.game = game;
     }
-
+    
     if (status) {
       whereClause.status = status;
     }
 
-    // Get sessions with pagination
+    // Get match history with pagination
     const sessions = await prisma.session.findMany({
       where: whereClause,
       include: {
@@ -55,81 +52,57 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
             avatar: true,
             game: true,
-            rank: true
-          }
-        }
+            rank: true,
+            hourlyRate: true,
+          },
+        },
       },
       orderBy: { startTime: 'desc' },
       skip: (page - 1) * limit,
-      take: limit
+      take: limit,
     });
 
     // Get total count for pagination
     const totalSessions = await prisma.session.count({
-      where: whereClause
+      where: whereClause,
     });
 
-    // Get session statistics
-    const stats = await prisma.$transaction([
-      prisma.session.count({
-        where: { clientId: decoded.userId, status: 'Completed' }
-      }),
-      prisma.session.count({
-        where: { clientId: decoded.userId, status: 'Cancelled' }
-      }),
-      prisma.payment.aggregate({
-        where: { 
-          userId: decoded.userId, 
-          status: 'completed',
-          method: { not: 'payout' }
-        },
-        _sum: { amount: true }
-      })
-    ]);
-
-    const [completedSessions, cancelledSessions, totalSpent] = stats;
-
-    const matchHistory = sessions.map(session => ({
+    // Format sessions
+    const formattedSessions = sessions.map(session => ({
       id: session.id,
       game: session.game,
       mode: session.mode,
       status: session.status,
       startTime: session.startTime,
       endTime: session.endTime,
-      duration: session.duration,
       price: session.price,
+      duration: session.duration,
       teammate: session.proTeammate ? {
         id: session.proTeammate.id,
         username: session.proTeammate.username,
-        name: `${session.proTeammate.firstName || ''} ${session.proTeammate.lastName || ''}`.trim() || session.proTeammate.username,
         avatar: session.proTeammate.avatar,
         game: session.proTeammate.game,
-        rank: session.proTeammate.rank
-      } : null
+        rank: session.proTeammate.rank,
+        hourlyRate: session.proTeammate.hourlyRate,
+      } : null,
     }));
 
     return NextResponse.json({
-      matchHistory,
+      sessions: formattedSessions,
       pagination: {
         page,
         limit,
         total: totalSessions,
-        totalPages: Math.ceil(totalSessions / limit)
+        totalPages: Math.ceil(totalSessions / limit),
       },
-      stats: {
-        totalSessions: totalSessions,
-        completedSessions,
-        cancelledSessions,
-        totalSpent: totalSpent._sum.amount || 0
-      }
     });
-
   } catch (error) {
-    console.error('Match history GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Match history error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

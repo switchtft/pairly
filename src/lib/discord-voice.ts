@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, ChannelType, VoiceChannel, Guild } from 'discord.js';
+import { Client, GatewayIntentBits, ChannelType, VoiceChannel, Guild, VoiceState } from 'discord.js';
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice';
 
 interface VoiceSession {
@@ -155,7 +155,7 @@ class DiscordVoiceService {
     }
   }
 
-  private async handleVoiceStateUpdate(oldState: any, newState: any) {
+  private async handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
     // Handle when users join/leave voice channels
     const session = Array.from(this.voiceSessions.values()).find(
       s => s.channelId === newState.channelId || s.channelId === oldState.channelId

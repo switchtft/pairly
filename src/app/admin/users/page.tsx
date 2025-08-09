@@ -6,11 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { 
   Search, 
-  Filter, 
   Plus, 
   Edit, 
   Trash2, 
-  Eye, 
   MoreHorizontal,
   Users,
   Crown,

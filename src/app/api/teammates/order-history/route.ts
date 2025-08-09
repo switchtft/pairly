@@ -36,7 +36,11 @@ export async function GET(request: NextRequest) {
     const game = searchParams.get('game');
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: {
+      proTeammateId: number;
+      status?: string;
+      game?: string;
+    } = {
       proTeammateId: decoded.userId
     };
 

@@ -4,6 +4,21 @@ import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
+interface ProfileUpdateRequest {
+  firstName?: string;
+  lastName?: string;
+  bio?: string;
+  game?: string;
+  rank?: string;
+  hourlyRate?: number;
+  avatar?: string;
+  discord?: string;
+  steam?: string;
+  timezone?: string;
+  languages?: string;
+  availability?: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -93,48 +108,42 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const token = request.cookies.get('token')?.value;
     
     if (!token) {
-      return NextResponse.json({ error: 'No token provided' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'No token provided' },
+        { status: 401 }
+      );
     }
 
     const decoded = verifyToken(token);
     if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
     }
 
-    const body = await request.json();
-    const { firstName, lastName, bio, discord, steam, timezone, languages, hourlyRate, availability } = body;
+    const body: ProfileUpdateRequest = await request.json();
 
-    // Validate user type permissions
-    const currentUser = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { userType: true, isAdmin: true }
-    });
-
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Only teammates can set hourlyRate and availability
-    if ((hourlyRate !== undefined || availability !== undefined) && currentUser.userType !== 'teammate' && !currentUser.isAdmin) {
-      return NextResponse.json({ error: 'Only teammates can set hourly rate and availability' }, { status: 403 });
-    }
-
+    // Update user profile
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
       data: {
-        firstName,
-        lastName,
-        bio,
-        discord,
-        steam,
-        timezone,
-        languages,
-        ...(currentUser.userType === 'teammate' || currentUser.isAdmin ? { hourlyRate, availability } : {}),
-        updatedAt: new Date()
+        ...(body.firstName !== undefined && { firstName: body.firstName }),
+        ...(body.lastName !== undefined && { lastName: body.lastName }),
+        ...(body.bio !== undefined && { bio: body.bio }),
+        ...(body.game !== undefined && { game: body.game }),
+        ...(body.rank !== undefined && { rank: body.rank }),
+        ...(body.hourlyRate !== undefined && { hourlyRate: body.hourlyRate }),
+        ...(body.avatar !== undefined && { avatar: body.avatar }),
+        ...(body.discord !== undefined && { discord: body.discord }),
+        ...(body.steam !== undefined && { steam: body.steam }),
+        ...(body.timezone !== undefined && { timezone: body.timezone }),
+        ...(body.languages !== undefined && { languages: body.languages }),
+        ...(body.availability !== undefined && { availability: body.availability }),
+        updatedAt: new Date(),
       },
       select: {
         id: true,
@@ -142,31 +151,32 @@ export async function PUT(request: NextRequest) {
         username: true,
         firstName: true,
         lastName: true,
-        avatar: true,
-        rank: true,
-        role: true,
-        game: true,
-        userType: true,
-        isPro: true,
-        isAdmin: true,
-        isOnline: true,
-        lastSeen: true,
-        verified: true,
         bio: true,
+        game: true,
+        rank: true,
+        hourlyRate: true,
+        avatar: true,
         discord: true,
         steam: true,
         timezone: true,
         languages: true,
-        hourlyRate: true,
         availability: true,
-        createdAt: true,
+        userType: true,
+        isPro: true,
+        isAdmin: true,
         updatedAt: true,
-      }
+      },
     });
 
-    return NextResponse.json({ user: updatedUser });
+    return NextResponse.json({
+      message: 'Profile updated successfully',
+      user: updatedUser,
+    });
   } catch (error) {
     console.error('Profile update error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

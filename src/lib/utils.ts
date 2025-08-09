@@ -41,8 +41,7 @@ export function formatDate(dateString: string, options?: {
 }
 
 // Debounce function for search inputs
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface TeammateProfileProps {
-  user: any; // Will be properly typed later
+  user: { id: number; username: string; email: string; firstName?: string; lastName?: string; bio?: string; discord?: string; steam?: string; timezone?: string; languages?: string; hourlyRate?: number; availability?: string }; // Will be properly typed later
 }
 
 export default function TeammateProfile({ user }: TeammateProfileProps) {
@@ -27,8 +27,8 @@ export default function TeammateProfile({ user }: TeammateProfileProps) {
   });
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [favoriteCustomers, setFavoriteCustomers] = useState([]);
-  const [blockedCustomers, setBlockedCustomers] = useState([]);
+  const [favoriteCustomers, setFavoriteCustomers] = useState<Array<{ id: number; username: string; game: string; rank?: string; rating?: number }>>([]);
+  const [blockedCustomers, setBlockedCustomers] = useState<Array<{ id: number; username: string; game: string; rank?: string; rating?: number }>>([]);
 
   useEffect(() => {
     fetchTeammateData();
@@ -40,14 +40,14 @@ export default function TeammateProfile({ user }: TeammateProfileProps) {
       const favoritesResponse = await fetch(`/api/users/favorites?userId=${user.id}&userType=teammate`);
       if (favoritesResponse.ok) {
         const favoritesData = await favoritesResponse.json();
-        setFavoriteCustomers(favoritesData.favorites.map((f: any) => f.customer));
+        setFavoriteCustomers(favoritesData.favorites.map((f: { customer: { id: number; username: string; game: string; rank?: string; rating?: number } }) => f.customer));
       }
 
       // Fetch blocked customers
       const blockedResponse = await fetch(`/api/users/blocked?userId=${user.id}&userType=teammate`);
       if (blockedResponse.ok) {
         const blockedData = await blockedResponse.json();
-        setBlockedCustomers(blockedData.blockedUsers.map((b: any) => b.customer));
+        setBlockedCustomers(blockedData.blockedUsers.map((b: { customer: { id: number; username: string; game: string; rank?: string; rating?: number } }) => b.customer));
       }
     } catch (error) {
       console.error('Failed to fetch teammate data:', error);
@@ -448,7 +448,7 @@ export default function TeammateProfile({ user }: TeammateProfileProps) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Favorite Customers</h3>
               {favoriteCustomers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {favoriteCustomers.map((customer: any, index: number) => (
+                  {favoriteCustomers.map((customer: { id: number; username: string; game: string; rank?: string; rating?: number }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
@@ -480,7 +480,7 @@ export default function TeammateProfile({ user }: TeammateProfileProps) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Blocked Customers</h3>
               {blockedCustomers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {blockedCustomers.map((customer: any, index: number) => (
+                  {blockedCustomers.map((customer: { id: number; username: string; game: string; rank?: string; rating?: number }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-red-50 rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-red-200 rounded-full flex items-center justify-center">

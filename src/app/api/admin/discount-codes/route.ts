@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
-          select: { usageHistory: true }
+          select: { usages: true }
         }
       }
     });
@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       code,
-      description,
       discountType,
       discountValue,
       maxUses,
@@ -76,7 +75,7 @@ export async function POST(request: NextRequest) {
       applicableGames
     } = body;
 
-    if (!code || !description || !discountType || !discountValue) {
+    if (!code || !discountType || !discountValue) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -107,14 +106,13 @@ export async function POST(request: NextRequest) {
     const discountCode = await prisma.discountCode.create({
       data: {
         code: code.toUpperCase(),
-        description,
         discountType,
         discountValue,
         maxUses: maxUses || null,
         validUntil: validUntil ? new Date(validUntil) : null,
         createdBy: decoded.userId,
         minAmount: minAmount || 0,
-        applicableGames: applicableGames || [],
+        applicableGames: applicableGames || 'all',
       }
     });
 

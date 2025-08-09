@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface CustomerProfileProps {
-  user: any; // Will be properly typed later
+  user: { id: number; username: string; email: string; firstName?: string; lastName?: string; bio?: string; discord?: string; steam?: string; timezone?: string; languages?: string; gameNicknames?: Record<string, string>; avatar?: string; accountBalance?: number; loyaltyTier?: string; loyaltyPoints?: number }; // Will be properly typed later
 }
 
 export default function CustomerProfile({ user }: CustomerProfileProps) {
@@ -41,9 +41,9 @@ export default function CustomerProfile({ user }: CustomerProfileProps) {
   });
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [favoriteTeammates, setFavoriteTeammates] = useState([]);
-  const [blockedTeammates, setBlockedTeammates] = useState([]);
-  const [matchHistory, setMatchHistory] = useState([]);
+  const [favoriteTeammates, setFavoriteTeammates] = useState<Array<{ id: number; username: string; game: string; rank?: string; rating?: number }>>([]);
+  const [blockedTeammates, setBlockedTeammates] = useState<Array<{ id: number; username: string; game: string; rank?: string; rating?: number }>>([]);
+  const [matchHistory, setMatchHistory] = useState<Array<{ date: string; time: string; gameType: string; result: string; price: number }>>([]);
 
   useEffect(() => {
     fetchCustomerData();
@@ -65,14 +65,14 @@ export default function CustomerProfile({ user }: CustomerProfileProps) {
       const favoritesResponse = await fetch(`/api/users/favorites?userId=${user.id}&userType=customer`);
       if (favoritesResponse.ok) {
         const favoritesData = await favoritesResponse.json();
-        setFavoriteTeammates(favoritesData.favorites.map((f: any) => f.teammate));
+        setFavoriteTeammates(favoritesData.favorites.map((f: { teammate: { id: number; username: string; game: string; rank?: string; rating?: number } }) => f.teammate));
       }
 
       // Fetch blocked teammates
       const blockedResponse = await fetch(`/api/users/blocked?userId=${user.id}&userType=customer`);
       if (blockedResponse.ok) {
         const blockedData = await blockedResponse.json();
-        setBlockedTeammates(blockedData.blockedUsers.map((b: any) => b.teammate));
+        setBlockedTeammates(blockedData.blockedUsers.map((b: { teammate: { id: number; username: string; game: string; rank?: string; rating?: number } }) => b.teammate));
       }
 
       // Fetch match history
@@ -633,7 +633,7 @@ export default function CustomerProfile({ user }: CustomerProfileProps) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Match History</h3>
               {matchHistory.length > 0 ? (
                 <div className="space-y-3">
-                  {matchHistory.map((match: any, index: number) => (
+                  {matchHistory.map((match: { date: string; time: string; gameType: string; result: string; price: number }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                       <div className="flex items-center space-x-3">
                         <span className="text-sm text-gray-600">{match.date}</span>
@@ -661,7 +661,7 @@ export default function CustomerProfile({ user }: CustomerProfileProps) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Favorite Teammates</h3>
               {favoriteTeammates.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {favoriteTeammates.map((teammate: any, index: number) => (
+                  {favoriteTeammates.map((teammate: { id: number; username: string; game: string; rank?: string; rating?: number }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
@@ -693,7 +693,7 @@ export default function CustomerProfile({ user }: CustomerProfileProps) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Blocked Teammates</h3>
               {blockedTeammates.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {blockedTeammates.map((teammate: any, index: number) => (
+                  {blockedTeammates.map((teammate: { id: number; username: string; game: string; rank?: string; rating?: number }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-red-50 rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-red-200 rounded-full flex items-center justify-center">

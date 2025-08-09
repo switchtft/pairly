@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if code applies to this game
-    if (discountCode.applicableGames.length > 0 && 
-        !discountCode.applicableGames.includes(game)) {
+    if (discountCode.applicableGames !== 'all' && 
+        discountCode.applicableGames !== game) {
       return NextResponse.json({ 
         error: 'Discount code does not apply to this game' 
       }, { status: 400 });
@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
       code: discountCode.code,
       discountAmount: Math.round(discountAmount * 100) / 100, // Round to 2 decimal places
       discountType: discountCode.discountType,
-      description: discountCode.description,
     });
 
   } catch (error) {

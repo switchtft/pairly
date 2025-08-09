@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface TeammateDashboardProps {
-  user: any; // Will be properly typed later
+  user: { id: number; username: string; email: string; role: string; game?: string }; // Will be properly typed later
 }
 
 export default function TeammateDashboard({ user }: TeammateDashboardProps) {
@@ -187,7 +187,7 @@ export default function TeammateDashboard({ user }: TeammateDashboardProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Live Orders</h3>
         {liveOrders.length > 0 ? (
           <div className="space-y-4">
-            {liveOrders.map((order: any) => (
+            {liveOrders.map((order: { id: number; customerName: string; gameType: string; duration: string; price: number }) => (
               <div key={order.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -227,7 +227,7 @@ export default function TeammateDashboard({ user }: TeammateDashboardProps) {
 
       {/* Weekly Stats */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">This Week's Stats</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">This Week&apos;s Stats</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600">${weeklyStats.totalPayment}</div>
@@ -270,7 +270,7 @@ export default function TeammateDashboard({ user }: TeammateDashboardProps) {
         
         {orderHistory.length > 0 ? (
           <div className="space-y-4">
-            {orderHistory.map((order: any) => (
+            {orderHistory.map((order: { id: number; customerName: string; gameType: string; duration: string; price: number; status: string; completedAt: string }) => (
               <div key={order.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -314,7 +314,7 @@ export default function TeammateDashboard({ user }: TeammateDashboardProps) {
         
         {availableQuests.length > 0 ? (
           <div className="space-y-4">
-            {availableQuests.map((quest: any) => (
+            {availableQuests.map((quest: { id: number; title: string; description: string; points: number; progress: number; target: number; isCompleted: boolean }) => (
               <div key={quest.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900">{quest.title}</h4>

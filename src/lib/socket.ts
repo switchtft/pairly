@@ -1,113 +1,31 @@
-import { Server as NetServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import { NextApiResponse } from 'next';
-import { verifyToken } from './auth';
+import { Server as SocketIOServer, type Socket } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+import type { Server as HTTPServer } from 'http';
 
-export interface SocketServer extends NetServer {
-  io?: SocketIOServer;
-}
+// Global reference to the socket server
+let globalSocketServer: SocketIOServer | null = null;
 
-// Removed unused interface
-
-export interface ServerToClientEvents {
-  'queue:update': (data: {
-    queueLength: number;
-    estimatedWaitTime: number;
-    availableTeammates: number;
-  }) => void;
-  'match:found': (data: {
-    sessionId: number;
-    teammate: {
-      id: number;
-      username: string;
-      rank: string;
-    };
-  }) => void;
-  'teammate:online': (data: {
-    teammateId: number;
-    username: string;
-    game: string;
-  }) => void;
-  'teammate:offline': (data: {
-    teammateId: number;
-    username: string;
-  }) => void;
-  'chat:message': (data: {
-    sessionId: number;
-    message: {
-      id: number;
-      content: string;
-      senderId: number;
-      senderName: string;
-      createdAt: string;
-    };
-  }) => void;
-  'session:status': (data: {
-    sessionId: number;
-    status: string;
-  }) => void;
-}
-
-export interface ClientToServerEvents {
-  'queue:join': (data: {
-    game: string;
-    gameMode: string;
-  }) => void;
-  'queue:leave': () => void;
-  'chat:send': (data: {
-    sessionId: number;
-    content: string;
-  }) => void;
-  'session:join': (data: {
-    sessionId: number;
-  }) => void;
-  'teammate:status': (data: {
-    isOnline: boolean;
-  }) => void;
-}
-
-export interface InterServerEvents {
-  ping: () => void;
-}
-
-export interface SocketData {
-  userId: number;
-  username: string;
-  isPro: boolean;
-  game?: string;
-}
-
-export function initSocketServer(server: SocketServer) {
+function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
   if (!server.io) {
-    const io = new SocketIOServer<
-      ClientToServerEvents,
-      ServerToClientEvents,
-      InterServerEvents,
-      SocketData
-    >(server, {
+    const io = new SocketIOServer(server, {
       cors: {
         origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
         methods: ['GET', 'POST'],
-        credentials: true,
       },
-      transports: ['websocket', 'polling'],
     });
 
     // Authentication middleware
-    io.use(async (socket, next) => {
+    io.use(async (socket: Socket & { data?: { userId: number; username: string; isPro: boolean; game: string | null } }, next: (err?: Error) => void) => {
       try {
         const token = socket.handshake.auth.token;
         if (!token) {
-          return next(new Error('Authentication error'));
+          return next(new Error('Authentication token required'));
         }
 
-        const decoded = verifyToken(token);
-        if (!decoded) {
-          return next(new Error('Invalid token'));
-        }
-
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+        
         // Get user data
-        const { PrismaClient } = await import('@prisma/client');
         const prisma = new PrismaClient();
         
         const user = await prisma.user.findUnique({
@@ -137,7 +55,7 @@ export function initSocketServer(server: SocketServer) {
     });
 
     // Connection handler
-    io.on('connection', (socket) => {
+    io.on('connection', (socket: Socket & { data?: { userId: number; username: string; isPro: boolean; game: string | null } }) => {
       console.log(`User ${socket.data.username} connected`);
 
       // Update user's online status
@@ -153,7 +71,7 @@ export function initSocketServer(server: SocketServer) {
       }
 
       // Handle queue join
-      socket.on('queue:join', async (data) => {
+      socket.on('queue:join', async (data: { game: string; gameMode: string }) => {
         try {
           socket.join(`queue:${data.game}`);
           socket.join(`queue:${data.game}:${data.gameMode}`);
@@ -173,8 +91,8 @@ export function initSocketServer(server: SocketServer) {
         try {
           // Leave all queue rooms
           const rooms = Array.from(socket.rooms);
-          rooms.forEach(room => {
-            if (room.startsWith('queue:')) {
+          rooms.forEach((room: unknown) => {
+            if (typeof room === 'string' && room.startsWith('queue:')) {
               socket.leave(room);
             }
           });
@@ -188,108 +106,121 @@ export function initSocketServer(server: SocketServer) {
         }
       });
 
-      // Handle chat messages
-      socket.on('chat:send', async (data) => {
+      // Handle match acceptance
+      socket.on('match:accept', async (data: { sessionId: number; clientId: number; teammateId: number }) => {
         try {
-          const { PrismaClient } = await import('@prisma/client');
+          const { sessionId, clientId, teammateId } = data;
+          
+          // Notify the client that their match was accepted
+          io.to(`user:${clientId}`).emit('match:accepted', {
+            sessionId,
+            teammateId: socket.data.userId,
+            teammateUsername: socket.data.username,
+          });
+          
+          // Update session status
           const prisma = new PrismaClient();
-
-          // Save message to database
-          const message = await prisma.chatMessage.create({
-            data: {
-              sessionId: data.sessionId,
-              senderId: socket.data.userId,
-              content: data.content,
-            },
-            include: {
-              sender: {
-                select: {
-                  username: true,
-                },
-              },
-            },
+          await prisma.session.update({
+            where: { id: sessionId },
+            data: { status: 'Active' },
           });
-
-          // Broadcast to session room
-          io.to(`session:${data.sessionId}`).emit('chat:message', {
-            sessionId: data.sessionId,
-            message: {
-              id: message.id,
-              content: message.content,
-              senderId: message.senderId,
-              senderName: message.sender.username,
-              createdAt: message.createdAt.toISOString(),
-            },
+          
+          // Join both users to the session room
+          socket.join(`session:${sessionId}`);
+          io.sockets.sockets.forEach((clientSocket: Socket & { data?: { userId: number; username: string; isPro: boolean; game: string | null } }) => {
+            if (clientSocket.data.userId === clientId) {
+              clientSocket.join(`session:${sessionId}`);
+            }
           });
+          
         } catch (error) {
-          console.error('Error sending chat message:', error);
+          console.error('Error accepting match:', error);
         }
       });
 
-      // Handle session join
-      socket.on('session:join', (data) => {
-        socket.join(`session:${data.sessionId}`);
+      // Handle match rejection
+      socket.on('match:reject', async (data: { sessionId: number; clientId: number }) => {
+        try {
+          const { sessionId, clientId } = data;
+          
+          // Notify the client that their match was rejected
+          io.to(`user:${clientId}`).emit('match:rejected', {
+            sessionId,
+            reason: 'Teammate rejected the match',
+          });
+          
+          // Update session status
+          const prisma = new PrismaClient();
+          await prisma.session.update({
+            where: { id: sessionId },
+            data: { status: 'Cancelled' },
+          });
+          
+        } catch (error) {
+          console.error('Error rejecting match:', error);
+        }
       });
 
-      // Handle teammate status updates
-      socket.on('teammate:status', async (data) => {
+      // Handle session messages
+      socket.on('session:message', async (data: { sessionId: number; message: string; type?: string }) => {
         try {
-          const { PrismaClient } = await import('@prisma/client');
-          const prisma = new PrismaClient();
-
-          await prisma.user.update({
-            where: { id: socket.data.userId },
-            data: { isOnline: data.isOnline },
+          const { sessionId, message, type = 'text' } = data;
+          
+          // Broadcast message to session room
+          io.to(`session:${sessionId}`).emit('session:message', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+            message,
+            type,
+            timestamp: new Date().toISOString(),
           });
-
-          if (data.isOnline) {
-            io.to('teammates').emit('teammate:online', {
-              teammateId: socket.data.userId,
-              username: socket.data.username,
-              game: socket.data.game || 'unknown',
-            });
-          } else {
-            io.to('teammates').emit('teammate:offline', {
-              teammateId: socket.data.userId,
-              username: socket.data.username,
-            });
-          }
+          
+          // Store message in database
+          const prisma = new PrismaClient();
+          await prisma.chatMessage.create({
+            data: {
+              sessionId,
+              senderId: socket.data.userId,
+              content: message,
+              type,
+            },
+          });
+          
         } catch (error) {
-          console.error('Error updating teammate status:', error);
+          console.error('Error sending message:', error);
         }
       });
 
       // Handle disconnection
       socket.on('disconnect', async () => {
-        console.log(`User ${socket.data.username} disconnected`);
-        
-        // Update user's online status
-        await updateUserOnlineStatus(socket.data.userId, false);
-        
-        // Broadcast teammate offline if they're a pro
-        if (socket.data.isPro) {
-          io.to('teammates').emit('teammate:offline', {
-            teammateId: socket.data.userId,
-            username: socket.data.username,
+        try {
+          // Update user's online status
+          await updateUserOnlineStatus(socket.data.userId, false);
+          
+          // Leave all rooms
+          socket.rooms.forEach((room: unknown) => {
+            if (typeof room === 'string') {
+              socket.leave(room);
+            }
           });
+          
+          console.log(`User ${socket.data.username} disconnected`);
+        } catch (error) {
+          console.error('Error handling disconnect:', error);
         }
       });
     });
 
     server.io = io;
-    
-    // Make io available globally for other parts of the application
-    (global as any).io = io;
+    globalSocketServer = io;
   }
-
+  
   return server.io;
 }
 
 async function updateUserOnlineStatus(userId: number, isOnline: boolean) {
   try {
-    const { PrismaClient } = await import('@prisma/client');
     const prisma = new PrismaClient();
-
     await prisma.user.update({
       where: { id: userId },
       data: { 
@@ -304,42 +235,22 @@ async function updateUserOnlineStatus(userId: number, isOnline: boolean) {
 
 async function broadcastQueueUpdate(game: string) {
   try {
-    const { PrismaClient } = await import('@prisma/client');
     const prisma = new PrismaClient();
-
-    // Get queue statistics
-    const queueLength = await prisma.queueEntry.count({
-      where: {
+    
+    // Get queue count for the game
+    const queueCount = await prisma.queueEntry.count({
+      where: { 
         game,
         status: 'waiting',
-        paymentStatus: 'paid',
       },
     });
-
-    const availableTeammates = await prisma.user.count({
-      where: {
+    
+    // Broadcast to all users in the game queue
+    if (globalSocketServer) {
+      globalSocketServer.to(`queue:${game}`).emit('queue:update', {
         game,
-        isPro: true,
-        isOnline: true,
-        proSessions: {
-          none: {
-            status: {
-              in: ['Pending', 'Active'],
-            },
-          },
-        },
-      },
-    });
-
-    const estimatedWaitTime = Math.max(2, queueLength * 2); // 2 minutes per person
-
-    // Broadcast to all users in the queue for this game
-    const io = (global as any).io;
-    if (io) {
-      io.to(`queue:${game}`).emit('queue:update', {
-        queueLength,
-        estimatedWaitTime,
-        availableTeammates,
+        count: queueCount,
+        timestamp: new Date().toISOString(),
       });
     }
   } catch (error) {
@@ -347,48 +258,26 @@ async function broadcastQueueUpdate(game: string) {
   }
 }
 
-export async function notifyMatchFound(sessionId: number, clientId: number, teammateId: number) {
+async function notifyMatchFound(sessionId: number, clientId: number, teammateId: number) {
   try {
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      include: {
-        client: {
-          select: { username: true, rank: true },
-        },
-        proTeammate: {
-          select: { username: true, rank: true },
-        },
-      },
-    });
-
-    if (!session) return;
-
-    const io = (global as any).io;
-    if (io) {
-      // Notify client
-      io.to(`user:${clientId}`).emit('match:found', {
+    if (globalSocketServer) {
+      // Notify the client
+      globalSocketServer.to(`user:${clientId}`).emit('match:found', {
         sessionId,
-        teammate: {
-          id: session.proTeammateId!,
-          username: session.proTeammate!.username,
-          rank: session.proTeammate!.rank || 'Unknown',
-        },
+        teammateId,
+        timestamp: new Date().toISOString(),
       });
-
-      // Notify teammate
-      io.to(`user:${teammateId}`).emit('match:found', {
+      
+      // Notify the teammate
+      globalSocketServer.to(`user:${teammateId}`).emit('match:found', {
         sessionId,
-        teammate: {
-          id: clientId,
-          username: session.client.username,
-          rank: session.client.rank || 'Unknown',
-        },
+        clientId,
+        timestamp: new Date().toISOString(),
       });
     }
   } catch (error) {
     console.error('Error notifying match found:', error);
   }
-} 
+}
+
+export { initSocketServer, notifyMatchFound }; 

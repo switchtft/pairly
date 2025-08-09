@@ -2,108 +2,95 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
-// GET - Get leaderboard data
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'weekly';
-    const game = searchParams.get('game');
+    const game = searchParams.get('game') || 'all';
+    const timeFrame = searchParams.get('timeFrame') || 'month'; // week, month, year, all
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Validate period
-    if (!['weekly', 'monthly', 'all-time'].includes(period)) {
-      return NextResponse.json({ error: 'Invalid period' }, { status: 400 });
+    // Build where clause
+    const whereClause: {
+      game?: string;
+      createdAt?: { gte: Date };
+    } = {};
+    
+    if (game !== 'all') {
+      whereClause.game = game;
     }
 
-    // Build where clause
-    const whereClause: any = { period };
-    if (game) {
-      whereClause.user = { game };
+    // Add time frame filter
+    if (timeFrame !== 'all') {
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (timeFrame) {
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'year':
+          startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startDate = new Date(0);
+      }
+      
+      whereClause.createdAt = {
+        gte: startDate,
+      };
     }
 
     // Get leaderboard entries
-    const leaderboardEntries = await prisma.leaderboardEntry.findMany({
+    const leaderboard = await prisma.leaderboardEntry.findMany({
       where: whereClause,
       include: {
         user: {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
             avatar: true,
             game: true,
-            userType: true,
-            isPro: true
-          }
-        }
+            rank: true,
+          },
+        },
       },
-      orderBy: { points: 'desc' },
-      take: limit
+      orderBy: [
+        { points: 'desc' },
+        { createdAt: 'asc' },
+      ],
+      take: limit,
     });
 
-    // Calculate ranks
-    const leaderboard = leaderboardEntries.map((entry, index) => ({
+    // Format leaderboard data
+    const formattedLeaderboard = leaderboard.map((entry, index) => ({
       rank: index + 1,
-      userId: entry.userId,
+      userId: entry.user.id,
       username: entry.user.username,
-      firstName: entry.user.firstName,
-      lastName: entry.user.lastName,
       avatar: entry.user.avatar,
       game: entry.user.game,
-      userType: entry.user.userType,
-      isPro: entry.user.isPro,
+      userRank: entry.user.rank,
       points: entry.points,
-      period: entry.period
+      leaderboardRank: entry.rank,
+      period: entry.period,
+      lastUpdated: entry.updatedAt,
     }));
 
-    // Get current user's position if they are a teammate
-    let currentUserPosition = null;
-    if (decoded.userType === 'teammate') {
-      const userEntry = await prisma.leaderboardEntry.findFirst({
-        where: {
-          userId: decoded.userId,
-          period
-        },
-        orderBy: { points: 'desc' }
-      });
-
-      if (userEntry) {
-        // Count how many users have more points than current user
-        const higherRankedUsers = await prisma.leaderboardEntry.count({
-          where: {
-            period,
-            points: { gt: userEntry.points }
-          }
-        });
-
-        currentUserPosition = {
-          rank: higherRankedUsers + 1,
-          points: userEntry.points
-        };
-      }
-    }
-
     return NextResponse.json({
-      leaderboard,
-      period,
-      game,
-      currentUserPosition,
-      total: leaderboard.length
+      leaderboard: formattedLeaderboard,
+      filters: {
+        game,
+        timeFrame,
+        limit,
+      },
     });
-
   } catch (error) {
-    console.error('Leaderboard GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Leaderboard error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
