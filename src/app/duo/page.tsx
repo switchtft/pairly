@@ -3,11 +3,12 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, Crown, Shield, Star } from 'lucide-react';
+import { Clock, Users, Crown, Shield, Star, Plus, X, Wifi, WifiOff, DollarSign, Tag, CheckCircle, Gamepad2 } from 'lucide-react';
 import { calculateBundleDiscount, formatCurrency } from '@/lib/utils';
-import { useRealTimeQueue } from '@/hooks/useRealTimeQueue';
 import { useAuth } from '@/contexts/AuthContext';
-import ChatInterface from '@/components/ChatInterface';
+import { useSocket, useSocketEvent } from '@/hooks/useSocket';
+import EnhancedChatInterface from '@/components/EnhancedChatInterface';
+import Image from 'next/image';
 import React from 'react';
 
 // Simplified components to avoid import issues
@@ -34,7 +35,6 @@ function CardSkeleton() {
         <div className="h-3 bg-gray-600 rounded w-20"></div>
         <div className="h-3 bg-gray-600 rounded w-16"></div>
       </div>
-      <div className="h-12 bg-gray-600 rounded"></div>
     </div>
   );
 }
@@ -44,7 +44,7 @@ function EmptyState({
   title, 
   message 
 }: { 
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; // ✅ Fixed type
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   title: string; 
   message: string; 
 }) {
@@ -57,31 +57,491 @@ function EmptyState({
   );
 }
 
-// Simple game selector
+// Visual game selector with larger images
 function GameSelector({ selectedGame, onGameSelect }: {
   selectedGame: string;
   onGameSelect: (game: string) => void;
 }) {
   const games = [
-    { id: 'valorant', name: 'Valorant' },
-    { id: 'league', name: 'League of Legends' },
+    { id: 'valorant', name: 'Valorant', image: '/images/games/valorant.jpg' },
+    { id: 'league', name: 'League of Legends', image: '/images/games/league.jpg' },
+    { id: 'csgo', name: 'CS:GO 2', image: '/images/games/csgo.jpg' },
   ];
 
   return (
-    <div className="flex justify-center gap-4 mb-8">
+    <div className="flex justify-center gap-8 mb-8">
       {games.map((game) => (
         <button
           key={game.id}
           onClick={() => onGameSelect(game.id)}
-          className={`px-6 py-3 rounded-xl font-medium transition-all ${
+          className={`flex flex-col items-center gap-4 transition-all ${
             selectedGame === game.id
-              ? 'bg-[#e6915b] text-[#1a1a1a]'
-              : 'bg-[#2a2a2a] text-[#e6915b] hover:bg-[#e6915b]/20'
+              ? 'scale-105'
+              : 'hover:scale-105'
           }`}
         >
-          {game.name}
+          <div className="relative w-24 h-24 rounded-2xl overflow-hidden">
+            <Image
+              src={game.image}
+              alt={game.name}
+              fill
+              className="object-cover"
+            />
+            {selectedGame === game.id && (
+              <div className="absolute inset-0 bg-[#e6915b]/20 border-2 border-[#e6915b] rounded-2xl" />
+            )}
+          </div>
+          <span className={`font-medium text-base ${
+            selectedGame === game.id ? 'text-[#e6915b]' : 'text-gray-400'
+          }`}>
+            {game.name}
+          </span>
         </button>
       ))}
+    </div>
+  );
+}
+
+// Integrated booking form
+function BookingForm({ game, onBookingComplete }: { 
+  game: string; 
+  onBookingComplete: (queueEntryId: number) => void;
+}) {
+  const { user } = useAuth();
+  const [step, setStep] = useState(1);
+  const [selectedGameMode, setSelectedGameMode] = useState<any>(null);
+  const [numberOfMatches, setNumberOfMatches] = useState(1);
+  const [teammatesNeeded, setTeammatesNeeded] = useState(1);
+  const [specialRequests, setSpecialRequests] = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountInfo, setDiscountInfo] = useState<{
+    code: string;
+    discountAmount: number;
+    discountType: string;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const GAME_MODES: Record<string, any[]> = {
+    valorant: [
+      { id: 'unrated', name: 'Unrated', description: 'Casual matches for practice', basePrice: 15 },
+      { id: 'ranked', name: 'Ranked', description: 'Competitive ranked matches', basePrice: 20 },
+      { id: 'ltms', name: 'LTMs', description: 'Limited Time Modes', basePrice: 12 },
+      { id: 'customs', name: 'Customs', description: 'Custom game modes', basePrice: 10 },
+    ],
+    league: [
+      { id: 'ranked-solo-duo', name: 'Ranked Solo/Duo', description: 'Solo or duo queue ranked', basePrice: 18 },
+      { id: 'ranked-flex', name: 'Ranked Flex', description: 'Flex queue ranked (3-5 players)', basePrice: 16 },
+      { id: 'ltms', name: 'LTMs', description: 'Limited Time Modes', basePrice: 12 },
+      { id: 'customs', name: 'Customs', description: 'Custom game modes', basePrice: 10 },
+      { id: 'draft', name: 'Draft', description: 'Draft pick games', basePrice: 14 },
+    ],
+    csgo: [
+      { id: 'competitive', name: 'Competitive', description: '5v5 competitive matches', basePrice: 18 },
+      { id: 'casual', name: 'Casual', description: 'Casual 10v10 matches', basePrice: 12 },
+      { id: 'deathmatch', name: 'Deathmatch', description: 'Fast-paced deathmatch', basePrice: 10 },
+      { id: 'customs', name: 'Customs', description: 'Custom game modes', basePrice: 8 },
+    ],
+  };
+
+  const gameModes = GAME_MODES[game] || [];
+
+  // Calculate pricing
+  const basePrice = selectedGameMode?.basePrice || 0;
+  const totalBasePrice = basePrice * numberOfMatches;
+  const discountAmount = discountInfo?.discountAmount || 0;
+  const finalPrice = Math.max(0, totalBasePrice - discountAmount);
+
+  // Validate discount code
+  const validateDiscountCode = async (code: string) => {
+    if (!code.trim()) return;
+    
+    try {
+      const response = await fetch('/api/discount-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code: code.trim(),
+          amount: totalBasePrice,
+          game: game
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setDiscountInfo({
+          code: data.code,
+          discountAmount: data.discountAmount,
+          discountType: data.discountType,
+        });
+        setError(null);
+      } else {
+        setDiscountInfo(null);
+        setError(data.error || 'Invalid discount code');
+      }
+    } catch (error) {
+      setDiscountInfo(null);
+      setError('Failed to validate discount code');
+    }
+  };
+
+  // Handle discount code submission
+  const handleDiscountCodeSubmit = () => {
+    validateDiscountCode(discountCode);
+  };
+
+  // Create booking
+  const handleCreateBooking = async () => {
+    if (!selectedGameMode) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          game,
+          gameMode: selectedGameMode.id,
+          numberOfMatches,
+          teammatesNeeded,
+          pricePerMatch: selectedGameMode.basePrice,
+          totalPrice: finalPrice,
+          specialRequests: specialRequests.trim() || undefined,
+          discountCode: discountInfo?.code || undefined,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (data.paymentRequired) {
+          // Handle Stripe payment flow
+          alert('Payment required - Stripe integration needed');
+        } else {
+          // Payment not required, booking completed
+          onBookingComplete(data.queueEntryId);
+          // Reset form
+          setStep(1);
+          setSelectedGameMode(null);
+          setNumberOfMatches(1);
+          setTeammatesNeeded(1);
+          setSpecialRequests('');
+          setDiscountCode('');
+          setDiscountInfo(null);
+          setError(null);
+        }
+      } else {
+        if (data.error === 'Already in queue') {
+          // Try to clear existing queue entry first
+          try {
+            await fetch('/api/queue', { method: 'DELETE' });
+            // Retry the booking after clearing
+            setTimeout(() => handleCreateBooking(), 1000);
+            return;
+          } catch (clearError) {
+            setError('Failed to clear existing queue entry. Please try again.');
+          }
+        } else {
+          setError(data.error || 'Failed to create booking');
+        }
+      }
+    } catch (error) {
+      setError('Failed to create booking');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-2xl p-6 border border-[#e6915b]/20 mb-8 text-center">
+        <div className="bg-[#e6915b]/10 rounded-xl p-4 mb-4">
+          <Crown className="w-8 h-8 text-[#e6915b] mx-auto mb-2" />
+          <h3 className="text-[#e6915b] font-semibold text-lg">Book Your Gaming Session</h3>
+        </div>
+        <p className="text-[#e6915b]/60 mb-4">Please log in to book a session</p>
+        <Button className="bg-[#e6915b] hover:bg-[#e6915b]/80 text-[#1a1a1a]">
+          Login to Book
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-2xl border border-[#e6915b]/20 mb-8 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#e6915b]/10 to-[#e6915b]/5 p-6 border-b border-[#e6915b]/20">
+        <div className="flex items-center gap-3">
+          <div className="bg-[#e6915b]/20 p-2 rounded-lg">
+            <Crown className="w-6 h-6 text-[#e6915b]" />
+          </div>
+          <h3 className="text-[#e6915b] font-semibold text-xl">Book Your Gaming Session</h3>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        {/* Step 1: Game Mode Selection */}
+        {step === 1 && (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-lg font-semibold text-[#e6915b] mb-4 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5" />
+                Select Game Mode
+              </h4>
+              <div className="grid gap-3">
+                {gameModes.map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setSelectedGameMode(mode)}
+                    className={`p-4 rounded-xl border-2 transition-all text-left hover:scale-[1.02] ${
+                      selectedGameMode?.id === mode.id
+                        ? 'border-[#e6915b] bg-gradient-to-r from-[#e6915b]/10 to-[#e6915b]/5'
+                        : 'border-[#e6915b]/30 hover:border-[#e6915b]/50 bg-[#1a1a1a]/50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <h5 className="font-semibold text-[#e6915b]">{mode.name}</h5>
+                        <span className="text-[#e6915b]/60 text-sm">• {mode.description}</span>
+                      </div>
+                      <span className="text-[#e6915b]/80 font-medium bg-[#e6915b]/10 px-2 py-1 rounded">
+                        ${mode.basePrice}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setStep(2)}
+                disabled={!selectedGameMode}
+                className="bg-[#e6915b] hover:bg-[#e6915b]/80 text-[#1a1a1a] px-6"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Session Details */}
+        {step === 2 && (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-lg font-semibold text-[#e6915b] mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Session Details
+              </h4>
+              
+              {/* Number of Matches and Teammates in parallel */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Number of Matches */}
+                <div>
+                  <label className="block text-[#e6915b]/80 mb-3 font-medium">
+                    Number of Matches
+                  </label>
+                  <div className="flex items-center gap-4 bg-[#1a1a1a] rounded-lg p-4">
+                    <button
+                      onClick={() => setNumberOfMatches(Math.max(1, numberOfMatches - 1))}
+                      className="w-10 h-10 rounded-lg bg-[#e6915b]/20 text-[#e6915b] hover:bg-[#e6915b]/30 transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="text-2xl font-bold text-[#e6915b] min-w-[3rem] text-center">
+                      {numberOfMatches}
+                    </span>
+                    <button
+                      onClick={() => setNumberOfMatches(Math.min(10, numberOfMatches + 1))}
+                      className="w-10 h-10 rounded-lg bg-[#e6915b]/20 text-[#e6915b] hover:bg-[#e6915b]/30 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Teammates Needed */}
+                <div>
+                  <label className="block text-[#e6915b]/80 mb-3 font-medium">
+                    Teammates Needed
+                  </label>
+                  <div className="flex items-center gap-4 bg-[#1a1a1a] rounded-lg p-4">
+                    <button
+                      onClick={() => setTeammatesNeeded(Math.max(1, teammatesNeeded - 1))}
+                      className="w-10 h-10 rounded-lg bg-[#e6915b]/20 text-[#e6915b] hover:bg-[#e6915b]/30 transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="text-2xl font-bold text-[#e6915b] min-w-[3rem] text-center">
+                      {teammatesNeeded}
+                    </span>
+                    <button
+                      onClick={() => setTeammatesNeeded(Math.min(5, teammatesNeeded + 1))}
+                      className="w-10 h-10 rounded-lg bg-[#e6915b]/20 text-[#e6915b] hover:bg-[#e6915b]/30 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Requests */}
+              <div className="mb-6">
+                <label className="block text-[#e6915b]/80 mb-3 font-medium">
+                  Special Requests (Optional)
+                </label>
+                <textarea
+                  value={specialRequests}
+                  onChange={(e) => setSpecialRequests(e.target.value)}
+                  placeholder="Any specific requirements or preferences..."
+                  className="w-full p-3 rounded-lg bg-[#1a1a1a] border border-[#e6915b]/30 text-[#e6915b] placeholder-[#e6915b]/40 focus:border-[#e6915b] focus:outline-none transition-colors"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <Button
+                onClick={() => setStep(1)}
+                variant="outline"
+                className="border-[#e6915b]/30 text-[#e6915b] hover:bg-[#e6915b]/10 hover:border-[#e6915b]/50 bg-transparent"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={() => setStep(3)}
+                className="bg-[#e6915b] hover:bg-[#e6915b]/80 text-[#1a1a1a] px-6"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Payment */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-lg font-semibold text-[#e6915b] mb-4 flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                Payment & Discount
+              </h4>
+
+              {/* Order Summary */}
+              <div className="bg-[#1a1a1a] rounded-lg p-4 mb-6 border border-[#e6915b]/20">
+                <h5 className="font-semibold text-[#e6915b] mb-3 flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  Order Summary
+                </h5>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#e6915b]/80">Game Mode:</span>
+                    <span className="text-[#e6915b]">{selectedGameMode?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#e6915b]/80">Matches:</span>
+                    <span className="text-[#e6915b]">{numberOfMatches}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#e6915b]/80">Teammates:</span>
+                    <span className="text-[#e6915b]">{teammatesNeeded}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#e6915b]/80">Price per match:</span>
+                    <span className="text-[#e6915b]">${selectedGameMode?.basePrice}</span>
+                  </div>
+                  <div className="border-t border-[#e6915b]/20 pt-2 mt-2">
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-[#e6915b]">Subtotal:</span>
+                      <span className="text-[#e6915b]">${totalBasePrice}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Discount Code */}
+              <div className="mb-6">
+                <label className="block text-[#e6915b]/80 mb-3 font-medium">
+                  Discount Code (Optional)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    placeholder="Enter discount code..."
+                    className="flex-1 p-3 rounded-lg bg-[#1a1a1a] border border-[#e6915b]/30 text-[#e6915b] placeholder-[#e6915b]/40 focus:border-[#e6915b] focus:outline-none transition-colors"
+                  />
+                  <Button
+                    onClick={handleDiscountCodeSubmit}
+                    disabled={!discountCode.trim()}
+                    className="bg-[#e6915b] hover:bg-[#e6915b]/80 text-[#1a1a1a]"
+                  >
+                    Apply
+                  </Button>
+                </div>
+                {error && (
+                  <p className="text-red-400 text-sm mt-2">{error}</p>
+                )}
+                {discountInfo && (
+                  <div className="flex items-center gap-2 mt-2 text-green-400 bg-green-400/10 p-2 rounded">
+                    <CheckCircle size={16} />
+                    <span className="text-sm">
+                      Discount applied: -${discountInfo.discountAmount}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Final Price */}
+              <div className="bg-[#1a1a1a] rounded-lg p-4 mb-6 border border-[#e6915b]/20">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-[#e6915b]">Total:</span>
+                  <span className="text-2xl font-bold text-[#e6915b]">
+                    ${finalPrice}
+                  </span>
+                </div>
+                {discountInfo && (
+                  <p className="text-sm text-[#e6915b]/60 mt-1">
+                    You saved ${discountInfo.discountAmount}!
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <Button
+                onClick={() => setStep(2)}
+                variant="outline"
+                className="border-[#e6915b]/30 text-[#e6915b] hover:bg-[#e6915b]/10 hover:border-[#e6915b]/50 bg-transparent"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleCreateBooking}
+                disabled={isLoading}
+                className="bg-[#e6915b] hover:bg-[#e6915b]/80 text-[#1a1a1a] flex items-center gap-2 px-6"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#1a1a1a] border-t-transparent rounded-full animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <DollarSign size={16} />
+                    Pay ${finalPrice}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -111,169 +571,91 @@ interface Player {
   queuePrice: string;
   game: string;
   verified?: boolean;
+  rating: number; // Star rating out of 5
 }
 
-// Convert database user to player format
 function convertDbUserToPlayer(dbUser: DbUser): Player {
-  const winRates = ['67%', '72%', '61%', '80%', '75%', '69%', '74%'];
-  const prices = ['$12', '$15', '$18', '$20', '$16', '$14', '$22'];
-  const secondaryRoles: Record<string, string> = {
-    'Duelist': 'Initiator',
-    'Controller': 'Sentinel', 
-    'Initiator': 'Duelist',
-    'Sentinel': 'Controller',
-    'Jungle': 'Top',
-    'Top': 'Mid',
-    'Mid': 'ADC',
-    'ADC': 'Support',
-    'Support': 'Jungle'
-  };
-
-  // Fixed random generation - use player ID for consistency
-  const seed = dbUser.id;
-  const isOnline = (seed % 3) !== 0; // ~66% online
-  const inQueue = isOnline && (seed % 2) === 0; // 50% of online players in queue
-
   return {
     id: dbUser.id.toString(),
     name: dbUser.username,
     rank: dbUser.rank || 'Unranked',
-    winRate: winRates[seed % winRates.length],
+    winRate: '65%', // Mock data
     mainRole: dbUser.role || 'Flex',
-    secondaryRole: secondaryRoles[dbUser.role || ''] || 'Flex',
-    online: isOnline,
-    lastOnline: isOnline ? 'Online now' : `${(seed % 12) + 1} hours ago`,
-    personalPrice: prices[seed % prices.length],
-    inQueue,
-    queuePrice: '$10',
+    secondaryRole: 'Support',
+    online: true, // Mock data
+    lastOnline: '2 minutes ago',
+    personalPrice: '$25',
+    inQueue: false,
+    queuePrice: '$20',
     game: dbUser.game || 'valorant',
-    verified: (seed % 2) === 0
+    verified: true, // Mock data
+    rating: 4.5, // Mock rating
   };
 }
 
-// Enhanced Player Card Component
-function PlayerCard({ player, onBookNow, onJoinQueue, isLoading }: {
-  player: Player;
-  onBookNow: (id: string) => void;
-  onJoinQueue: (id: string) => void;
-  isLoading: boolean;
-}) {
-  const isHighRank = player.rank.includes('Radiant') || 
-                   player.rank.includes('Grandmaster') || 
-                   player.rank.includes('Challenger');
+function PlayerCard({ player }: { player: Player }) {
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />);
+    }
+    
+    if (hasHalfStar) {
+      stars.push(<Star key="half" className="w-4 h-4 fill-yellow-400/50 text-yellow-400" />);
+    }
+
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(<Star key={`empty-${i}`} className="w-4 h-4 text-gray-400" />);
+    }
+
+    return stars;
+  };
 
   return (
-    <div className="bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-2xl border-2 border-[#e6915b]/30 hover:border-[#e6915b]/70 transition-all duration-300 hover:-translate-y-1 shadow-md hover:shadow-lg relative">
-      <div className="p-4 sm:p-5">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="bg-[#2a2a2a] w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-[#e6915b] border-2 border-[#e6915b]/30">
-                {player.name.charAt(0).toUpperCase()}
-              </div>
-              <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1a1a1a] ${
-                player.online ? "bg-green-500" : "bg-gray-400"
-              }`} />
-            </div>
-            
-            <div>
-              <h3 className="font-bold text-lg flex items-center text-[#e6915b]">
-                {player.name}
-                {player.verified && <Shield className="ml-2 text-blue-400" size={16} />}
-                {isHighRank && <Crown className="ml-2 text-yellow-400" size={16} />}
-              </h3>
-              
-              <div className="flex items-center mt-1 text-sm">
-                <span className="font-medium text-purple-400">
-                  {player.rank}
-                </span>
-                <span className="mx-2 text-gray-600">•</span>
-                <span className="text-green-500 flex items-center">
-                  <Star className="mr-1" size={12} />
-                  {player.winRate} WR
-                </span>
-              </div>
-              
-              <div className="text-xs text-gray-500 mt-1 flex items-center">
-                <Clock size={12} className="mr-1" />
-                {player.online ? 'Online now' : `Last seen: ${player.lastOnline}`}
-              </div>
-            </div>
-          </div>
+    <div className="bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-2xl border-2 border-[#e6915b]/30 p-5 hover:border-[#e6915b]/50 transition-all">
+      {/* Player Image and Name */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-16 h-16 bg-gradient-to-br from-[#e6915b] to-[#d17a4a] rounded-full flex items-center justify-center">
+          <span className="text-[#1a1a1a] font-bold text-xl">
+            {player.name.charAt(0).toUpperCase()}
+          </span>
         </div>
-        
-        {/* Roles */}
-        <div className="mb-4 space-y-2">
-          <div className="flex items-center text-sm">
-            <span className="text-gray-400 w-20 flex-shrink-0">Main:</span>
-            <span className="font-medium text-[#e6915b] bg-[#e6915b]/10 px-2 py-1 rounded">
-              {player.mainRole}
-            </span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-[#e6915b] text-lg">{player.name}</h3>
+            {player.verified && (
+              <Shield className="w-4 h-4 text-[#e6915b]" />
+            )}
           </div>
-          <div className="flex items-center text-sm">
-            <span className="text-gray-400 w-20 flex-shrink-0">Alt:</span>
-            <span className="font-medium text-[#6b8ab0] bg-[#6b8ab0]/10 px-2 py-1 rounded">
-              {player.secondaryRole}
-            </span>
-          </div>
+          <p className="text-[#e6915b]/60 text-sm">{player.rank}</p>
         </div>
-        
-        {/* Pricing and Actions */}
-        <div className="space-y-3">
-          {/* Personal Rate */}
-          <div className="flex justify-between items-center p-3 bg-[#2a2a2a] rounded-lg">
-            <div>
-              <div className="text-sm text-gray-400">Personal Rate</div>
-              <div className="text-lg font-bold text-[#e6915b]">
-                {player.personalPrice}
-                <span className="text-sm font-normal ml-1 text-gray-500">/hr</span>
-              </div>
-            </div>
-            <Button 
-              onClick={() => onBookNow(player.id)}
-              disabled={isLoading || !player.online}
-              className="bg-[#e6915b] hover:bg-[#d18251] text-[#1a1a1a] rounded-xl px-4 py-2 disabled:opacity-50"
-            >
-              {isLoading ? <LoadingSpinner size={16} /> : 'Book Now'}
-            </Button>
-          </div>
-          
-          {/* Queue Rate */}
-          {player.inQueue && (
-            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-900/20 to-green-800/20 rounded-lg border border-green-500/30">
-              <div>
-                <div className="text-sm text-green-400 flex items-center">
-                  Queue Rate
-                  <span className="ml-2 bg-green-500 text-black text-xs px-2 py-0.5 rounded-full font-medium">
-                    SAVE {((parseFloat(player.personalPrice.replace('$', '')) - parseFloat(player.queuePrice.replace('$', ''))) / parseFloat(player.personalPrice.replace('$', '')) * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="text-lg font-bold text-green-300">
-                  {player.queuePrice}
-                  <span className="text-sm font-normal ml-1 text-gray-400">/hr</span>
-                </div>
-              </div>
-              <Button 
-                onClick={() => onJoinQueue(player.id)}
-                disabled={isLoading}
-                className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-2"
-              >
-                {isLoading ? <LoadingSpinner size={16} /> : 'Join Queue'}
-              </Button>
-            </div>
-          )}
+        <div className={`w-3 h-3 rounded-full ${player.online ? 'bg-green-500' : 'bg-gray-500'}`} />
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <p className="text-[#e6915b]/60 text-sm">Win Rate</p>
+          <p className="text-[#e6915b] font-semibold">{player.winRate}</p>
         </div>
-        
-        {/* Offline overlay */}
-        {!player.online && (
-          <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-gray-300 font-medium mb-1">Currently Offline</div>
-              <div className="text-gray-400 text-sm">Last seen: {player.lastOnline}</div>
-            </div>
-          </div>
-        )}
+        <div>
+          <p className="text-[#e6915b]/60 text-sm">Main Role</p>
+          <p className="text-[#e6915b] font-semibold">{player.mainRole}</p>
+        </div>
+      </div>
+
+      {/* Star Rating */}
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          {renderStars(player.rating)}
+        </div>
+        <span className="text-[#e6915b] text-sm font-medium">
+          {player.rating.toFixed(1)}
+        </span>
       </div>
     </div>
   );
@@ -282,32 +664,43 @@ function PlayerCard({ player, onBookNow, onJoinQueue, isLoading }: {
 export default function DuoPage() {
   const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState('valorant');
-  const [bundleSize, setBundleSize] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+  const [queueStats, setQueueStats] = useState({
+    queueLength: 0,
+    estimatedWaitTime: 0,
+    availableTeammates: 0,
+  });
 
-  // Queue system
-  const {
-    isInQueue,
-    queueLength,
-    estimatedWaitTime,
-    availableTeammates,
-    loading: queueLoading,
-    error: queueError,
-    joinQueue,
-    leaveQueue,
-    resetQueue
-  } = useRealTimeQueue({
-    game: selectedGame,
-    onMatchFound: (sessionId, teammate) => {
-      setCurrentSessionId(sessionId);
-      setShowChat(true);
-      alert(`Match found! You've been paired with ${teammate.username}`);
-    }
+  // WebSocket connection
+  const { isConnected, joinQueue: joinSocketQueue, leaveQueue: leaveSocketQueue } = useSocket();
+
+  // Real-time queue updates
+  useSocketEvent('queue:update', (data) => {
+    console.log('Queue update received:', data);
+    setQueueStats(data);
+  });
+
+  // Real-time match notifications
+  useSocketEvent('match:found', (data) => {
+    setCurrentSessionId(data.sessionId);
+    setShowChat(true);
+    alert(`🎉 Match found! You've been paired with ${data.teammate.username} (${data.teammate.rank})`);
+  });
+
+  // Real-time teammate status updates
+  useSocketEvent('teammate:online', (data) => {
+    console.log(`Teammate ${data.username} is now online for ${data.game}`);
+    // You could update the players list here to show real-time status
+  });
+
+  useSocketEvent('teammate:offline', (data) => {
+    console.log(`Teammate ${data.username} is now offline`);
+    // You could update the players list here to show real-time status
   });
 
   // Fetch players from database
@@ -320,7 +713,10 @@ export default function DuoPage() {
       if (game) params.append('game', game);
       
       const response = await fetch(`/api/users?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch players');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch players`);
+      }
       
       const dbUsers: DbUser[] = await response.json();
       const convertedPlayers = dbUsers.map(convertDbUserToPlayer);
@@ -339,6 +735,13 @@ export default function DuoPage() {
     fetchPlayers(selectedGame);
   }, [selectedGame, fetchPlayers]);
 
+  // Join WebSocket queue when game changes
+  useEffect(() => {
+    if (isConnected && user) {
+      joinSocketQueue(selectedGame, 'duo');
+    }
+  }, [isConnected, selectedGame, user, joinSocketQueue]);
+
   // Filter players by selected game
   const filteredPlayers = useMemo(() => {
     return players.filter(p => p.game === selectedGame);
@@ -349,41 +752,11 @@ export default function DuoPage() {
     return players.filter(p => p.online && p.game === selectedGame).length;
   }, [players, selectedGame]);
 
-  // Calculate pricing
-  const pricing = useMemo(() => {
-    return calculateBundleDiscount(bundleSize, 10);
-  }, [bundleSize]);
-
-  // Handle bundle size changes
-  const handleBundleSizeChange = useCallback((change: number) => {
-    setBundleSize(prev => Math.max(1, Math.min(10, prev + change)));
-  }, []);
-
-  // Handle player actions
-  const handleBookNow = useCallback(async (playerId: string) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Booked player:', playerId);
-      alert(`Booked player ${playerId}!`);
-    } catch (error) {
-      console.error('Failed to book player:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleJoinPlayerQueue = useCallback(async (playerId: string) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Joined queue with player:', playerId);
-      alert(`Joined queue with player ${playerId}!`);
-    } catch (error) {
-      console.error('Failed to join player queue:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  // Handle booking completion
+  const handleBookingComplete = useCallback((queueEntryId: number) => {
+    console.log('Booking completed, queue entry ID:', queueEntryId);
+    // The user is now in the queue, you can show queue status or redirect
+    alert('Booking completed! You are now in the queue.');
   }, []);
 
   return (
@@ -399,182 +772,100 @@ export default function DuoPage() {
           </p>
         </div>
 
-        {/* Queue Status */}
-        {user && (
-          <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#e6915b]">Queue Status</h2>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-400">
-                  {availableTeammates} teammates available
-                </span>
-                <span className="text-sm text-gray-400">
-                  {queueLength} in queue
-                </span>
-              </div>
-            </div>
-
-            {queueError && (
-              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 mb-4">
-                <p className="text-red-400 text-sm">{queueError}</p>
-              </div>
-            )}
-
-            {isInQueue ? (
-              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-400 font-medium">In Queue</p>
-                    <p className="text-green-300 text-sm">
-                      Estimated wait time: {estimatedWaitTime} minutes
-                    </p>
-                  </div>
-                  <Button
-                    onClick={leaveQueue}
-                    disabled={queueLoading}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    {queueLoading ? <LoadingSpinner size={16} /> : 'Leave Queue'}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Button
-                  onClick={() => joinQueue(60, 10, 'duo')}
-                  disabled={queueLoading || !user}
-                  className="bg-[#e6915b] hover:bg-[#d8824a] text-white"
-                >
-                  {queueLoading ? <LoadingSpinner size={16} /> : 'Join Queue (1 hour - $10)'}
-                </Button>
-                <Button
-                  onClick={() => joinQueue(120, 18, 'duo')}
-                  disabled={queueLoading || !user}
-                  className="bg-[#6b8ab0] hover:bg-[#5a79a0] text-white"
-                >
-                  {queueLoading ? <LoadingSpinner size={16} /> : 'Join Queue (2 hours - $18)'}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-        
         {/* Game Selector */}
-        <GameSelector 
-          selectedGame={selectedGame}
-          onGameSelect={setSelectedGame}
-        />
-        
-        {/* Bundle Size Selector */}
-        <div className="bg-[#1a1a1a] rounded-2xl p-6 mb-8 border-2 border-[#e6915b]/30">
-          <h3 className="text-xl font-semibold mb-4 text-center text-[#e6915b]">
-            Bundle Size
-          </h3>
-          <div className="flex items-center justify-center space-x-4">
-            <button
-              onClick={() => handleBundleSizeChange(-1)}
-              disabled={bundleSize <= 1}
-              className="w-10 h-10 rounded-full bg-[#2a2a2a] text-[#e6915b] flex items-center justify-center text-xl hover:bg-[#e6915b] hover:text-[#1a1a1a] transition-all border-2 border-[#e6915b]/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              -
-            </button>
-            
-            <div className="text-2xl font-bold bg-[#2a2a2a] px-6 py-2 rounded-xl border-2 border-[#e6915b]/30 text-[#e6915b]">
-              {bundleSize} Game{bundleSize > 1 ? 's' : ''}
-            </div>
-            
-            <button
-              onClick={() => handleBundleSizeChange(1)}
-              disabled={bundleSize >= 10}
-              className="w-10 h-10 rounded-full bg-[#2a2a2a] text-[#e6915b] flex items-center justify-center text-xl hover:bg-[#e6915b] hover:text-[#1a1a1a] transition-all border-2 border-[#e6915b]/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              +
-            </button>
-          </div>
-          
-          <div className="text-center mt-4">
-            <span className="text-[#e6915b] font-bold text-xl">
-              Total: {formatCurrency(pricing.totalPrice)}
-            </span>
-            {pricing.discountPercent > 0 && (
-              <span className="ml-2 text-green-400">
-                (Save {pricing.discountPercent}%)
-              </span>
-            )}
-          </div>
-        </div>
-        
-        {/* Available Players */}
+        <GameSelector selectedGame={selectedGame} onGameSelect={setSelectedGame} />
+
+        {/* Booking Form */}
+        <BookingForm game={selectedGame} onBookingComplete={handleBookingComplete} />
+
+        {/* Players Grid */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-[#e6915b]">Available Players</h2>
-            <div className="text-sm text-[#e6915b]/80">
-              {onlinePlayersCount} online • {filteredPlayers.filter(p => p.inQueue).length} in queue
+          <h2 className="text-2xl font-bold text-[#e6915b] mb-6 flex items-center gap-3">
+            Available Players
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-green-400 text-lg">{onlinePlayersCount} Online</span>
             </div>
-          </div>
+          </h2>
           
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-6 mb-6">
-              <div className="text-red-400 text-center">
-                <p className="mb-4">{error}</p>
-                <Button 
-                  onClick={() => fetchPlayers(selectedGame)}
-                  className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-6 py-2"
-                >
-                  Try Again
-                </Button>
-              </div>
-            </div>
-          )}
-          
-          {/* Loading State */}
-          {loadingPlayers && !error && (
+          {loadingPlayers ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
+              {[...Array(6)].map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
             </div>
-          )}
-          
-          {/* Empty State */}
-          {!loadingPlayers && !error && filteredPlayers.length === 0 && (
-            <EmptyState 
+          ) : error ? (
+            <EmptyState
+              icon={Users}
+              title="Failed to load players"
+              message={error}
+            />
+          ) : filteredPlayers.length === 0 ? (
+            <EmptyState
               icon={Users}
               title="No players available"
-              message={`No players are currently available for ${selectedGame}`}
+              message="Check back later for available players"
             />
-          )}
-          
-          {/* Players Grid */}
-          {!loadingPlayers && !error && filteredPlayers.length > 0 && (
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPlayers.map((player) => (
                 <PlayerCard
                   key={player.id}
                   player={player}
-                  onBookNow={handleBookNow}
-                  onJoinQueue={handleJoinPlayerQueue}
-                  isLoading={isLoading}
                 />
               ))}
             </div>
           )}
         </div>
+
+        {/* Queue Status */}
+        {queueStats.queueLength > 0 && (
+          <div className="bg-[#2a2a2a] rounded-xl p-6 border border-[#e6915b]/30 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-[#e6915b] font-semibold text-lg mb-2">
+                  Queue Status
+                </h3>
+                <p className="text-[#e6915b]/60">
+                  {queueStats.queueLength} people in queue • {queueStats.availableTeammates} teammates available
+                </p>
+                <p className="text-[#e6915b]/60">
+                  Estimated wait time: {queueStats.estimatedWaitTime} minutes
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-sm">Live Updates</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Chat Interface */}
+      {/* Chat Modal */}
       {showChat && currentSessionId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-2xl">
-            <ChatInterface 
-              sessionId={currentSessionId} 
-              onClose={() => {
-                setShowChat(false);
-                setCurrentSessionId(null);
-                resetQueue();
-              }}
-            />
+          <div className="bg-[#1a1a1a] rounded-2xl border-2 border-[#e6915b]/30 w-full max-w-2xl h-[600px] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-[#e6915b]/20">
+              <h3 className="text-[#e6915b] font-semibold">Chat with your teammate</h3>
+              <button
+                onClick={() => setShowChat(false)}
+                className="text-[#e6915b]/60 hover:text-[#e6915b]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 p-4">
+              <EnhancedChatInterface 
+                sessionId={currentSessionId} 
+                teammate={{
+                  id: 1, // This would come from the actual session data
+                  username: "ProTeammate",
+                  rank: "Diamond",
+                  isOnline: true
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

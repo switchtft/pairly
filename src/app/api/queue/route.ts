@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
+import { notifyMatchFound } from '@/lib/socket';
+
+// Initialize Stripe only if secret key is available
+let stripe: any = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  const Stripe = require('stripe');
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2024-12-18.acacia',
+  });
+}
 
 // GET - Get current queue status and available teammates
 export async function GET(request: NextRequest) {
@@ -19,6 +29,7 @@ export async function GET(request: NextRequest) {
     const game = searchParams.get('game') || 'valorant';
 
     // Get available teammates (pro users who are online and not in a session)
+    // Note: This is a general list - blocked/favorite logic is applied in findMatch
     const availableTeammates = await prisma.user.findMany({
       where: {
         isPro: true,
@@ -53,7 +64,8 @@ export async function GET(request: NextRequest) {
     const queueEntries = await prisma.queueEntry.findMany({
       where: {
         game: game,
-        status: 'waiting'
+        status: 'waiting',
+        paymentStatus: 'paid'
       },
       include: {
         user: {
@@ -87,7 +99,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Join the queue
+// POST - Create booking and join queue
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value;
@@ -101,9 +113,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { game, duration, price, mode = 'duo' } = body;
+    const { 
+      game, 
+      gameMode, 
+      numberOfMatches, 
+      teammatesNeeded, 
+      pricePerMatch, 
+      totalPrice, 
+      specialRequests, 
+      discountCode 
+    } = body;
 
-    if (!game || !duration || !price) {
+    if (!game || !gameMode || !numberOfMatches || !teammatesNeeded || !pricePerMatch || !totalPrice) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -116,7 +137,85 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingEntry) {
-      return NextResponse.json({ error: 'Already in queue' }, { status: 400 });
+      // Check if the existing entry is stale (older than 1 hour)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (existingEntry.createdAt < oneHourAgo) {
+        // Delete stale entry and continue
+        await prisma.queueEntry.delete({
+          where: { id: existingEntry.id }
+        });
+      } else {
+        return NextResponse.json({ error: 'Already in queue' }, { status: 400 });
+      }
+    }
+
+    // Validate discount code if provided
+    let discountAmount = 0;
+    let discountCodeRecord = null;
+    
+    if (discountCode) {
+      const discountCodeData = await prisma.discountCode.findUnique({
+        where: { code: discountCode.toUpperCase() },
+      });
+
+      if (discountCodeData && discountCodeData.isActive) {
+        if (discountCodeData.validUntil && new Date() > discountCodeData.validUntil) {
+          return NextResponse.json({ error: 'Discount code has expired' }, { status: 400 });
+        }
+
+        if (discountCodeData.maxUses && discountCodeData.currentUses >= discountCodeData.maxUses) {
+          return NextResponse.json({ error: 'Discount code usage limit reached' }, { status: 400 });
+        }
+
+        if (totalPrice < discountCodeData.minAmount) {
+          return NextResponse.json({ 
+            error: `Minimum order amount of $${discountCodeData.minAmount} required` 
+          }, { status: 400 });
+        }
+
+        if (discountCodeData.applicableGames.length > 0 && 
+            !discountCodeData.applicableGames.includes(game)) {
+          return NextResponse.json({ 
+            error: 'Discount code does not apply to this game' 
+          }, { status: 400 });
+        }
+
+        // Calculate discount amount
+        if (discountCodeData.discountType === 'percentage') {
+          discountAmount = (totalPrice * discountCodeData.discountValue) / 100;
+        } else if (discountCodeData.discountType === 'fixed') {
+          discountAmount = discountCodeData.discountValue;
+        } else if (discountCodeData.discountType === 'free') {
+          discountAmount = totalPrice; // 100% off
+        }
+
+        discountAmount = Math.min(discountAmount, totalPrice);
+        discountCodeRecord = discountCodeData;
+      }
+    }
+
+    const finalPrice = Math.max(0, totalPrice - discountAmount);
+
+    // Create Stripe payment intent if Stripe is configured
+    let paymentIntent = null;
+    if (stripe) {
+      try {
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(finalPrice * 100), // Convert to cents
+          currency: 'usd',
+          metadata: {
+            userId: decoded.userId.toString(),
+            game,
+            gameMode,
+            numberOfMatches: numberOfMatches.toString(),
+            teammatesNeeded: teammatesNeeded.toString(),
+            discountCode: discountCode || '',
+          },
+        });
+      } catch (stripeError) {
+        console.error('Stripe error:', stripeError);
+        return NextResponse.json({ error: 'Payment service unavailable' }, { status: 500 });
+      }
     }
 
     // Create queue entry
@@ -124,10 +223,15 @@ export async function POST(request: NextRequest) {
       data: {
         userId: decoded.userId,
         game,
-        duration,
-        price,
-        mode,
-        status: 'waiting'
+        gameMode,
+        numberOfMatches,
+        teammatesNeeded,
+        duration: 30, // Default 30 minutes per match
+        pricePerMatch,
+        totalPrice: finalPrice,
+        status: 'waiting',
+        paymentStatus: stripe ? 'pending' : 'paid', // If no Stripe, mark as paid
+        specialRequests,
       },
       include: {
         user: {
@@ -139,22 +243,63 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Try to find a match immediately
-    const match = await findMatch(queueEntry);
-    if (match) {
-      return NextResponse.json({ 
-        success: true, 
-        matchFound: true, 
-        sessionId: match.id,
-        teammate: match.proTeammate
+    // Create payment record
+    await prisma.payment.create({
+      data: {
+        userId: decoded.userId,
+        queueEntryId: queueEntry.id,
+        amount: finalPrice,
+        originalAmount: totalPrice,
+        discountAmount,
+        method: stripe ? 'stripe' : 'manual',
+        status: stripe ? 'pending' : 'completed',
+        stripePaymentIntentId: paymentIntent?.id,
+        discountCodeId: discountCodeRecord?.id,
+      }
+    });
+
+    // Update discount code usage if applicable
+    if (discountCodeRecord) {
+      await prisma.discountCode.update({
+        where: { id: discountCodeRecord.id },
+        data: { currentUses: { increment: 1 } }
       });
+
+      await prisma.discountCodeUsage.create({
+        data: {
+          discountCodeId: discountCodeRecord.id,
+          userId: decoded.userId,
+          orderAmount: totalPrice,
+          discountAmount,
+        }
+      });
+    }
+
+    // Try to find a match immediately if payment is not required
+    if (!stripe) {
+      const match = await findMatch(queueEntry);
+      if (match) {
+        // Notify both users via WebSocket
+        await notifyMatchFound(match.id, decoded.userId, match.proTeammateId!);
+        
+        return NextResponse.json({ 
+          success: true, 
+          matchFound: true,
+          sessionId: match.id,
+          teammate: match.proTeammate,
+          queueEntryId: queueEntry.id,
+          paymentRequired: false
+        });
+      }
     }
 
     return NextResponse.json({ 
       success: true, 
-      matchFound: false, 
-      queueEntry: queueEntry.id,
-      estimatedWaitTime: 5 // 5 minutes estimate
+      queueEntryId: queueEntry.id,
+      paymentIntentId: paymentIntent?.id,
+      clientSecret: paymentIntent?.client_secret,
+      estimatedWaitTime: 5, // 5 minutes estimate
+      paymentRequired: !!stripe // Indicate if payment is required
     });
 
   } catch (error) {
@@ -194,28 +339,79 @@ export async function DELETE(request: NextRequest) {
 
 // Helper function to find a match
 async function findMatch(queueEntry: { id: number; userId: number; game: string; mode: string; price: number; duration: number }) {
-  // Find available teammates
-  const availableTeammates = await prisma.user.findMany({
+  // First, try to find favorited teammates
+  const favoriteTeammates = await prisma.favoriteTeammate.findMany({
     where: {
-      isPro: true,
-      isOnline: true,
-      game: queueEntry.game,
-      proSessions: {
-        none: {
-          status: {
-            in: ['Pending', 'Active']
+      customerId: queueEntry.userId,
+      teammate: {
+        isPro: true,
+        isOnline: true,
+        game: queueEntry.game,
+        proSessions: {
+          none: {
+            status: {
+              in: ['Pending', 'Active']
+            }
           }
         }
       }
     },
-    take: 1
+    include: {
+      teammate: true
+    }
   });
+
+  // If no favorited teammates available, find any available teammates
+  let availableTeammates: any[] = [];
+  
+  if (favoriteTeammates.length > 0) {
+    // Use favorited teammates
+    availableTeammates = favoriteTeammates.map(ft => ft.teammate);
+  } else {
+    // Find all available teammates, excluding blocked ones
+    availableTeammates = await prisma.user.findMany({
+      where: {
+        isPro: true,
+        isOnline: true,
+        game: queueEntry.game,
+        proSessions: {
+          none: {
+            status: {
+              in: ['Pending', 'Active']
+            }
+          }
+        },
+        // Exclude teammates blocked by this customer
+        blockedByCustomers: {
+          none: {
+            customerId: queueEntry.userId
+          }
+        }
+      }
+    });
+  }
 
   if (availableTeammates.length === 0) {
     return null;
   }
 
-  const teammate = availableTeammates[0];
+  // Prioritize favorited teammates, then by rating/availability
+  const sortedTeammates = availableTeammates.sort((a, b) => {
+    // First priority: favorited teammates
+    const aIsFavorited = favoriteTeammates.some(ft => ft.teammateId === a.id);
+    const bIsFavorited = favoriteTeammates.some(ft => ft.teammateId === b.id);
+    
+    if (aIsFavorited && !bIsFavorited) return -1;
+    if (!aIsFavorited && bIsFavorited) return 1;
+    
+    // Second priority: rating (if available)
+    const aRating = a.reviewsReceived?.[0]?.rating || 0;
+    const bRating = b.reviewsReceived?.[0]?.rating || 0;
+    
+    return bRating - aRating;
+  });
+
+  const teammate = sortedTeammates[0];
 
   // Create a session
   const session = await prisma.session.create({

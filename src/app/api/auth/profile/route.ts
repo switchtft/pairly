@@ -1,39 +1,22 @@
 // src/app/api/auth/profile/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
+import { verifyToken } from '@/lib/auth';
 
-const updateProfileSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  username: z.string().min(3).max(20).optional(),
-  bio: z.string().max(500).optional(),
-  game: z.string().optional(),
-  role: z.string().optional(),
-  rank: z.string().optional(),
-  discord: z.string().optional(),
-  steam: z.string().optional(),
-  timezone: z.string().optional(),
-  languages: z.array(z.string()).optional(),
-  avatar: z.string().url().optional(),
-});
-
-// GET profile
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-
+    
     if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -44,77 +27,115 @@ export async function GET() {
         firstName: true,
         lastName: true,
         avatar: true,
-        bio: true,
-        game: true,
-        role: true,
         rank: true,
+        role: true,
+        game: true,
+        userType: true,
         isPro: true,
+        isAdmin: true,
+        isOnline: true,
+        lastSeen: true,
         verified: true,
+        bio: true,
         discord: true,
         steam: true,
         timezone: true,
         languages: true,
+        hourlyRate: true,
+        availability: true,
         createdAt: true,
-        lastSeen: true,
+        updatedAt: true,
       }
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    // Get user stats
+    const stats = await prisma.$transaction([
+      prisma.session.count({
+        where: { clientId: user.id }
+      }),
+      prisma.session.count({
+        where: { proTeammateId: user.id }
+      }),
+      prisma.payment.aggregate({
+        where: { userId: user.id, status: 'completed' },
+        _sum: { amount: true }
+      }),
+      prisma.review.aggregate({
+        where: { reviewedId: user.id },
+        _avg: { rating: true },
+        _count: true
+      })
+    ]);
 
+    const [totalSessions, totalProSessions, totalSpent, reviews] = stats;
+
+    const extendedUser = {
+      ...user,
+      stats: {
+        totalSessions: totalSessions,
+        totalProSessions: totalProSessions,
+        totalSpent: totalSpent._sum.amount || 0,
+        averageRating: reviews._avg.rating || 0,
+        totalReviews: reviews._count || 0
+      }
+    };
+
+    return NextResponse.json({ user: extendedUser });
   } catch (error) {
     console.error('Profile fetch error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// PUT update profile
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-
+    
     if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const validatedData = updateProfileSchema.parse(body);
+    const { firstName, lastName, bio, discord, steam, timezone, languages, hourlyRate, availability } = body;
 
-    // Check if username is being changed and if it's already taken
-    if (validatedData.username) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          username: validatedData.username,
-          id: { not: decoded.userId }
-        }
-      });
+    // Validate user type permissions
+    const currentUser = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { userType: true, isAdmin: true }
+    });
 
-      if (existingUser) {
-        return NextResponse.json(
-          { error: 'Username already taken' },
-          { status: 400 }
-        );
-      }
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Update user
+    // Only teammates can set hourlyRate and availability
+    if ((hourlyRate !== undefined || availability !== undefined) && currentUser.userType !== 'teammate' && !currentUser.isAdmin) {
+      return NextResponse.json({ error: 'Only teammates can set hourly rate and availability' }, { status: 403 });
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
-      data: validatedData,
+      data: {
+        firstName,
+        lastName,
+        bio,
+        discord,
+        steam,
+        timezone,
+        languages,
+        ...(currentUser.userType === 'teammate' || currentUser.isAdmin ? { hourlyRate, availability } : {}),
+        updatedAt: new Date()
+      },
       select: {
         id: true,
         email: true,
@@ -122,38 +143,30 @@ export async function PUT(request: Request) {
         firstName: true,
         lastName: true,
         avatar: true,
-        bio: true,
-        game: true,
-        role: true,
         rank: true,
+        role: true,
+        game: true,
+        userType: true,
         isPro: true,
+        isAdmin: true,
+        isOnline: true,
+        lastSeen: true,
         verified: true,
+        bio: true,
         discord: true,
         steam: true,
         timezone: true,
         languages: true,
+        hourlyRate: true,
+        availability: true,
         createdAt: true,
-        lastSeen: true,
+        updatedAt: true,
       }
     });
 
-    return NextResponse.json({ 
-      message: 'Profile updated successfully', 
-      user: updatedUser 
-    });
-
+    return NextResponse.json({ user: updatedUser });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     console.error('Profile update error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
