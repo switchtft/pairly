@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface TeammateDashboardProps {
-  user: { id: number; username: string; email: string; role: string; game?: string }; // Will be properly typed later
+  user: { id: number; username: string; email: string; userType: string; game?: string }; // Will be properly typed later
 }
 
 export default function TeammateDashboard({ user }: TeammateDashboardProps) {

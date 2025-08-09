@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
-  user: { id: number; username: string; email: string; role: string }; // Will be properly typed later
+  user: { id: number; username: string; email: string; userType: string }; // Will be properly typed later
 }
 
 export default function AdminDashboard({ user }: AdminDashboardProps) {
@@ -64,7 +64,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     }
   };
 
-  const createUser = async (userData: { username: string; email: string; password: string; role: string; game?: string }) => {
+  const createUser = async (userData: { username: string; email: string; password: string; userType: string; game?: string }) => {
     try {
       const response = await fetch('/api/admin/users', {
         method: 'POST',
@@ -87,7 +87,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     }
   };
 
-  const updateUser = async (userId: string, userData: { username?: string; email?: string; role?: string; game?: string; isOnline?: boolean; isPro?: boolean }) => {
+  const updateUser = async (userId: string, userData: { username?: string; email?: string; userType?: string; game?: string; isOnline?: boolean; isPro?: boolean }) => {
     try {
       const response = await fetch(`/api/admin/users`, {
         method: 'PUT',
