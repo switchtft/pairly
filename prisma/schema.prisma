@@ -15,9 +15,13 @@ model User {
   email     String   @unique
   username  String   @unique
   password  String
+  firstName String?
+  lastName  String?
+  avatar    String?
   rank      String?
   role      String?
   game      String?
+  userType  String   @default("customer") // customer, teammate, admin
   isPro     Boolean  @default(false)
   isAdmin   Boolean  @default(false)
   isOnline  Boolean  @default(false)
@@ -28,6 +32,15 @@ model User {
   steam     String?
   timezone  String?
   languages String @default("English")
+  hourlyRate Float?  // For teammates
+  availability String? // For teammates
+  
+  // New fields for enhanced profiles
+  accountBalance Float @default(0.00) // For customers
+  loyaltyPoints Int @default(0) // For customers
+  loyaltyTier String @default("Bronze") // Bronze, Silver, Gold, Platinum, Diamond
+  gameNicknames Json? // Store game-specific nicknames as JSON
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
@@ -44,6 +57,22 @@ model User {
   discountCodeUsages DiscountCodeUsage[]
   authSessions    AuthSession[]
   createdDiscountCodes DiscountCode[] @relation("DiscountCodeCreator")
+  
+  // New relations for favorites and blocked users
+  favoriteTeammates FavoriteTeammate[] @relation("CustomerFavorites")
+  favoriteCustomers FavoriteCustomer[] @relation("TeammateFavorites")
+  blockedTeammates BlockedTeammate[] @relation("CustomerBlocked")
+  blockedCustomers BlockedCustomer[] @relation("TeammateBlocked")
+  
+  // Quest and leaderboard relations
+  questCompletions QuestCompletion[]
+  leaderboardEntries LeaderboardEntry[]
+  
+  // Additional relations for the new models
+  favoritedByCustomers FavoriteCustomer[] @relation("CustomerFavoritedBy")
+  favoritedByTeammates FavoriteTeammate[] @relation("TeammateFavoritedBy")
+  blockedByCustomers BlockedCustomer[] @relation("CustomerBlockedBy")
+  blockedByTeammates BlockedTeammate[] @relation("TeammateBlockedBy")
 }
 
 model Session {
@@ -211,4 +240,102 @@ model AuthSession {
 
   // Relations
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// New models for enhanced features
+
+model FavoriteTeammate {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  teammateId   Int
+  createdAt    DateTime @default(now())
+
+  // Relations
+  customer    User     @relation("CustomerFavorites", fields: [customerId], references: [id])
+  teammate    User     @relation("TeammateFavoritedBy", fields: [teammateId], references: [id])
+
+  @@unique([customerId, teammateId])
+}
+
+model FavoriteCustomer {
+  id           Int      @id @default(autoincrement())
+  teammateId   Int
+  customerId   Int
+  createdAt    DateTime @default(now())
+
+  // Relations
+  teammate    User     @relation("TeammateFavorites", fields: [teammateId], references: [id])
+  customer    User     @relation("CustomerFavoritedBy", fields: [customerId], references: [id])
+
+  @@unique([teammateId, customerId])
+}
+
+model BlockedTeammate {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  teammateId   Int
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  customer    User     @relation("CustomerBlocked", fields: [customerId], references: [id])
+  teammate    User     @relation("TeammateBlockedBy", fields: [teammateId], references: [id])
+
+  @@unique([customerId, teammateId])
+}
+
+model BlockedCustomer {
+  id           Int      @id @default(autoincrement())
+  teammateId   Int
+  customerId   Int
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  teammate    User     @relation("TeammateBlocked", fields: [teammateId], references: [id])
+  customer    User     @relation("CustomerBlockedBy", fields: [customerId], references: [id])
+
+  @@unique([teammateId, customerId])
+}
+
+model Quest {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  points      Int
+  requirements Json     // Store requirements as JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  completions QuestCompletion[]
+}
+
+model QuestCompletion {
+  id        Int      @id @default(autoincrement())
+  questId   Int
+  userId    Int
+  completedAt DateTime @default(now())
+
+  // Relations
+  quest     Quest    @relation(fields: [questId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([questId, userId])
+}
+
+model LeaderboardEntry {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  period    String   // weekly, monthly, all-time
+  points    Int
+  rank      Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, period])
 }

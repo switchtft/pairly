@@ -2,401 +2,613 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { 
-  User, 
-  Users, 
-  Trophy, 
-  Star, 
-  Calendar,
-  Clock,
-  TrendingUp,
-  Award,
-  Target,
-  Gamepad2,
-  Crown,
-  Shield
-} from 'lucide-react';
+import LeaderboardWidget from '@/components/LeaderboardWidget';
 
-interface DashboardStats {
-  upcomingSessions: number;
-  completedSessions: number;
+interface UserStats {
+  totalSessions: number;
+  totalProSessions: number;
+  totalSpent: number;
   averageRating: number;
-  totalEarnings: number;
-  winRate: number;
-  activeTournaments: number;
+  totalReviews: number;
 }
 
-interface RecentActivity {
-  id: string;
-  type: 'session' | 'tournament' | 'review';
-  title: string;
-  description: string;
-  timestamp: string;
-  status: 'completed' | 'upcoming' | 'in-progress';
+interface ExtendedUser {
+  id: number;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  rank?: string;
+  role?: string;
+  game?: string;
+  userType: string;
+  isPro: boolean;
+  isAdmin: boolean;
+  isOnline: boolean;
+  lastSeen: string;
+  verified: boolean;
+  bio?: string;
+  discord?: string;
+  steam?: string;
+  timezone?: string;
+  languages: string;
+  hourlyRate?: number;
+  availability?: string;
+  createdAt: string;
+  updatedAt: string;
+  stats: UserStats;
 }
 
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [stats] = useState<DashboardStats>({
-    upcomingSessions: 3,
-    completedSessions: 47,
-    averageRating: 4.8,
-    totalEarnings: 1420,
-    winRate: 73,
-    activeTournaments: 2,
-  });
-  
-  const [recentActivity] = useState<RecentActivity[]>([
-    {
-      id: '1',
-      type: 'session',
-      title: 'Duo Session with MasterYi',
-      description: 'Ranked Valorant coaching session',
-      timestamp: '2024-01-15T14:30:00Z',
-      status: 'upcoming'
-    },
-    {
-      id: '2',
-      type: 'tournament',
-      title: 'Winter Championship',
-      description: 'Qualified for semifinals',
-      timestamp: '2024-01-14T20:00:00Z',
-      status: 'in-progress'
-    },
-    {
-      id: '3',
-      type: 'review',
-      title: 'New Review Received',
-      description: '5-star review from coaching session',
-      timestamp: '2024-01-14T16:45:00Z',
-      status: 'completed'
-    },
-    {
-      id: '4',
-      type: 'session',
-      title: 'CS:GO Strategy Session',
-      description: 'Team tactics and map control',
-      timestamp: '2024-01-13T19:00:00Z',
-      status: 'completed'
-    },
-  ]);
+  const [profileUser, setProfileUser] = useState<ExtendedUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
+      return;
+    }
+
+    if (isAuthenticated) {
+      fetchProfile();
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'session':
-        return <Users className="text-[#e6915b]" size={20} />;
-      case 'tournament':
-        return <Trophy className="text-yellow-400" size={20} />;
-      case 'review':
-        return <Star className="text-blue-400" size={20} />;
-      default:
-        return <Calendar className="text-gray-400" size={20} />;
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfileUser(data.user);
+      } else {
+        console.error('Failed to fetch profile');
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'upcoming':
-        return 'text-blue-400';
-      case 'in-progress':
-        return 'text-green-400';
-      case 'completed':
-        return 'text-gray-400';
-      default:
-        return 'text-gray-400';
+  const getUserTypeLabel = (userType: string) => {
+    switch (userType) {
+      case 'customer': return 'Customer';
+      case 'teammate': return 'Teammate';
+      case 'admin': return 'Administrator';
+      default: return userType;
     }
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return `${Math.floor(diffInHours * 60)}m ago`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const getUserTypeColor = (userType: string) => {
+    switch (userType) {
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'teammate': return 'bg-blue-100 text-blue-800';
+      case 'customer': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#e6915b]"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  if (!user) return null;
-
-  const getDisplayName = () => {
-    if (user.firstName && user.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-    return user.username;
-  };
+  if (!profileUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Failed to load dashboard</p>
+          <button 
+            onClick={() => router.push('/login')}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Back to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome back, {getDisplayName()}! 
-                {user.verified && <Shield className="inline ml-2 text-blue-400" size={24} />}
-                {user.isPro && <Crown className="inline ml-2 text-yellow-400" size={24} />}
-              </h1>
-              <p className="text-gray-400">Here&apos;s what&apos;s happening with your gaming profile</p>
+            <div className="flex items-center space-x-4">
+              {profileUser.avatar ? (
+                <img 
+                  src={profileUser.avatar} 
+                  alt="Profile" 
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
+                  <span className="text-xl text-gray-600">
+                    {profileUser.firstName?.[0] || profileUser.username[0]?.toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Welcome back, {profileUser.firstName || profileUser.username}!
+                </h1>
+                <p className="text-gray-600">@{profileUser.username}</p>
+                <div className="flex items-center space-x-2 mt-2">
+                  <span className={`px-2 py-1 text-xs rounded-full ${getUserTypeColor(profileUser.userType)}`}>
+                    {getUserTypeLabel(profileUser.userType)}
+                  </span>
+                  {profileUser.verified && (
+                    <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                      Verified
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Button 
-                asChild
-                className="bg-[#e6915b] hover:bg-[#d18251]"
-              >
-                <Link href="/profile">View Profile</Link>
-              </Button>
-              <Button 
-                asChild
-                variant="outline"
-                className="border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10"
-              >
-                <Link href="/duo">Find Duo</Link>
-              </Button>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Last seen</p>
+              <p className="text-sm text-gray-900">
+                {new Date(profileUser.lastSeen).toLocaleDateString()}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-[#e6915b]/20 p-3 rounded-lg">
-                <Calendar className="text-[#e6915b]" size={24} />
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +12%
-              </span>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Sessions</p>
+                <p className="text-2xl font-bold text-gray-900">{profileUser.stats.totalSessions}</p>
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.upcomingSessions}</h3>
-            <p className="text-gray-400">Upcoming Sessions</p>
           </div>
 
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-[#6b8ab0]/20 p-3 rounded-lg">
-                <Users className="text-[#6b8ab0]" size={24} />
+          {profileUser.userType === 'teammate' && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Pro Sessions</p>
+                  <p className="text-2xl font-bold text-gray-900">{profileUser.stats.totalProSessions}</p>
+                </div>
               </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +8%
-              </span>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.completedSessions}</h3>
-            <p className="text-gray-400">Completed Sessions</p>
+          )}
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Rating</p>
+                <p className="text-2xl font-bold text-gray-900">{profileUser.stats.averageRating.toFixed(1)}/5</p>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-yellow-500/20 p-3 rounded-lg">
-                <Star className="text-yellow-400" size={24} />
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
               </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +0.2
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.averageRating}</h3>
-            <p className="text-gray-400">Average Rating</p>
-          </div>
-
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-green-500/20 p-3 rounded-lg">
-                <Target className="text-green-400" size={24} />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Reviews</p>
+                <p className="text-2xl font-bold text-gray-900">{profileUser.stats.totalReviews}</p>
               </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +5%
-              </span>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.winRate}%</h3>
-            <p className="text-gray-400">Win Rate</p>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Activity */}
-          <div className="lg:col-span-2 bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Clock className="text-[#e6915b]" size={20} />
-                Recent Activity
-              </h2>
-              <Button 
-                asChild
-                variant="outline" 
-                size="sm"
-                className="border-gray-600 text-gray-400"
+        {/* Leaderboard Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Leaderboard</h2>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">See how you rank among the best players</span>
+              <Link 
+                href="/leaderboard"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
               >
-                <Link href="/activity">View All</Link>
-              </Button>
+                View Full Leaderboard →
+              </Link>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Weekly Leaderboard */}
+            <div className="bg-white rounded-lg shadow-sm">
+              <LeaderboardWidget 
+                period="weekly"
+                limit={5}
+                showHeader={true}
+                className="border-0 shadow-none"
+              />
+            </div>
+            
+            {/* Monthly Leaderboard */}
+            <div className="bg-white rounded-lg shadow-sm">
+              <LeaderboardWidget 
+                period="monthly"
+                limit={5}
+                showHeader={true}
+                className="border-0 shadow-none"
+              />
             </div>
 
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div 
-                  key={activity.id}
-                  className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#333] transition-colors"
-                >
-                  <div className="flex-shrink-0">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white truncate">{activity.title}</h3>
-                    <p className="text-gray-400 text-sm truncate">{activity.description}</p>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <p className={`text-sm font-medium ${getStatusColor(activity.status)}`}>
-                      {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
-                    </p>
-                    <p className="text-gray-500 text-xs">{formatTimestamp(activity.timestamp)}</p>
-                  </div>
+            {/* User's Ranking */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
-              ))}
+                <h3 className="font-semibold text-gray-900">Your Ranking</h3>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white font-bold text-xl">
+                    {profileUser.rank || 'N/A'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">Current Rank</p>
+                <p className="text-xs text-gray-500">
+                  {profileUser.game ? `in ${profileUser.game}` : 'No game selected'}
+                </p>
+                
+                {profileUser.userType === 'teammate' && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600 mb-2">Pro Status</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${profileUser.isPro ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span className="text-xs text-gray-600">
+                        {profileUser.isPro ? 'Active Pro' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <Link 
+                href="/duo"
+                className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="text-blue-900">Find Duo Partner</span>
+              </Link>
+              
+              <Link 
+                href="/coaching"
+                className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+              >
+                <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5c1.747 0 3.332.477 4.5 1.253zm0 0C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.523 18.246 19 16.5 19c-1.746 0-3.332-.477-4.5-1.253z" />
+                </svg>
+                <span className="text-green-900">Get Coaching</span>
+              </Link>
+
+              {profileUser.userType === 'teammate' && (
+                <Link 
+                  href="/dashboard/teammate"
+                  className="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-purple-900">Teammate Dashboard</span>
+                </Link>
+              )}
+
+              {profileUser.isAdmin && (
+                <Link 
+                  href="/admin"
+                  className="flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-red-900">Admin Panel</span>
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* Quick Actions & Stats */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Gamepad2 className="text-[#e6915b]" size={20} />
-                Quick Actions
-              </h2>
-              <div className="space-y-3">
-                <Button 
-                  asChild
-                  className="w-full bg-gradient-to-r from-[#e6915b] to-[#e6915b] hover:from-[#d18251] hover:to-[#d18251] justify-start"
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="space-y-3">
+              {profileUser.stats.totalSessions > 0 ? (
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                  <span className="text-gray-700">Completed {profileUser.stats.totalSessions} session(s)</span>
+                </div>
+              ) : (
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                  <span className="text-gray-500">No sessions yet</span>
+                </div>
+              )}
+              
+              {profileUser.stats.totalReviews > 0 ? (
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                  <span className="text-gray-700">Received {profileUser.stats.totalReviews} review(s)</span>
+                </div>
+              ) : (
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                  <span className="text-gray-500">No reviews yet</span>
+                </div>
+              )}
+
+              <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+                <span className="text-gray-700">Joined {new Date(profileUser.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Role-Based Actions */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+            <div className="flex space-x-3">
+              {profileUser.userType === 'teammate' && (
+                <Link 
+                  href="/dashboard/teammate"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                 >
-                  <Link href="/duo">
-                    <Users size={16} className="mr-2" />
-                    Find Duo Partner
-                  </Link>
-                </Button>
-                <Button 
-                  asChild
-                  className="w-full bg-gradient-to-r from-[#6b8ab0] to-[#6b8ab0] hover:from-[#5a79a0] hover:to-[#5a79a0] justify-start"
+                  Teammate Dashboard
+                </Link>
+              )}
+              {profileUser.userType === 'admin' && (
+                <Link 
+                  href="/admin/dashboard"
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                 >
-                  <Link href="/coaching">
-                    <User size={16} className="mr-2" />
-                    Book Coaching
-                  </Link>
-                </Button>
-                <Button 
-                  asChild
-                  className="w-full bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-700 hover:to-yellow-700 justify-start"
+                  Admin Dashboard
+                </Link>
+              )}
+              <Link 
+                href="/profile"
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Edit Profile
+              </Link>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {profileUser.userType === 'customer' && (
+              <>
+                <Link 
+                  href="/duo"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
                 >
-                  <Link href="/tournaments">
-                    <Trophy size={16} className="mr-2" />
-                    Join Tournament
-                  </Link>
-                </Button>
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Find Teammate</h4>
+                    <p className="text-sm text-gray-600">Get matched with a pro player</p>
+                  </div>
+                </Link>
+                <Link 
+                  href="/coaching"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Get Coaching</h4>
+                    <p className="text-sm text-gray-600">Improve your skills</p>
+                  </div>
+                </Link>
+                <Link 
+                  href="/tournaments"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Tournaments</h4>
+                    <p className="text-sm text-gray-600">Compete with others</p>
+                  </div>
+                </Link>
+              </>
+            )}
+            {profileUser.userType === 'teammate' && (
+              <>
+                <Link 
+                  href="/dashboard/teammate"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Dashboard</h4>
+                    <p className="text-sm text-gray-600">Manage orders & earnings</p>
+                  </div>
+                </Link>
+                <Link 
+                  href="/profile"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Profile</h4>
+                    <p className="text-sm text-gray-600">Update your info</p>
+                  </div>
+                </Link>
+                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Go Online</h4>
+                    <p className="text-sm text-gray-600">Start receiving orders</p>
+                  </div>
+                </div>
+              </>
+            )}
+            {profileUser.userType === 'admin' && (
+              <>
+                <Link 
+                  href="/admin/dashboard"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-red-300 hover:bg-red-50 transition-colors"
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">Admin Panel</h4>
+                    <p className="text-sm text-gray-600">Manage platform</p>
+                  </div>
+                </Link>
+                <Link 
+                  href="/admin/users"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                >
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900">User Management</h4>
+                    <p className="text-sm text-gray-600">Manage all users</p>
+                  </div>
+                </Link>
+                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-gray-900">System Status</h4>
+                    <p className="text-sm text-gray-600">All systems operational</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Profile Summary */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Profile Summary</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Personal Info</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Name:</span>
+                  <span className="text-gray-900">
+                    {profileUser.firstName && profileUser.lastName 
+                      ? `${profileUser.firstName} ${profileUser.lastName}`
+                      : 'Not set'
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Email:</span>
+                  <span className="text-gray-900">{profileUser.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Bio:</span>
+                  <span className="text-gray-900">{profileUser.bio || 'Not set'}</span>
+                </div>
               </div>
             </div>
 
-            {/* Performance Summary */}
-            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Award className="text-[#e6915b]" size={20} />
-                Performance
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Earnings</span>
-                  <span className="text-green-400 font-bold">${stats.totalEarnings}</span>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Gaming Info</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Game:</span>
+                  <span className="text-gray-900">{profileUser.game || 'Not set'}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Active Tournaments</span>
-                  <span className="text-white font-bold">{stats.activeTournaments}</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Role:</span>
+                  <span className="text-gray-900">{profileUser.role || 'Not set'}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Win Rate</span>
-                  <span className="text-blue-400 font-bold">{stats.winRate}%</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Rank:</span>
+                  <span className="text-gray-900">{profileUser.rank || 'Not set'}</span>
                 </div>
-                <div className="pt-2 border-t border-[#2a2a2a]">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-400">Monthly Goal</span>
-                    <span className="text-gray-400">75%</span>
-                  </div>
-                  <div className="w-full bg-[#2a2a2a] rounded-full h-2">
-                    <div className="bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] h-2 rounded-full" style={{width: '75%'}}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Gaming Profile Summary */}
-            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Gaming Profile</h2>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#2a2a2a] rounded-lg flex items-center justify-center">
-                    {user.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt={user.username}
-                        className="w-full h-full rounded-lg object-cover"
-                      />
-                    ) : (
-                      <span className="text-[#e6915b] font-bold text-lg">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">@{user.username}</p>
-                    <p className="text-gray-400 text-sm">{user.game || 'No game set'}</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
+                {profileUser.userType === 'teammate' && (
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Rank</span>
-                    <span className="text-white">{user.rank || 'Unranked'}</span>
+                    <span className="text-gray-600">Hourly Rate:</span>
+                    <span className="text-gray-900">${profileUser.hourlyRate || 'Not set'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Role</span>
-                    <span className="text-white">{user.role || 'Flex'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Status</span>
-                    <span className="text-green-400">Online</span>
-                  </div>
-                </div>
-                <Button 
-                  asChild
-                  variant="outline" 
-                  className="w-full border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10"
-                >
-                  <Link href="/profile">Edit Profile</Link>
-                </Button>
+                )}
               </div>
             </div>
           </div>

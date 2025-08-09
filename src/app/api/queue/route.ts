@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     const game = searchParams.get('game') || 'valorant';
 
     // Get available teammates (pro users who are online and not in a session)
+    // Note: This is a general list - blocked/favorite logic is applied in findMatch
     const availableTeammates = await prisma.user.findMany({
       where: {
         isPro: true,
@@ -136,7 +137,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingEntry) {
-      return NextResponse.json({ error: 'Already in queue' }, { status: 400 });
+      // Check if the existing entry is stale (older than 1 hour)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (existingEntry.createdAt < oneHourAgo) {
+        // Delete stale entry and continue
+        await prisma.queueEntry.delete({
+          where: { id: existingEntry.id }
+        });
+      } else {
+        return NextResponse.json({ error: 'Already in queue' }, { status: 400 });
+      }
     }
 
     // Validate discount code if provided
@@ -329,28 +339,79 @@ export async function DELETE(request: NextRequest) {
 
 // Helper function to find a match
 async function findMatch(queueEntry: { id: number; userId: number; game: string; mode: string; price: number; duration: number }) {
-  // Find available teammates
-  const availableTeammates = await prisma.user.findMany({
+  // First, try to find favorited teammates
+  const favoriteTeammates = await prisma.favoriteTeammate.findMany({
     where: {
-      isPro: true,
-      isOnline: true,
-      game: queueEntry.game,
-      proSessions: {
-        none: {
-          status: {
-            in: ['Pending', 'Active']
+      customerId: queueEntry.userId,
+      teammate: {
+        isPro: true,
+        isOnline: true,
+        game: queueEntry.game,
+        proSessions: {
+          none: {
+            status: {
+              in: ['Pending', 'Active']
+            }
           }
         }
       }
     },
-    take: 1
+    include: {
+      teammate: true
+    }
   });
+
+  // If no favorited teammates available, find any available teammates
+  let availableTeammates: any[] = [];
+  
+  if (favoriteTeammates.length > 0) {
+    // Use favorited teammates
+    availableTeammates = favoriteTeammates.map(ft => ft.teammate);
+  } else {
+    // Find all available teammates, excluding blocked ones
+    availableTeammates = await prisma.user.findMany({
+      where: {
+        isPro: true,
+        isOnline: true,
+        game: queueEntry.game,
+        proSessions: {
+          none: {
+            status: {
+              in: ['Pending', 'Active']
+            }
+          }
+        },
+        // Exclude teammates blocked by this customer
+        blockedByCustomers: {
+          none: {
+            customerId: queueEntry.userId
+          }
+        }
+      }
+    });
+  }
 
   if (availableTeammates.length === 0) {
     return null;
   }
 
-  const teammate = availableTeammates[0];
+  // Prioritize favorited teammates, then by rating/availability
+  const sortedTeammates = availableTeammates.sort((a, b) => {
+    // First priority: favorited teammates
+    const aIsFavorited = favoriteTeammates.some(ft => ft.teammateId === a.id);
+    const bIsFavorited = favoriteTeammates.some(ft => ft.teammateId === b.id);
+    
+    if (aIsFavorited && !bIsFavorited) return -1;
+    if (!aIsFavorited && bIsFavorited) return 1;
+    
+    // Second priority: rating (if available)
+    const aRating = a.reviewsReceived?.[0]?.rating || 0;
+    const bRating = b.reviewsReceived?.[0]?.rating || 0;
+    
+    return bRating - aRating;
+  });
+
+  const teammate = sortedTeammates[0];
 
   // Create a session
   const session = await prisma.session.create({

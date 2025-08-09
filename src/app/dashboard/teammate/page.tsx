@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket, useSocketEvent } from '@/hooks/useSocket';
 import EnhancedChatInterface from '@/components/EnhancedChatInterface';
+import LeaderboardWidget from '@/components/LeaderboardWidget';
 
 interface QueueRequest {
   id: number;
@@ -265,6 +266,54 @@ export default function TeammateDashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Leaderboard Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-[#e6915b]">Leaderboard</h2>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-[#e6915b]/60">See how you rank among other pros</span>
+              <a 
+                href="/leaderboard"
+                className="text-sm text-[#e6915b] hover:text-[#e6915b]/80 hover:underline"
+              >
+                View Full Leaderboard →
+              </a>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Weekly Leaderboard */}
+            <Card className="bg-[#2a2a2a] border-[#e6915b]/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-[#e6915b] text-lg">Weekly Top Players</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <LeaderboardWidget 
+                  period="weekly"
+                  limit={5}
+                  showHeader={false}
+                  className="border-0 shadow-none bg-transparent"
+                />
+              </CardContent>
+            </Card>
+            
+            {/* Monthly Leaderboard */}
+            <Card className="bg-[#2a2a2a] border-[#e6915b]/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-[#e6915b] text-lg">Monthly Top Players</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <LeaderboardWidget 
+                  period="monthly"
+                  limit={5}
+                  showHeader={false}
+                  className="border-0 shadow-none bg-transparent"
+                />
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Pending Requests */}

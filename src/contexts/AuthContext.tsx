@@ -1,7 +1,8 @@
 // src/contexts/AuthContext.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: number;
@@ -14,7 +15,9 @@ interface User {
   game?: string;
   role?: string;
   rank?: string;
+  userType: string;
   isPro: boolean;
+  isAdmin: boolean;
   verified: boolean;
   discord?: string;
   steam?: string;
@@ -22,6 +25,7 @@ interface User {
   languages: string;
   createdAt: string;
   lastSeen: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
@@ -50,96 +54,142 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const router = useRouter();
 
   const isAuthenticated = !!user;
 
-  // Check authentication on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
+    if (hasCheckedAuth) return; // Prevent multiple checks
+    
     try {
-      const response = await fetch('/api/auth/me');
+      setIsLoading(true);
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
+      } else {
+        setUser(null);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+      setHasCheckedAuth(true);
+    }
+  }, [hasCheckedAuth]);
+
+  // Check authentication on mount only once
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      setUser(data.user);
+      setHasCheckedAuth(true);
+      
+      // Redirect to dashboard or intended page
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect') || '/dashboard';
+      router.push(redirect);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Login failed');
-    }
-
-    setUser(data.user);
-  };
-
   const register = async (userData: RegisterData) => {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Registration failed');
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Auto-login after registration
+      await login(userData.email, userData.password);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    // Auto-login after registration
-    await login(userData.email, userData.password);
   };
 
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
+        credentials: 'include',
       });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      setHasCheckedAuth(false);
+      router.push('/login');
     }
   };
 
   const updateUser = async (userData: Partial<User>) => {
-    const response = await fetch('/api/auth/profile', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Update failed');
+      if (!response.ok) {
+        throw new Error(data.error || 'Update failed');
+      }
+
+      setUser(data.user);
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
     }
-
-    setUser(data.user);
   };
 
   const refetchUser = async () => {
+    setHasCheckedAuth(false);
     await checkAuth();
   };
 

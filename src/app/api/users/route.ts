@@ -7,6 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const game = searchParams.get('game');
     
+    console.log('Fetching users with game filter:', game);
+    
     const users = await prisma.user.findMany({
       where: {
         isPro: true,
@@ -26,11 +28,17 @@ export async function GET(request: Request) {
       }
     });
 
+    console.log(`Found ${users.length} users`);
+    
     return NextResponse.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect(); // Disconnect after each request
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch users',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    );
   }
 }

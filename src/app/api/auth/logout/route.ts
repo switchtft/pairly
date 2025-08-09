@@ -26,17 +26,23 @@ export async function POST() {
         });
       } catch (error) {
         console.error('Error during logout cleanup:', error);
+        // Still try to delete the session even if token is invalid
+        await prisma.authSession.deleteMany({
+          where: { token: token }
+        });
       }
     }
 
     const response = NextResponse.json({ message: 'Logged out successfully' });
     
-    // Clear the cookie
+    // Clear the cookie with proper settings
     response.cookies.set('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 0,
+      path: '/',
+      expires: new Date(0),
     });
 
     return response;

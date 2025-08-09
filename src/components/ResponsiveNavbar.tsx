@@ -25,6 +25,7 @@ const publicNavLinks = [
   { name: 'Duo', href: '/duo', icon: <UsersIcon size={16} /> },
   { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
   { name: 'Tournaments', href: '/tournaments', icon: <Trophy size={16} /> },
+  { name: 'Leaderboard', href: '/leaderboard', icon: <Trophy size={16} /> },
 ];
 
 const authenticatedNavLinks = [
@@ -32,6 +33,7 @@ const authenticatedNavLinks = [
   { name: 'Duo', href: '/duo', icon: <UsersIcon size={16} /> },
   { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
   { name: 'Tournaments', href: '/tournaments', icon: <Trophy size={16} /> },
+  { name: 'Leaderboard', href: '/leaderboard', icon: <Trophy size={16} /> },
 ];
 
 export default function ResponsiveNavbar() {

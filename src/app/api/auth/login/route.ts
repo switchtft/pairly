@@ -23,6 +23,8 @@ export async function POST(request: Request) {
         email: true,
         username: true,
         password: true,
+        userType: true,
+        isAdmin: true,
         game: true,
         role: true,
         rank: true,
@@ -35,6 +37,7 @@ export async function POST(request: Request) {
         languages: true,
         createdAt: true,
         lastSeen: true,
+        updatedAt: true,
       }
     });
 
@@ -53,6 +56,11 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+
+    // Clean up any existing sessions for this user
+    await prisma.authSession.deleteMany({
+      where: { userId: user.id }
+    });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -88,12 +96,13 @@ export async function POST(request: Request) {
       token
     });
 
-    // Set HTTP-only cookie
+    // Set HTTP-only cookie with better compatibility
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax', // Changed from 'strict' for better compatibility
       maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/',
     });
 
     return response;

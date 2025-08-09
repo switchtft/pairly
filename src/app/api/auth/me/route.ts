@@ -17,31 +17,44 @@ export async function GET() {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production') as { userId: number };
+    let decoded: { userId: number };
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production') as { userId: number };
+    } catch (jwtError) {
+      console.error('JWT verification failed:', jwtError);
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
 
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        bio: true,
-        game: true,
-        role: true,
-        rank: true,
-        isPro: true,
-        verified: true,
-        discord: true,
-        steam: true,
-        timezone: true,
-        languages: true,
-        createdAt: true,
-        lastSeen: true,
-      }
+              select: {
+          id: true,
+          email: true,
+          username: true,
+          userType: true,
+          isAdmin: true,
+          game: true,
+          role: true,
+          rank: true,
+          isPro: true,
+          verified: true,
+          bio: true,
+          discord: true,
+          steam: true,
+          timezone: true,
+          languages: true,
+          accountBalance: true,
+          loyaltyPoints: true,
+          loyaltyTier: true,
+          gameNicknames: true,
+          createdAt: true,
+          lastSeen: true,
+          updatedAt: true,
+        }
     });
 
     if (!user) {
@@ -56,8 +69,8 @@ export async function GET() {
   } catch (error) {
     console.error('Auth verification error:', error);
     return NextResponse.json(
-      { error: 'Invalid token' },
-      { status: 401 }
+      { error: 'Internal server error' },
+      { status: 500 }
     );
   }
 } 

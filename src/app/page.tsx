@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import GameSelector from "@/components/GameSelector";
 import FeatureCard from "@/components/FeatureCard";
 import TestimonialCard from "@/components/TestimonialCard";
+import LeaderboardWidget from "@/components/LeaderboardWidget";
 
 export default function Home() {
   return (
@@ -46,7 +48,7 @@ export default function Home() {
       <section id="features" className="bg-[#1a1a1a] py-20">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h3 className="text-3xl font-bold mb-12">What Pairly Offers:</h3>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <FeatureCard
               icon="🤝"
               title="Duo Services"
@@ -64,6 +66,12 @@ export default function Home() {
               title="Tournaments"
               desc="Compete in tournaments with cash prizes and sponsorship opportunities."
               href="/tournaments"
+            />
+            <FeatureCard
+              icon="🥇"
+              title="Leaderboard"
+              desc="Compete on the leaderboard and see how you rank against other players."
+              href="/leaderboard"
             />
           </div>
         </div>
@@ -85,6 +93,46 @@ export default function Home() {
             name="Gonçalo F."
             text="Used Pairly to find a study partner. Very effective!"
           />
+        </div>
+      </section>
+
+      {/* Leaderboard Preview */}
+      <section className="py-20 px-6 bg-[#1a1a1a]">
+        <div className="max-w-6xl mx-auto text-center">
+          <h3 className="text-3xl font-bold mb-4 text-[#e6915b]">Top Players This Week</h3>
+          <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
+            See who's dominating the leaderboard this week. Compete with the best and climb your way to the top!
+          </p>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="bg-[#2a2a2a] rounded-xl p-6 border border-[#e6915b]/20">
+              <h4 className="text-xl font-semibold text-[#e6915b] mb-4">Weekly Champions</h4>
+              <LeaderboardWidget 
+                period="weekly"
+                limit={5}
+                showHeader={false}
+                className="border-0 shadow-none bg-transparent"
+              />
+            </div>
+            
+            <div className="bg-[#2a2a2a] rounded-xl p-6 border border-[#e6915b]/20">
+              <h4 className="text-xl font-semibold text-[#e6915b] mb-4">Monthly Leaders</h4>
+              <LeaderboardWidget 
+                period="monthly"
+                limit={5}
+                showHeader={false}
+                className="border-0 shadow-none bg-transparent"
+              />
+            </div>
+          </div>
+          
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-[#e6915b] to-[#a8724c] hover:from-[#d8824a] hover:to-[#976040]"
+            asChild
+          >
+            <Link href="/leaderboard">View Full Leaderboard</Link>
+          </Button>
         </div>
       </section>
 
