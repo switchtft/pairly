@@ -25,25 +25,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authorized as teammate' }, { status: 403 });
     }
 
-    // Get pending sessions for this teammate's game
+    // Get pending sessions for this teammate's game (simplified query without blocking for now)
     const orders = await prisma.session.findMany({
       where: {
         game: user.game || undefined,
         status: 'Pending',
-        proTeammateId: null, // Not yet assigned
-        // Not from blocked users
-        client: {
-          blockedBy: {
-            none: {
-              userId: decoded.userId
-            }
-          },
-          blockedUsers: {
-            none: {
-              blockedId: decoded.userId
-            }
-          }
-        }
+        proTeammateId: null // Not yet assigned
       },
       include: {
         client: {
@@ -59,7 +46,7 @@ export async function GET(request: NextRequest) {
       orderBy: {
         startTime: 'asc'
       },
-      take: 10 // Limit to 10 most recent
+      take: 10
     });
 
     // Transform to match frontend interface
