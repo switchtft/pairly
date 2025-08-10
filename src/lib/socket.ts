@@ -42,6 +42,7 @@ export interface ClientToServerEvents {
   'teammate:status': (data: { isOnline: boolean }) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InterServerEvents {
   // Add any inter-server events if needed
 }
@@ -66,7 +67,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
     });
 
     // Authentication middleware
-    io.use(async (socket: Socket & { data?: { userId: number; username: string; isPro: boolean; game: string | null } }, next: (err?: Error) => void) => {
+    io.use(async (socket: Socket & { data?: { userId: string; username: string; isPro: boolean; game: string | null } }, next: (err?: Error) => void) => {
       try {
         const token = socket.handshake.auth.token;
         if (!token) {
@@ -177,7 +178,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
           
           // Join both users to the session room
           socket.join(`session:${sessionId}`);
-          io.sockets.sockets.forEach((clientSocket: Socket & { data?: { userId: number; username: string; isPro: boolean; game: string | null } }) => {
+          io.sockets.sockets.forEach((clientSocket: Socket & { data?: { userId: string; username: string; isPro: boolean; game: string | null } }) => {
             if (clientSocket.data.userId === clientId) {
               clientSocket.join(`session:${sessionId}`);
             }
@@ -189,7 +190,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
       });
 
       // Handle match rejection
-      socket.on('match:reject', async (data: { sessionId: number; clientId: number }) => {
+      socket.on('match:reject', async (data: { sessionId: string; clientId: string }) => {
         try {
           const { sessionId, clientId } = data;
           
