@@ -445,7 +445,7 @@ export default function TeammateProfilePage() {
                 <div className="text-center py-8 text-gray-400">
                   <Ban className="mx-auto mb-4" size={48} />
                   <p>No blocked customers</p>
-                  <p className="text-sm">Blocked customers won't be able to order from you</p>
+                  <p className="text-sm">Blocked customers won&apos;t be able to order from you</p>
                 </div>
               )}
             </div>
