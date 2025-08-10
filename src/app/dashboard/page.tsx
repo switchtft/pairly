@@ -287,7 +287,7 @@ export default function DashboardPage() {
 
           <div className="p-4 bg-[#2a2a2a] rounded-lg">
             <h3 className="text-white font-medium mb-2">2. Session Quality</h3>
-            <p className="text-gray-400 text-sm">Provide high-quality coaching and gameplay. Focus on improving the customer's skills and experience.</p>
+            <p className="text-gray-400 text-sm">Provide high-quality coaching and gameplay. Focus on improving the customer&apos;s skills and experience.</p>
           </div>
 
           <div className="p-4 bg-[#2a2a2a] rounded-lg">
