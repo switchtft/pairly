@@ -67,15 +67,16 @@ export async function POST(request: NextRequest) {
         data: { status: 'Requested' }
       });
     } else {
-      // Create new payment record
-      await prisma.payment.create({
-        data: {
-          sessionId: orderId,
-          amount: order.price,
-          status: 'Requested',
-          type: 'Payout'
-        }
-      });
+             // Create new payment record
+       await prisma.payment.create({
+         data: {
+           sessionId: orderId,
+           amount: order.price,
+           status: 'Requested',
+           method: 'Payout',
+           userId: decoded.userId
+         }
+       });
     }
 
     return NextResponse.json({ 
