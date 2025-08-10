@@ -6,6 +6,89 @@ export interface Game {
   description?: string;
 }
 
+// User role types
+export type UserRole = 'customer' | 'teammate' | 'administrator';
+
+// Profile interfaces for different user types
+export interface CustomerProfile {
+  id: number;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  bio?: string;
+  balance: number;
+  loyaltyLevel: string;
+  loyaltyPoints: number;
+  gameNicknames: Record<string, string>; // game -> nickname mapping
+  socials: {
+    discord?: string;
+    steam?: string;
+    twitter?: string;
+  };
+  matchHistory: MatchHistoryItem[];
+  favouriteTeammates: number[]; // teammate user IDs
+  blockedTeammates: number[]; // blocked teammate user IDs
+  createdAt: string;
+  lastSeen: string;
+}
+
+export interface TeammateProfile {
+  id: number;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  bio?: string;
+  rating: number;
+  totalSessions: number;
+  totalReviews: number;
+  winRate: number;
+  weeklyStats: {
+    totalPayment: number;
+    orders: number;
+    winRate: number;
+    leaderboardPosition: number;
+  };
+  socials: {
+    discord?: string;
+    steam?: string;
+    twitter?: string;
+  };
+  favouriteCustomers: number[]; // customer user IDs
+  blockedCustomers: number[]; // blocked customer user IDs
+  isOnline: boolean;
+  createdAt: string;
+  lastSeen: string;
+}
+
+export interface AdministratorProfile {
+  id: number;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  bio?: string;
+  permissions: string[];
+  createdAt: string;
+  lastSeen: string;
+}
+
+export interface MatchHistoryItem {
+  id: number;
+  date: string;
+  game: string;
+  result: 'win' | 'loss' | 'draw';
+  teammateId: number;
+  teammateName: string;
+  teammateAvatar?: string;
+  price: number;
+  duration: number;
+}
+
 export interface Player {
   id: string;
   name: string;
