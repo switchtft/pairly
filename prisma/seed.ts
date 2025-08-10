@@ -1,13 +1,17 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Hash password for all users
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  
   // Create some pro players
   const proPlayers = [
     {
       email: 'capychill@example.com',
-      password: 'hashedpassword123', // In real app, hash this
+      password: hashedPassword,
       username: 'CapyChill',
       rank: 'Diamond 3',
       game: 'valorant',
@@ -16,7 +20,7 @@ async function main() {
     },
     {
       email: 'capyzen@example.com',
-      password: 'hashedpassword123',
+      password: hashedPassword,
       username: 'CapyZen',
       rank: 'Immortal 1',
       game: 'valorant',
@@ -25,7 +29,7 @@ async function main() {
     },
     {
       email: 'capynap@example.com',
-      password: 'hashedpassword123',
+      password: hashedPassword,
       username: 'CapyNap',
       rank: 'Ascendant 2',
       game: 'valorant',
@@ -34,7 +38,7 @@ async function main() {
     },
     {
       email: 'capyleaf@example.com',
-      password: 'hashedpassword123',
+      password: hashedPassword,
       username: 'CapyLeaf',
       rank: 'Master',
       game: 'league',
@@ -43,7 +47,7 @@ async function main() {
     },
     {
       email: 'capyking@example.com',
-      password: 'hashedpassword123',
+      password: hashedPassword,
       username: 'CapyKing',
       rank: 'Radiant',
       game: 'valorant',

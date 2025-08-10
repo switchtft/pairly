@@ -56,6 +56,7 @@ export async function GET() {
         languages: true,
         createdAt: true,
         lastSeen: true,
+        isOnline: true,
       }
     });
 
@@ -66,7 +67,35 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ user });
+    // Get user stats
+    const [totalSessions, totalReviews, averageRating] = await Promise.all([
+      prisma.session.count({
+        where: {
+          OR: [
+            { clientId: user.id },
+            { proTeammateId: user.id }
+          ]
+        }
+      }),
+      prisma.review.count({
+        where: { reviewedId: user.id }
+      }),
+      prisma.review.aggregate({
+        where: { reviewedId: user.id },
+        _avg: { rating: true }
+      })
+    ]);
+
+    const userWithStats = {
+      ...user,
+      stats: {
+        totalSessions,
+        totalReviews,
+        averageRating: averageRating._avg.rating || 0
+      }
+    };
+
+    return NextResponse.json({ user: userWithStats });
 
   } catch (error) {
     console.error('Profile fetch error:', error);
