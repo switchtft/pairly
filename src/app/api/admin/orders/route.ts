@@ -196,7 +196,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if order exists
     const existingOrder = await prisma.queueEntry.findUnique({
-      where: { id: parseInt(orderId) }
+      where: { id: orderId }
     });
 
     if (!existingOrder) {
@@ -205,7 +205,7 @@ export async function PUT(request: NextRequest) {
 
     // Update order
     const updatedOrder = await prisma.queueEntry.update({
-      where: { id: parseInt(orderId) },
+      where: { id: orderId },
       data: {
         ...(status !== undefined && { status }),
         updatedAt: new Date()
@@ -270,7 +270,7 @@ export async function DELETE(request: NextRequest) {
 
     // Check if order exists
     const existingOrder = await prisma.queueEntry.findUnique({
-      where: { id: parseInt(orderId) }
+      where: { id: orderId }
     });
 
     if (!existingOrder) {
@@ -279,7 +279,7 @@ export async function DELETE(request: NextRequest) {
 
     // Cancel order
     const cancelledOrder = await prisma.queueEntry.update({
-      where: { id: parseInt(orderId) },
+      where: { id: orderId },
       data: {
         status: 'cancelled',
         updatedAt: new Date()
