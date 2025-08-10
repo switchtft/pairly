@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status'); // 'active', 'completed', 'all'
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: {
+      OR: Array<{ clientId: number } | { proTeammateId: number }>;
+      status?: { in: string[] };
+    } = {
       OR: [
         { clientId: decoded.userId },
         { proTeammateId: decoded.userId }
@@ -107,7 +110,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update session
-    const updateData: any = { status };
+    const updateData: { status: string; endTime?: Date } = { status };
     if (endTime) {
       updateData.endTime = new Date(endTime);
     }
