@@ -489,7 +489,7 @@ export default function CustomerProfilePage() {
                 <div className="text-center py-8 text-gray-400">
                   <Ban className="mx-auto mb-4" size={48} />
                   <p>No blocked teammates</p>
-                  <p className="text-sm">Blocked teammates won't be able to accept your orders</p>
+                  <p className="text-sm">Blocked teammates won&apos;t be able to accept your orders</p>
                 </div>
               )}
             </div>
