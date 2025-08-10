@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const game = searchParams.get('game') || 'valorant';
 
-    // Get available teammates (pro users who are online and not in a session)
+    // Get available teammates (simplified query without blocking for now)
     const availableTeammates = await prisma.user.findMany({
       where: {
         isPro: true,
@@ -30,18 +30,6 @@ export async function GET(request: NextRequest) {
             status: {
               in: ['Pending', 'Active']
             }
-          }
-        },
-        // Not blocked by the current user
-        blockedBy: {
-          none: {
-            userId: decoded.userId
-          }
-        },
-        // Not blocking the current user
-        blockedUsers: {
-          none: {
-            blockedId: decoded.userId
           }
         }
       },
@@ -206,7 +194,7 @@ export async function DELETE(request: NextRequest) {
 
 // Helper function to find a match
 async function findMatch(queueEntry: { id: number; userId: number; game: string; mode: string; price: number; duration: number }) {
-  // Find available teammates
+  // Find available teammates (simplified query without blocking for now)
   const availableTeammates = await prisma.user.findMany({
     where: {
       isPro: true,
@@ -217,18 +205,6 @@ async function findMatch(queueEntry: { id: number; userId: number; game: string;
           status: {
             in: ['Pending', 'Active']
           }
-        }
-      },
-      // Not blocked by the current user
-      blockedBy: {
-        none: {
-          userId: queueEntry.userId
-        }
-      },
-      // Not blocking the current user
-      blockedUsers: {
-        none: {
-          blockedId: queueEntry.userId
         }
       }
     },
