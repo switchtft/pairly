@@ -158,7 +158,7 @@ export default function CustomerProfilePage() {
       
       if (favouritesResponse.ok) {
         const favouritesData = await favouritesResponse.json();
-        setFavouriteTeammates(favouritesData.favourites.map((f: any) => f.favourite));
+        setFavouriteTeammates(favouritesData.favourites.map((f: { favourite: TeammateData }) => f.favourite));
       }
 
       // Fetch blocked teammates
@@ -168,7 +168,7 @@ export default function CustomerProfilePage() {
       
       if (blocksResponse.ok) {
         const blocksData = await blocksResponse.json();
-        setBlockedTeammates(blocksData.blocks.map((b: any) => b.blocked));
+        setBlockedTeammates(blocksData.blocks.map((b: { blocked: TeammateData }) => b.blocked));
       }
 
     } catch (error) {
