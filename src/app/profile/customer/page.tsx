@@ -23,7 +23,9 @@ import {
   Heart,
   Ban,
   DollarSign,
-  Gamepad2
+  Gamepad2,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { CustomerProfile, MatchHistoryItem } from '@/lib/types';
 
@@ -33,64 +35,32 @@ const GAMES = [
   { id: 'csgo', name: 'CS:GO 2' },
 ];
 
-// Placeholder data for Phase 1
-const placeholderCustomerProfile: CustomerProfile = {
-  id: 1,
-  email: 'customer@example.com',
-  username: 'customer123',
-  firstName: 'John',
-  lastName: 'Doe',
-  avatar: '',
-  bio: 'Passionate gamer looking for great teammates!',
-  balance: 150.75,
-  loyaltyLevel: 'Gold',
-  loyaltyPoints: 1250,
-  gameNicknames: {
-    valorant: 'ValorantPlayer#123',
-    league: 'LeagueGamer',
-    csgo: 'CSGOPlayer'
-  },
-  socials: {
-    discord: 'customer#1234',
-    steam: 'https://steamcommunity.com/id/customer',
-    twitter: '@customer123'
-  },
-  matchHistory: [
-    {
-      id: 1,
-      date: '2025-01-15T10:30:00Z',
-      game: 'Valorant',
-      result: 'win',
-      teammateId: 2,
-      teammateName: 'ProTeammate',
-      teammateAvatar: '',
-      price: 25.00,
-      duration: 60
-    },
-    {
-      id: 2,
-      date: '2025-01-14T15:45:00Z',
-      game: 'League of Legends',
-      result: 'loss',
-      teammateId: 3,
-      teammateName: 'ElitePlayer',
-      teammateAvatar: '',
-      price: 30.00,
-      duration: 45
-    }
-  ],
-  favouriteTeammates: [2, 4, 6],
-  blockedTeammates: [5],
-  createdAt: '2024-01-01T00:00:00Z',
-  lastSeen: new Date().toISOString()
-};
+interface TeammateData {
+  id: number;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  rank?: string;
+  role?: string;
+  game?: string;
+  isPro: boolean;
+  verified: boolean;
+  averageRating?: number;
+  totalReviews?: number;
+}
 
 export default function CustomerProfilePage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [customerProfile, setCustomerProfile] = useState<CustomerProfile>(placeholderCustomerProfile);
+  const [customerProfile, setCustomerProfile] = useState<CustomerProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setSaving] = useState(false);
+  const [matchHistory, setMatchHistory] = useState<MatchHistoryItem[]>([]);
+  const [favouriteTeammates, setFavouriteTeammates] = useState<TeammateData[]>([]);
+  const [blockedTeammates, setBlockedTeammates] = useState<TeammateData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -111,53 +81,272 @@ export default function CustomerProfilePage() {
       return;
     }
 
-    // In Phase 1, we use placeholder data
-    setFormData({
-      firstName: customerProfile.firstName || '',
-      lastName: customerProfile.lastName || '',
-      username: customerProfile.username || '',
-      bio: customerProfile.bio || '',
-      discord: customerProfile.socials.discord || '',
-      steam: customerProfile.socials.steam || '',
-      twitter: customerProfile.socials.twitter || '',
-      valorantNickname: customerProfile.gameNicknames.valorant || '',
-      leagueNickname: customerProfile.gameNicknames.league || '',
-      csgoNickname: customerProfile.gameNicknames.csgo || '',
-    });
+    if (user) {
+      fetchProfileData();
+    }
   }, [user, isLoading, isAuthenticated, router]);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch user profile
+      const profileResponse = await fetch('/api/auth/profile', {
+        credentials: 'include'
+      });
+      
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        const userProfile = profileData.user;
+        
+        setCustomerProfile({
+          id: userProfile.id,
+          email: userProfile.email,
+          username: userProfile.username,
+          firstName: userProfile.firstName,
+          lastName: userProfile.lastName,
+          avatar: userProfile.avatar,
+          bio: userProfile.bio,
+          balance: 150.75, // Placeholder - would come from payment system
+          loyaltyLevel: 'Gold',
+          loyaltyPoints: 1250,
+          gameNicknames: {
+            valorant: userProfile.gameNicknames?.valorant || '',
+            league: userProfile.gameNicknames?.league || '',
+            csgo: userProfile.gameNicknames?.csgo || ''
+          },
+          socials: {
+            discord: userProfile.discord || '',
+            steam: userProfile.steam || '',
+            twitter: userProfile.twitter || ''
+          },
+          matchHistory: [],
+          favouriteTeammates: [],
+          blockedTeammates: [],
+          createdAt: userProfile.createdAt,
+          lastSeen: userProfile.lastSeen
+        });
+
+        setFormData({
+          firstName: userProfile.firstName || '',
+          lastName: userProfile.lastName || '',
+          username: userProfile.username || '',
+          bio: userProfile.bio || '',
+          discord: userProfile.discord || '',
+          steam: userProfile.steam || '',
+          twitter: userProfile.twitter || '',
+          valorantNickname: userProfile.gameNicknames?.valorant || '',
+          leagueNickname: userProfile.gameNicknames?.league || '',
+          csgoNickname: userProfile.gameNicknames?.csgo || '',
+        });
+      }
+
+      // Fetch match history
+      const historyResponse = await fetch('/api/users/match-history', {
+        credentials: 'include'
+      });
+      
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setMatchHistory(historyData.matchHistory);
+      }
+
+      // Fetch favourite teammates
+      const favouritesResponse = await fetch('/api/users/favourites', {
+        credentials: 'include'
+      });
+      
+      if (favouritesResponse.ok) {
+        const favouritesData = await favouritesResponse.json();
+        setFavouriteTeammates(favouritesData.favourites.map((f: { favourite: TeammateData }) => f.favourite));
+      }
+
+      // Fetch blocked teammates
+      const blocksResponse = await fetch('/api/users/blocks', {
+        credentials: 'include'
+      });
+      
+      if (blocksResponse.ok) {
+        const blocksData = await blocksResponse.json();
+        setBlockedTeammates(blocksData.blocks.map((b: { blocked: TeammateData }) => b.blocked));
+      }
+
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+      setError('Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // In Phase 1, just simulate saving
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setCustomerProfile(prev => ({
-        ...prev,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        username: formData.username,
-        bio: formData.bio,
-        socials: {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          bio: formData.bio,
           discord: formData.discord,
           steam: formData.steam,
-          twitter: formData.twitter,
-        },
-        gameNicknames: {
-          valorant: formData.valorantNickname,
-          league: formData.leagueNickname,
-          csgo: formData.csgoNickname,
-        }
-      }));
-      setIsEditing(false);
+          // Note: gameNicknames would need a separate endpoint or schema update
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCustomerProfile(prev => prev ? {
+          ...prev,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          bio: formData.bio,
+          socials: {
+            discord: formData.discord,
+            steam: formData.steam,
+            twitter: formData.twitter,
+          }
+        } : null);
+        setIsEditing(false);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update profile');
+      }
     } catch (error) {
       console.error('Failed to update profile:', error);
+      setError('Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
 
+  const handleAddToFavourites = async (teammateId: number) => {
+    try {
+      const response = await fetch('/api/users/favourites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ teammateId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFavouriteTeammates(prev => [...prev, data.favourite.favourite]);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to add to favourites');
+      }
+    } catch (error) {
+      console.error('Failed to add to favourites:', error);
+      setError('Failed to add to favourites');
+    }
+  };
+
+  const handleRemoveFromFavourites = async (teammateId: number) => {
+    try {
+      const response = await fetch(`/api/users/favourites?teammateId=${teammateId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        setFavouriteTeammates(prev => prev.filter(t => t.id !== teammateId));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to remove from favourites');
+      }
+    } catch (error) {
+      console.error('Failed to remove from favourites:', error);
+      setError('Failed to remove from favourites');
+    }
+  };
+
+  const handleBlockTeammate = async (teammateId: number) => {
+    try {
+      const response = await fetch('/api/users/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ teammateId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBlockedTeammates(prev => [...prev, data.block.blocked]);
+        // Remove from favourites if they were favourited
+        setFavouriteTeammates(prev => prev.filter(t => t.id !== teammateId));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to block teammate');
+      }
+    } catch (error) {
+      console.error('Failed to block teammate:', error);
+      setError('Failed to block teammate');
+    }
+  };
+
+  const handleUnblockTeammate = async (teammateId: number) => {
+    try {
+      const response = await fetch(`/api/users/blocks?teammateId=${teammateId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        setBlockedTeammates(prev => prev.filter(t => t.id !== teammateId));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to unblock teammate');
+      }
+    } catch (error) {
+      console.error('Failed to unblock teammate:', error);
+      setError('Failed to unblock teammate');
+    }
+  };
+
+  const handleDirectOrder = async (teammateId: number) => {
+    try {
+      const response = await fetch('/api/orders/direct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          teammateId,
+          game: 'valorant', // Default game - could be made configurable
+          mode: 'duo',
+          duration: 60,
+          price: 15.00
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Direct order created successfully!');
+        // Could redirect to session page or show success message
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to create direct order');
+      }
+    } catch (error) {
+      console.error('Failed to create direct order:', error);
+      setError('Failed to create direct order');
+    }
+  };
+
   const handleAvatarUpload = async (file: File) => {
-    // In Phase 1, just simulate upload
+    // In Phase 3, this would upload to a file service
     console.log('Avatar upload:', file.name);
   };
 
@@ -188,10 +377,21 @@ export default function CustomerProfilePage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#e6915b]"></div>
+      </div>
+    );
+  }
+
+  if (!customerProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white mb-4">Failed to load profile</p>
+          {error && <p className="text-red-400">{error}</p>}
+        </div>
       </div>
     );
   }
@@ -390,8 +590,8 @@ export default function CustomerProfilePage() {
           </h2>
 
           <div className="space-y-4">
-            {customerProfile.matchHistory.length > 0 ? (
-              customerProfile.matchHistory.map((match) => (
+            {matchHistory.length > 0 ? (
+              matchHistory.map((match) => (
                 <div key={match.id} className="bg-[#2a2a2a] rounded-lg p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="text-2xl">{getResultIcon(match.result)}</div>
@@ -433,21 +633,45 @@ export default function CustomerProfilePage() {
             </h2>
 
             <div className="space-y-3">
-              {customerProfile.favouriteTeammates.length > 0 ? (
-                customerProfile.favouriteTeammates.map((teammateId) => (
-                  <div key={teammateId} className="bg-[#2a2a2a] rounded-lg p-3 flex items-center justify-between">
+              {favouriteTeammates.length > 0 ? (
+                favouriteTeammates.map((teammate) => (
+                  <div key={teammate.id} className="bg-[#2a2a2a] rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[#e6915b] flex items-center justify-center text-white font-bold">
-                        T
+                        {teammate.avatar ? (
+                          <img 
+                            src={teammate.avatar} 
+                            alt={teammate.username}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          teammate.username.charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div>
-                        <div className="font-semibold text-white">Teammate #{teammateId}</div>
-                        <div className="text-sm text-gray-400">⭐ 4.8 (15 reviews)</div>
+                        <div className="font-semibold text-white">{teammate.username}</div>
+                        <div className="text-sm text-gray-400">
+                          ⭐ {teammate.averageRating?.toFixed(1) || '0.0'} ({teammate.totalReviews || 0} reviews)
+                        </div>
                       </div>
                     </div>
-                    <Button size="sm" className="bg-[#e6915b] hover:bg-[#d18251]">
-                      Order Now
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="bg-[#e6915b] hover:bg-[#d18251]"
+                        onClick={() => handleDirectOrder(teammate.id)}
+                      >
+                        Order Now
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        onClick={() => handleRemoveFromFavourites(teammate.id)}
+                      >
+                        <Minus size={14} />
+                      </Button>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -468,19 +692,32 @@ export default function CustomerProfilePage() {
             </h2>
 
             <div className="space-y-3">
-              {customerProfile.blockedTeammates.length > 0 ? (
-                customerProfile.blockedTeammates.map((teammateId) => (
-                  <div key={teammateId} className="bg-[#2a2a2a] rounded-lg p-3 flex items-center justify-between">
+              {blockedTeammates.length > 0 ? (
+                blockedTeammates.map((teammate) => (
+                  <div key={teammate.id} className="bg-[#2a2a2a] rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
-                        T
+                        {teammate.avatar ? (
+                          <img 
+                            src={teammate.avatar} 
+                            alt={teammate.username}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          teammate.username.charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-400">Teammate #{teammateId}</div>
+                        <div className="font-semibold text-gray-400">{teammate.username}</div>
                         <div className="text-sm text-gray-500">Blocked</div>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
+                      onClick={() => handleUnblockTeammate(teammate.id)}
+                    >
                       Unblock
                     </Button>
                   </div>
@@ -495,6 +732,20 @@ export default function CustomerProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg">
+            <p>{error}</p>
+            <Button 
+              size="sm" 
+              className="ml-2 bg-red-600 hover:bg-red-700"
+              onClick={() => setError(null)}
+            >
+              <X size={14} />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

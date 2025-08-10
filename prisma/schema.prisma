@@ -37,6 +37,11 @@ model User {
   authSessions             AuthSession[]
   queueEntries             QueueEntry[]
   tournamentParticipations TournamentParticipant[]
+  // Favourite and block relationships
+  favourites               UserFavourite[]         @relation("UserFavourites")
+  favouritedBy             UserFavourite[]         @relation("FavouritedByUser")
+  blockedUsers             UserBlock[]             @relation("UserBlocks")
+  blockedBy                UserBlock[]             @relation("BlockedByUser")
 }
 
 model AuthSession {
@@ -160,4 +165,28 @@ model QueueEntry {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("queue_entries")
+}
+
+model UserFavourite {
+  id           Int      @id @default(autoincrement())
+  userId       Int      // User who is favouriting
+  favouriteId  Int      // User who is being favourited
+  createdAt    DateTime @default(now())
+  user         User     @relation("UserFavourites", fields: [userId], references: [id], onDelete: Cascade)
+  favourite    User     @relation("FavouritedByUser", fields: [favouriteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, favouriteId])
+  @@map("user_favourites")
+}
+
+model UserBlock {
+  id        Int      @id @default(autoincrement())
+  userId    Int      // User who is blocking
+  blockedId Int      // User who is being blocked
+  createdAt DateTime @default(now())
+  user      User     @relation("UserBlocks", fields: [userId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("BlockedByUser", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blockedId])
+  @@map("user_blocks")
 }
