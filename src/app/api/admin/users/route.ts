@@ -34,17 +34,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
 
     // Build where clause
-    const whereClause: {
-      userType?: string;
-      game?: string;
-      isOnline?: boolean;
-      OR?: Array<{
-        username?: { contains: string; mode: string };
-        firstName?: { contains: string; mode: string };
-        lastName?: { contains: string; mode: string };
-        email?: { contains: string; mode: string };
-      }>;
-    } = {};
+    const whereClause: any = {};
     
     if (userType) {
       whereClause.userType = userType;
@@ -62,10 +52,10 @@ export async function GET(request: NextRequest) {
     
     if (search) {
       whereClause.OR = [
-        { username: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
+        { username: { contains: search, mode: 'insensitive' as const } },
+        { firstName: { contains: search, mode: 'insensitive' as const } },
+        { lastName: { contains: search, mode: 'insensitive' as const } },
+        { email: { contains: search, mode: 'insensitive' as const } }
       ];
     }
 
