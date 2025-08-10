@@ -23,12 +23,12 @@ if (!userIdParam || !userType) {
   return NextResponse.json({ error: 'Missing userId or userType' }, { status: 400 });
 }
 
-const userId = Number(userIdParam);
-if (isNaN(userId)) {
+const userId = userIdParam;
+if (!userId) {
   return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
 }
 
-// Now use userId (a number) safely in Prisma queries:
+// Now use userId (a string) safely in Prisma queries:
 const userQuests = await prisma.userQuest.findMany({
   where: { userId: userId },
   include: { quest: true }

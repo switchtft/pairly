@@ -339,7 +339,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 // Helper function to find a match
-async function findMatch(queueEntry: { id: number; userId: number; game: string; mode: string; price: number; duration: number }) {
+async function findMatch(queueEntry: { id: string; userId: string; game: string; gameMode: string; totalPrice: number; duration: number }) {
   // First, try to find favorited teammates
   const favoriteTeammates = await prisma.favoriteTeammate.findMany({
     where: {
@@ -364,9 +364,9 @@ async function findMatch(queueEntry: { id: number; userId: number; game: string;
 
   // If no favorited teammates available, find any available teammates
   let availableTeammates: Array<{
-    id: number;
+    id: string;
     username: string;
-    rank?: string;
+    rank: string | null;
     reviewsReceived?: Array<{ rating: number }>;
   }> = [];
   
@@ -425,10 +425,10 @@ async function findMatch(queueEntry: { id: number; userId: number; game: string;
       clientId: queueEntry.userId,
       proTeammateId: teammate.id,
       game: queueEntry.game,
-      mode: queueEntry.mode,
+      mode: queueEntry.gameMode,
       status: 'Pending',
       startTime: new Date(),
-      price: queueEntry.price,
+      price: queueEntry.totalPrice,
       duration: queueEntry.duration
     },
     include: {

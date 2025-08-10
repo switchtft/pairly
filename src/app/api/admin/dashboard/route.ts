@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
       where: { id: decoded.userId },
       select: { isAdmin: true }
     });
+    
 
     if (!user?.isAdmin) {
       return NextResponse.json({ error: 'Not authorized as admin' }, { status: 403 });
