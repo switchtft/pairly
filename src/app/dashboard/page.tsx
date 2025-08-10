@@ -24,24 +24,278 @@ import {
   Settings,
   DollarSign,
   CheckCircle,
-  XCircle
+  XCircle,
+  Wifi,
+  WifiOff,
+  AlertCircle
 } from 'lucide-react';
 
 type TabType = 'dashboard' | 'order-history' | 'quest' | 'teammate-rules';
+
+interface IncomingOrder {
+  id: number;
+  clientId: number;
+  clientName: string;
+  clientAvatar?: string;
+  game: string;
+  mode: string;
+  duration: number;
+  price: number;
+  createdAt: string;
+}
+
+interface OrderHistoryItem {
+  id: number;
+  clientId: number;
+  clientName: string;
+  clientAvatar?: string;
+  game: string;
+  mode: string;
+  result: 'win' | 'loss' | 'draw';
+  price: number;
+  createdAt: string;
+  status: 'completed' | 'pending' | 'cancelled';
+  payoutRequested: boolean;
+}
+
+interface Quest {
+  id: number;
+  title: string;
+  description: string;
+  reward: number;
+  progress: number;
+  maxProgress: number;
+  status: 'active' | 'completed' | 'locked';
+  type: 'orders' | 'rating' | 'streak' | 'earnings';
+}
+
+interface WeeklyStats {
+  totalPayment: number;
+  orders: number;
+  winRate: number;
+  leaderboardPosition: number;
+}
 
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
+  const [incomingOrders, setIncomingOrders] = useState<IncomingOrder[]>([]);
+  const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([]);
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStats>({
+    totalPayment: 0,
+    orders: 0,
+    winRate: 0,
+    leaderboardPosition: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user, isLoading, isAuthenticated, router]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch teammate status and stats
+      const statsResponse = await fetch('/api/teammates/stats', {
+        credentials: 'include'
+      });
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setWeeklyStats(statsData.weeklyStats);
+        setIsOnline(statsData.isOnline);
+      }
+
+      // Fetch incoming orders
+      const ordersResponse = await fetch('/api/teammates/incoming-orders', {
+        credentials: 'include'
+      });
+      
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        setIncomingOrders(ordersData.orders);
+      }
+
+      // Fetch order history
+      const historyResponse = await fetch('/api/teammates/order-history', {
+        credentials: 'include'
+      });
+      
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setOrderHistory(historyData.orders);
+      }
+
+      // Fetch quests
+      const questsResponse = await fetch('/api/teammates/quests', {
+        credentials: 'include'
+      });
+      
+      if (questsResponse.ok) {
+        const questsData = await questsResponse.json();
+        setQuests(questsData.quests);
+      }
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleOnline = async () => {
+    try {
+      const response = await fetch('/api/teammates/toggle-online', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ isOnline: !isOnline })
+      });
+
+      if (response.ok) {
+        setIsOnline(!isOnline);
+        // Refresh incoming orders when going online
+        if (!isOnline) {
+          fetchDashboardData();
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update online status');
+      }
+    } catch (error) {
+      console.error('Failed to update online status:', error);
+      setError('Failed to update online status');
+    }
+  };
+
+  const handleAcceptOrder = async (orderId: number) => {
+    try {
+      const response = await fetch('/api/teammates/accept-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ orderId })
+      });
+
+      if (response.ok) {
+        // Remove from incoming orders
+        setIncomingOrders(prev => prev.filter(order => order.id !== orderId));
+        // Refresh data
+        fetchDashboardData();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to accept order');
+      }
+    } catch (error) {
+      console.error('Failed to accept order:', error);
+      setError('Failed to accept order');
+    }
+  };
+
+  const handleRejectOrder = async (orderId: number) => {
+    try {
+      const response = await fetch('/api/teammates/reject-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ orderId })
+      });
+
+      if (response.ok) {
+        // Remove from incoming orders
+        setIncomingOrders(prev => prev.filter(order => order.id !== orderId));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to reject order');
+      }
+    } catch (error) {
+      console.error('Failed to reject order:', error);
+      setError('Failed to reject order');
+    }
+  };
+
+  const handleRequestPayout = async (orderId: number) => {
+    try {
+      const response = await fetch('/api/teammates/request-payout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ orderId })
+      });
+
+      if (response.ok) {
+        // Update order status
+        setOrderHistory(prev => prev.map(order => 
+          order.id === orderId 
+            ? { ...order, payoutRequested: true }
+            : order
+        ));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to request payout');
+      }
+    } catch (error) {
+      console.error('Failed to request payout:', error);
+      setError('Failed to request payout');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const getResultColor = (result: string) => {
+    switch (result) {
+      case 'win': return 'text-green-400';
+      case 'loss': return 'text-red-400';
+      case 'draw': return 'text-yellow-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getQuestProgress = (quest: Quest) => {
+    return Math.min((quest.progress / quest.maxProgress) * 100, 100);
+  };
+
+  const getQuestStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'border-blue-500';
+      case 'completed': return 'border-green-500';
+      case 'locked': return 'border-gray-500';
+      default: return 'border-gray-500';
+    }
+  };
+
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#e6915b]"></div>
@@ -60,98 +314,116 @@ export default function DashboardPage() {
 
   const renderDashboardTab = () => (
     <div className="space-y-6">
+      {/* Online Status */}
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
         <h2 className="text-xl font-bold text-white mb-4">Online Status</h2>
         <div className="flex items-center gap-4">
           <div className={`w-4 h-4 rounded-full ${isOnline ? 'bg-green-400' : 'bg-red-400'}`}></div>
           <span className="text-white">{isOnline ? 'Online' : 'Offline'}</span>
           <Button
-            onClick={() => setIsOnline(!isOnline)}
+            onClick={handleToggleOnline}
             className={`ml-auto ${isOnline ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
           >
+            {isOnline ? <WifiOff size={16} className="mr-2" /> : <Wifi size={16} className="mr-2" />}
             {isOnline ? 'Go Offline' : 'Go Online'}
           </Button>
         </div>
+        {!isOnline && (
+          <p className="text-gray-400 text-sm mt-2">
+            <AlertCircle size={14} className="inline mr-1" />
+            You need to be online to receive orders
+          </p>
+        )}
       </div>
 
+      {/* Incoming Orders */}
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-        <h2 className="text-xl font-bold text-white mb-4">Incoming Orders</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white">Incoming Orders</h2>
+          <Link href="/teammate-rules" className="text-[#e6915b] hover:text-[#d18251] text-sm">
+            View Teammate Rules →
+          </Link>
+        </div>
         <div className="space-y-4">
-          <div className="p-4 bg-[#2a2a2a] rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#e6915b] rounded-full flex items-center justify-center">
-                  <User className="text-white" size={20} />
+          {incomingOrders.length > 0 ? (
+            incomingOrders.map((order) => (
+              <div key={order.id} className="p-4 bg-[#2a2a2a] rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#e6915b] rounded-full flex items-center justify-center">
+                      {order.clientAvatar ? (
+                        <img 
+                          src={order.clientAvatar} 
+                          alt={order.clientName}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white font-bold">
+                          {order.clientName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{order.clientName}</p>
+                      <p className="text-gray-400 text-sm">{order.game} - {order.mode}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-green-400 font-bold">${order.price.toFixed(2)}</p>
+                    <p className="text-gray-400 text-sm">{order.duration}min</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white font-medium">JohnDoe123</p>
-                  <p className="text-gray-400 text-sm">Valorant - Ranked</p>
+                <div className="flex gap-2 mt-3">
+                  <Button 
+                    className="bg-green-500 hover:bg-green-600 flex-1"
+                    onClick={() => handleAcceptOrder(order.id)}
+                  >
+                    <CheckCircle size={16} className="mr-2" />
+                    Accept
+                  </Button>
+                  <Button 
+                    className="bg-red-500 hover:bg-red-600 flex-1"
+                    onClick={() => handleRejectOrder(order.id)}
+                  >
+                    <XCircle size={16} className="mr-2" />
+                    Decline
+                  </Button>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-green-400 font-bold">$15.00</p>
-                <p className="text-gray-400 text-sm">2 hours ago</p>
-              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <Users className="mx-auto mb-4" size={48} />
+              <p>No incoming orders</p>
+              <p className="text-sm">
+                {isOnline 
+                  ? 'Orders will appear here when customers request your services'
+                  : 'Go online to start receiving orders'
+                }
+              </p>
             </div>
-            <div className="flex gap-2 mt-3">
-              <Button className="bg-green-500 hover:bg-green-600 flex-1">
-                <CheckCircle size={16} className="mr-2" />
-                Accept
-              </Button>
-              <Button className="bg-red-500 hover:bg-red-600 flex-1">
-                <XCircle size={16} className="mr-2" />
-                Decline
-              </Button>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-[#2a2a2a] rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#6b8ab0] rounded-full flex items-center justify-center">
-                  <User className="text-white" size={20} />
-                </div>
-                <div>
-                  <p className="text-white font-medium">GamerGirl456</p>
-                  <p className="text-gray-400 text-sm">CS:GO - Casual</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-green-400 font-bold">$12.50</p>
-                <p className="text-gray-400 text-sm">1 hour ago</p>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <Button className="bg-green-500 hover:bg-green-600 flex-1">
-                <CheckCircle size={16} className="mr-2" />
-                Accept
-              </Button>
-              <Button className="bg-red-500 hover:bg-red-600 flex-1">
-                <XCircle size={16} className="mr-2" />
-                Decline
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
+      {/* Weekly Stats */}
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
         <h2 className="text-xl font-bold text-white mb-4">Weekly Stats</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-400">$245.75</p>
+            <p className="text-2xl font-bold text-green-400">${weeklyStats.totalPayment.toFixed(2)}</p>
             <p className="text-gray-400 text-sm">Total Payment</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-white">18</p>
+            <p className="text-2xl font-bold text-white">{weeklyStats.orders}</p>
             <p className="text-gray-400 text-sm">Orders</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-blue-400">78%</p>
+            <p className="text-2xl font-bold text-blue-400">{weeklyStats.winRate}%</p>
             <p className="text-gray-400 text-sm">Win Rate</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-yellow-400">#12</p>
+            <p className="text-2xl font-bold text-yellow-400">#{weeklyStats.leaderboardPosition}</p>
             <p className="text-gray-400 text-sm">Leaderboard</p>
           </div>
         </div>
@@ -164,59 +436,51 @@ export default function DashboardPage() {
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
         <h2 className="text-xl font-bold text-white mb-4">Order History</h2>
         <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
-            <div className="text-gray-400 text-sm">08/07/2025 - 3:24 am</div>
-            <div className="w-8 h-8 bg-[#e6915b] rounded-full flex items-center justify-center">
-              <User className="text-white" size={16} />
+          {orderHistory.length > 0 ? (
+            orderHistory.map((order) => (
+              <div key={order.id} className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
+                <div className="text-gray-400 text-sm min-w-[140px]">
+                  {formatDate(order.createdAt)}
+                </div>
+                <div className="w-8 h-8 bg-[#e6915b] rounded-full flex items-center justify-center">
+                  {order.clientAvatar ? (
+                    <img 
+                      src={order.clientAvatar} 
+                      alt={order.clientName}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-bold text-sm">
+                      {order.clientName.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">{order.clientName}</p>
+                  <p className="text-gray-400 text-sm">{order.game} - {order.mode}</p>
+                </div>
+                <div className="text-center">
+                  <p className={`text-sm font-medium ${getResultColor(order.result)}`}>
+                    {order.result.toUpperCase()}
+                  </p>
+                </div>
+                <div className="text-green-400 font-bold">${order.price.toFixed(2)}</div>
+                <Button 
+                  className={`${order.payoutRequested ? 'bg-gray-500 cursor-not-allowed' : 'bg-[#e6915b] hover:bg-[#d18251]'}`}
+                  disabled={order.payoutRequested}
+                  onClick={() => handleRequestPayout(order.id)}
+                >
+                  {order.payoutRequested ? 'Payout Requested' : 'Request payout'}
+                </Button>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <History className="mx-auto mb-4" size={48} />
+              <p>No order history yet</p>
+              <p className="text-sm">Complete orders to see your history here!</p>
             </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">JohnDoe123</p>
-              <p className="text-gray-400 text-sm">Valorant - Ranked</p>
-            </div>
-            <div className="text-center">
-              <p className="text-white">0W - 0L</p>
-            </div>
-            <div className="text-green-400 font-bold">$4.85</div>
-            <Button className="bg-[#e6915b] hover:bg-[#d18251]">
-              Request payout
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
-            <div className="text-gray-400 text-sm">07/07/2025 - 8:15 pm</div>
-            <div className="w-8 h-8 bg-[#6b8ab0] rounded-full flex items-center justify-center">
-              <User className="text-white" size={16} />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">GamerGirl456</p>
-              <p className="text-gray-400 text-sm">CS:GO - Casual</p>
-            </div>
-            <div className="text-center">
-              <p className="text-white">2W - 1L</p>
-            </div>
-            <div className="text-green-400 font-bold">$12.50</div>
-            <Button className="bg-[#e6915b] hover:bg-[#d18251]">
-              Request payout
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
-            <div className="text-gray-400 text-sm">06/07/2025 - 2:30 pm</div>
-            <div className="w-8 h-8 bg-[#e6915b] rounded-full flex items-center justify-center">
-              <User className="text-white" size={16} />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">ProPlayer789</p>
-              <p className="text-gray-400 text-sm">League of Legends - Ranked</p>
-            </div>
-            <div className="text-center">
-              <p className="text-white">1W - 2L</p>
-            </div>
-            <div className="text-green-400 font-bold">$18.75</div>
-            <Button className="bg-[#e6915b] hover:bg-[#d18251]">
-              Request payout
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -227,49 +491,44 @@ export default function DashboardPage() {
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
         <h2 className="text-xl font-bold text-white mb-4">Available Quests</h2>
         <div className="space-y-4">
-          <div className="p-4 bg-[#2a2a2a] rounded-lg border-l-4 border-[#e6915b]">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-white font-medium">Complete 10 Orders</h3>
-                <p className="text-gray-400 text-sm">Complete 10 orders this week</p>
-                <p className="text-yellow-400 text-sm mt-1">Reward: 50 leaderboard points</p>
-              </div>
-              <div className="text-right">
-                <p className="text-white">7/10</p>
-                <div className="w-20 bg-[#1a1a1a] rounded-full h-2 mt-1">
-                  <div className="bg-[#e6915b] h-2 rounded-full" style={{width: '70%'}}></div>
+          {quests.length > 0 ? (
+            quests.map((quest) => (
+              <div key={quest.id} className={`p-4 bg-[#2a2a2a] rounded-lg border-l-4 ${getQuestStatusColor(quest.status)}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-white font-medium">{quest.title}</h3>
+                    <p className="text-gray-400 text-sm">{quest.description}</p>
+                    <p className="text-yellow-400 text-sm mt-1">Reward: {quest.reward} leaderboard points</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white">{quest.progress}/{quest.maxProgress}</p>
+                    <div className="w-20 bg-[#1a1a1a] rounded-full h-2 mt-1">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          quest.status === 'completed' ? 'bg-green-500' : 
+                          quest.status === 'active' ? 'bg-[#e6915b]' : 'bg-gray-500'
+                        }`} 
+                        style={{width: `${getQuestProgress(quest)}%`}}
+                      ></div>
+                    </div>
+                    <p className={`text-sm ${
+                      quest.status === 'completed' ? 'text-green-400' : 
+                      quest.status === 'active' ? 'text-blue-400' : 'text-gray-500'
+                    }`}>
+                      {quest.status === 'completed' ? 'Completed' : 
+                       quest.status === 'active' ? 'Active' : 'Locked'}
+                    </p>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <Trophy className="mx-auto mb-4" size={48} />
+              <p>No quests available</p>
+              <p className="text-sm">Complete more orders to unlock quests!</p>
             </div>
-          </div>
-
-          <div className="p-4 bg-[#2a2a2a] rounded-lg border-l-4 border-[#6b8ab0]">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-white font-medium">Maintain 4.5+ Rating</h3>
-                <p className="text-gray-400 text-sm">Keep average rating above 4.5 for 7 days</p>
-                <p className="text-yellow-400 text-sm mt-1">Reward: 100 leaderboard points</p>
-              </div>
-              <div className="text-right">
-                <p className="text-white">4.8</p>
-                <p className="text-green-400 text-sm">Active</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 bg-[#2a2a2a] rounded-lg border-l-4 border-yellow-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-white font-medium">Win Streak</h3>
-                <p className="text-gray-400 text-sm">Win 5 consecutive games</p>
-                <p className="text-yellow-400 text-sm mt-1">Reward: 75 leaderboard points</p>
-              </div>
-              <div className="text-right">
-                <p className="text-white">3/5</p>
-                <p className="text-blue-400 text-sm">In Progress</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -287,7 +546,7 @@ export default function DashboardPage() {
 
           <div className="p-4 bg-[#2a2a2a] rounded-lg">
             <h3 className="text-white font-medium mb-2">2. Session Quality</h3>
-            <p className="text-gray-400 text-sm">Provide high-quality coaching and gameplay. Focus on improving the customer&apos;s skills and experience.</p>
+                         <p className="text-gray-400 text-sm">Provide high-quality coaching and gameplay. Focus on improving the customer&apos;s skills and experience.</p>
           </div>
 
           <div className="p-4 bg-[#2a2a2a] rounded-lg">
@@ -308,6 +567,16 @@ export default function DashboardPage() {
           <div className="p-4 bg-[#2a2a2a] rounded-lg">
             <h3 className="text-white font-medium mb-2">6. Platform Guidelines</h3>
             <p className="text-gray-400 text-sm">Follow all platform guidelines and terms of service. Violations may result in account suspension.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">7. Online Status</h3>
+                         <p className="text-gray-400 text-sm">Keep your online status accurate. Only go online when you&apos;re available to accept orders.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">8. Order Management</h3>
+            <p className="text-gray-400 text-sm">Respond to incoming orders promptly. Accept or decline within a reasonable time frame.</p>
           </div>
         </div>
       </div>
@@ -405,7 +674,7 @@ export default function DashboardPage() {
                   className={`w-full justify-start ${activeTab === 'quest' ? 'bg-[#e6915b] hover:bg-[#d18251]' : 'bg-transparent hover:bg-[#2a2a2a]'}`}
                 >
                   <Trophy size={16} className="mr-3" />
-                  Quest Button
+                  Quests
                 </Button>
                 <Button
                   onClick={() => setActiveTab('teammate-rules')}
@@ -423,6 +692,20 @@ export default function DashboardPage() {
             {renderContent()}
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg">
+            <p>{error}</p>
+            <Button 
+              size="sm" 
+              className="ml-2 bg-red-600 hover:bg-red-700"
+              onClick={() => setError(null)}
+            >
+              ×
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
