@@ -3,6 +3,56 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import type { Server as HTTPServer } from 'http';
 
+// Socket event type definitions
+export interface ServerToClientEvents {
+  'queue:update': (data: {
+    queueLength: number;
+    estimatedWaitTime: number;
+    availableTeammates: number;
+  }) => void;
+  'match:found': (data: {
+    sessionId: string;
+    teammate: {
+      id: string;
+      username: string;
+      rank: string;
+    };
+  }) => void;
+  'teammate:online': (data: {
+    username: string;
+    game: string;
+  }) => void;
+  'teammate:offline': (data: {
+    username: string;
+  }) => void;
+  'chat:message': (data: {
+    id: string;
+    content: string;
+    senderId: string;
+    senderName: string;
+    createdAt: string;
+  }) => void;
+}
+
+export interface ClientToServerEvents {
+  'queue:join': (data: { game: string; gameMode: string }) => void;
+  'queue:leave': () => void;
+  'chat:send': (data: { sessionId: string; content: string }) => void;
+  'session:join': (data: { sessionId: string }) => void;
+  'teammate:status': (data: { isOnline: boolean }) => void;
+}
+
+export interface InterServerEvents {
+  // Add any inter-server events if needed
+}
+
+export interface SocketData {
+  userId: string;
+  username: string;
+  isPro: boolean;
+  game: string | null;
+}
+
 // Global reference to the socket server
 let globalSocketServer: SocketIOServer | null = null;
 
@@ -23,7 +73,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
           return next(new Error('Authentication token required'));
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
         
         // Get user data
         const prisma = new PrismaClient();
@@ -55,7 +105,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
     });
 
     // Connection handler
-    io.on('connection', (socket: Socket & { data?: { userId: number; username: string; isPro: boolean; game: string | null } }) => {
+    io.on('connection', (socket: Socket & { data?: { userId: string; username: string; isPro: boolean; game: string | null } }) => {
       console.log(`User ${socket.data.username} connected`);
 
       // Update user's online status
@@ -107,7 +157,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
       });
 
       // Handle match acceptance
-      socket.on('match:accept', async (data: { sessionId: number; clientId: number; teammateId: number }) => {
+      socket.on('match:accept', async (data: { sessionId: string; clientId: string; teammateId: string }) => {
         try {
           const { sessionId, clientId, teammateId } = data;
           
@@ -162,7 +212,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
       });
 
       // Handle session messages
-      socket.on('session:message', async (data: { sessionId: number; message: string; type?: string }) => {
+      socket.on('session:message', async (data: { sessionId: string; message: string; type?: string }) => {
         try {
           const { sessionId, message, type = 'text' } = data;
           
@@ -218,7 +268,7 @@ function initSocketServer(server: HTTPServer & { io?: SocketIOServer }) {
   return server.io;
 }
 
-async function updateUserOnlineStatus(userId: number, isOnline: boolean) {
+async function updateUserOnlineStatus(userId: string, isOnline: boolean) {
   try {
     const prisma = new PrismaClient();
     await prisma.user.update({
@@ -258,7 +308,7 @@ async function broadcastQueueUpdate(game: string) {
   }
 }
 
-async function notifyMatchFound(sessionId: number, clientId: number, teammateId: number) {
+async function notifyMatchFound(sessionId: string, clientId: string, teammateId: string) {
   try {
     if (globalSocketServer) {
       // Notify the client

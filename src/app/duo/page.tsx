@@ -105,7 +105,7 @@ function GameSelector({ selectedGame, onGameSelect }: {
 // Integrated booking form
 function BookingForm({ game, onBookingComplete }: { 
   game: string; 
-  onBookingComplete: (queueEntryId: number) => void;
+  onBookingComplete: (queueEntryId: string) => void;
 }) {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -669,7 +669,7 @@ export default function DuoPage() {
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [queueStats, setQueueStats] = useState({
     queueLength: 0,
     estimatedWaitTime: 0,
@@ -680,25 +680,41 @@ export default function DuoPage() {
   const { isConnected, joinQueue: joinSocketQueue, leaveQueue: leaveSocketQueue } = useSocket();
 
   // Real-time queue updates
-  useSocketEvent('queue:update', (data) => {
+  useSocketEvent('queue:update', (data: {
+    queueLength: number;
+    estimatedWaitTime: number;
+    availableTeammates: number;
+  }) => {
     console.log('Queue update received:', data);
     setQueueStats(data);
   });
 
   // Real-time match notifications
-  useSocketEvent('match:found', (data) => {
+  useSocketEvent('match:found', (data: {
+    sessionId: string;
+    teammate: {
+      id: string;
+      username: string;
+      rank: string;
+    };
+  }) => {
     setCurrentSessionId(data.sessionId);
     setShowChat(true);
     alert(`🎉 Match found! You've been paired with ${data.teammate.username} (${data.teammate.rank})`);
   });
 
   // Real-time teammate status updates
-  useSocketEvent('teammate:online', (data) => {
+  useSocketEvent('teammate:online', (data: {
+    username: string;
+    game: string;
+  }) => {
     console.log(`Teammate ${data.username} is now online for ${data.game}`);
     // You could update the players list here to show real-time status
   });
 
-  useSocketEvent('teammate:offline', (data) => {
+  useSocketEvent('teammate:offline', (data: {
+    username: string;
+  }) => {
     console.log(`Teammate ${data.username} is now offline`);
     // You could update the players list here to show real-time status
   });
@@ -753,7 +769,7 @@ export default function DuoPage() {
   }, [players, selectedGame]);
 
   // Handle booking completion
-  const handleBookingComplete = useCallback((queueEntryId: number) => {
+  const handleBookingComplete = useCallback((queueEntryId: string) => {
     console.log('Booking completed, queue entry ID:', queueEntryId);
     // The user is now in the queue, you can show queue status or redirect
     alert('Booking completed! You are now in the queue.');
@@ -859,7 +875,7 @@ export default function DuoPage() {
               <EnhancedChatInterface 
                 sessionId={currentSessionId} 
                 teammate={{
-                  id: 1, // This would come from the actual session data
+                  id: "1", // This would come from the actual session data
                   username: "ProTeammate",
                   rank: "Diamond",
                   isOnline: true

@@ -27,9 +27,9 @@ import { useSocket, useSocketEvent } from '@/hooks/useSocket';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
-  id: number;
+  id: string;
   content: string;
-  senderId: number;
+  senderId: string;
   senderName: string;
   createdAt: string;
   type: 'text' | 'file' | 'image' | 'voice';
@@ -40,9 +40,9 @@ interface Message {
 }
 
 interface EnhancedChatInterfaceProps {
-  sessionId: number;
+  sessionId: string;
   teammate?: {
-    id: number;
+    id: string;
     username: string;
     rank: string;
     isOnline: boolean;

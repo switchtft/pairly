@@ -15,8 +15,8 @@ interface UseSocketReturn {
   isConnected: boolean;
   joinQueue: (game: string, gameMode: string) => void;
   leaveQueue: () => void;
-  sendChatMessage: (sessionId: number, content: string) => void;
-  joinSession: (sessionId: number) => void;
+  sendChatMessage: (sessionId: string, content: string) => void;
+  joinSession: (sessionId: string) => void;
   updateTeammateStatus: (isOnline: boolean) => void;
 }
 
@@ -99,13 +99,13 @@ export function useSocket(): UseSocketReturn {
     }
   }, [isConnected]);
 
-  const sendChatMessage = useCallback((sessionId: number, content: string) => {
+  const sendChatMessage = useCallback((sessionId: string, content: string) => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit('chat:send', { sessionId, content });
     }
   }, [isConnected]);
 
-  const joinSession = useCallback((sessionId: number) => {
+  const joinSession = useCallback((sessionId: string) => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit('session:join', { sessionId });
     }
