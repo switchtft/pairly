@@ -31,6 +31,18 @@ export async function GET(request: NextRequest) {
               in: ['Pending', 'Active']
             }
           }
+        },
+        // Not blocked by the current user
+        blockedBy: {
+          none: {
+            userId: decoded.userId
+          }
+        },
+        // Not blocking the current user
+        blockedUsers: {
+          none: {
+            blockedId: decoded.userId
+          }
         }
       },
       select: {
@@ -205,6 +217,18 @@ async function findMatch(queueEntry: { id: number; userId: number; game: string;
           status: {
             in: ['Pending', 'Active']
           }
+        }
+      },
+      // Not blocked by the current user
+      blockedBy: {
+        none: {
+          userId: queueEntry.userId
+        }
+      },
+      // Not blocking the current user
+      blockedUsers: {
+        none: {
+          blockedId: queueEntry.userId
         }
       }
     },
