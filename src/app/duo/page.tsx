@@ -138,7 +138,7 @@ function BookingForm({ game, onBookingComplete }: {
     ],
     csgo: [
       { id: 'competitive', name: 'Competitive', description: '5v5 competitive matches', basePrice: 18 },
-      { id: 'casual', name: 'Casual', description: 'Casual 10v10 matches', basePrice: 12 },
+      { id: 'casual', name: 'Casual', description: 'Casual Draft matches', basePrice: 12 },
       { id: 'deathmatch', name: 'Deathmatch', description: 'Fast-paced deathmatch', basePrice: 10 },
       { id: 'customs', name: 'Customs', description: 'Custom game modes', basePrice: 8 },
     ],
