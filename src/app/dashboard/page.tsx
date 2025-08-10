@@ -18,119 +18,28 @@ import {
   Target,
   Gamepad2,
   Crown,
-  Shield
+  Shield,
+  History,
+  BookOpen,
+  Settings,
+  DollarSign,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
-interface DashboardStats {
-  upcomingSessions: number;
-  completedSessions: number;
-  averageRating: number;
-  totalEarnings: number;
-  winRate: number;
-  activeTournaments: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'session' | 'tournament' | 'review';
-  title: string;
-  description: string;
-  timestamp: string;
-  status: 'completed' | 'upcoming' | 'in-progress';
-}
+type TabType = 'dashboard' | 'order-history' | 'quest' | 'teammate-rules';
 
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [stats] = useState<DashboardStats>({
-    upcomingSessions: 3,
-    completedSessions: 47,
-    averageRating: 4.8,
-    totalEarnings: 1420,
-    winRate: 73,
-    activeTournaments: 2,
-  });
-  
-  const [recentActivity] = useState<RecentActivity[]>([
-    {
-      id: '1',
-      type: 'session',
-      title: 'Duo Session with MasterYi',
-      description: 'Ranked Valorant coaching session',
-      timestamp: '2024-01-15T14:30:00Z',
-      status: 'upcoming'
-    },
-    {
-      id: '2',
-      type: 'tournament',
-      title: 'Winter Championship',
-      description: 'Qualified for semifinals',
-      timestamp: '2024-01-14T20:00:00Z',
-      status: 'in-progress'
-    },
-    {
-      id: '3',
-      type: 'review',
-      title: 'New Review Received',
-      description: '5-star review from coaching session',
-      timestamp: '2024-01-14T16:45:00Z',
-      status: 'completed'
-    },
-    {
-      id: '4',
-      type: 'session',
-      title: 'CS:GO Strategy Session',
-      description: 'Team tactics and map control',
-      timestamp: '2024-01-13T19:00:00Z',
-      status: 'completed'
-    },
-  ]);
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router]);
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'session':
-        return <Users className="text-[#e6915b]" size={20} />;
-      case 'tournament':
-        return <Trophy className="text-yellow-400" size={20} />;
-      case 'review':
-        return <Star className="text-blue-400" size={20} />;
-      default:
-        return <Calendar className="text-gray-400" size={20} />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'upcoming':
-        return 'text-blue-400';
-      case 'in-progress':
-        return 'text-green-400';
-      case 'completed':
-        return 'text-gray-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return `${Math.floor(diffInHours * 60)}m ago`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -149,256 +58,369 @@ export default function DashboardPage() {
     return user.username;
   };
 
+  const renderDashboardTab = () => (
+    <div className="space-y-6">
+      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Online Status</h2>
+        <div className="flex items-center gap-4">
+          <div className={`w-4 h-4 rounded-full ${isOnline ? 'bg-green-400' : 'bg-red-400'}`}></div>
+          <span className="text-white">{isOnline ? 'Online' : 'Offline'}</span>
+          <Button
+            onClick={() => setIsOnline(!isOnline)}
+            className={`ml-auto ${isOnline ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+          >
+            {isOnline ? 'Go Offline' : 'Go Online'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Incoming Orders</h2>
+        <div className="space-y-4">
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#e6915b] rounded-full flex items-center justify-center">
+                  <User className="text-white" size={20} />
+                </div>
+                <div>
+                  <p className="text-white font-medium">JohnDoe123</p>
+                  <p className="text-gray-400 text-sm">Valorant - Ranked</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-green-400 font-bold">$15.00</p>
+                <p className="text-gray-400 text-sm">2 hours ago</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button className="bg-green-500 hover:bg-green-600 flex-1">
+                <CheckCircle size={16} className="mr-2" />
+                Accept
+              </Button>
+              <Button className="bg-red-500 hover:bg-red-600 flex-1">
+                <XCircle size={16} className="mr-2" />
+                Decline
+              </Button>
+            </div>
+          </div>
+          
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#6b8ab0] rounded-full flex items-center justify-center">
+                  <User className="text-white" size={20} />
+                </div>
+                <div>
+                  <p className="text-white font-medium">GamerGirl456</p>
+                  <p className="text-gray-400 text-sm">CS:GO - Casual</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-green-400 font-bold">$12.50</p>
+                <p className="text-gray-400 text-sm">1 hour ago</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button className="bg-green-500 hover:bg-green-600 flex-1">
+                <CheckCircle size={16} className="mr-2" />
+                Accept
+              </Button>
+              <Button className="bg-red-500 hover:bg-red-600 flex-1">
+                <XCircle size={16} className="mr-2" />
+                Decline
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Weekly Stats</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-400">$245.75</p>
+            <p className="text-gray-400 text-sm">Total Payment</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white">18</p>
+            <p className="text-gray-400 text-sm">Orders</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-400">78%</p>
+            <p className="text-gray-400 text-sm">Win Rate</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-yellow-400">#12</p>
+            <p className="text-gray-400 text-sm">Leaderboard</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOrderHistoryTab = () => (
+    <div className="space-y-4">
+      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Order History</h2>
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
+            <div className="text-gray-400 text-sm">08/07/2025 - 3:24 am</div>
+            <div className="w-8 h-8 bg-[#e6915b] rounded-full flex items-center justify-center">
+              <User className="text-white" size={16} />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">JohnDoe123</p>
+              <p className="text-gray-400 text-sm">Valorant - Ranked</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white">0W - 0L</p>
+            </div>
+            <div className="text-green-400 font-bold">$4.85</div>
+            <Button className="bg-[#e6915b] hover:bg-[#d18251]">
+              Request payout
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
+            <div className="text-gray-400 text-sm">07/07/2025 - 8:15 pm</div>
+            <div className="w-8 h-8 bg-[#6b8ab0] rounded-full flex items-center justify-center">
+              <User className="text-white" size={16} />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">GamerGirl456</p>
+              <p className="text-gray-400 text-sm">CS:GO - Casual</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white">2W - 1L</p>
+            </div>
+            <div className="text-green-400 font-bold">$12.50</div>
+            <Button className="bg-[#e6915b] hover:bg-[#d18251]">
+              Request payout
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg">
+            <div className="text-gray-400 text-sm">06/07/2025 - 2:30 pm</div>
+            <div className="w-8 h-8 bg-[#e6915b] rounded-full flex items-center justify-center">
+              <User className="text-white" size={16} />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">ProPlayer789</p>
+              <p className="text-gray-400 text-sm">League of Legends - Ranked</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white">1W - 2L</p>
+            </div>
+            <div className="text-green-400 font-bold">$18.75</div>
+            <Button className="bg-[#e6915b] hover:bg-[#d18251]">
+              Request payout
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderQuestTab = () => (
+    <div className="space-y-4">
+      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Available Quests</h2>
+        <div className="space-y-4">
+          <div className="p-4 bg-[#2a2a2a] rounded-lg border-l-4 border-[#e6915b]">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-medium">Complete 10 Orders</h3>
+                <p className="text-gray-400 text-sm">Complete 10 orders this week</p>
+                <p className="text-yellow-400 text-sm mt-1">Reward: 50 leaderboard points</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white">7/10</p>
+                <div className="w-20 bg-[#1a1a1a] rounded-full h-2 mt-1">
+                  <div className="bg-[#e6915b] h-2 rounded-full" style={{width: '70%'}}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg border-l-4 border-[#6b8ab0]">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-medium">Maintain 4.5+ Rating</h3>
+                <p className="text-gray-400 text-sm">Keep average rating above 4.5 for 7 days</p>
+                <p className="text-yellow-400 text-sm mt-1">Reward: 100 leaderboard points</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white">4.8</p>
+                <p className="text-green-400 text-sm">Active</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg border-l-4 border-yellow-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-medium">Win Streak</h3>
+                <p className="text-gray-400 text-sm">Win 5 consecutive games</p>
+                <p className="text-yellow-400 text-sm mt-1">Reward: 75 leaderboard points</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white">3/5</p>
+                <p className="text-blue-400 text-sm">In Progress</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTeammateRulesTab = () => (
+    <div className="space-y-4">
+      <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Teammate Rules</h2>
+        <div className="space-y-4">
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">1. Professional Conduct</h3>
+            <p className="text-gray-400 text-sm">Always maintain professional behavior during sessions. No toxic language, harassment, or inappropriate conduct.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">2. Session Quality</h3>
+            <p className="text-gray-400 text-sm">Provide high-quality coaching and gameplay. Focus on improving the customer&apos;s skills and experience.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">3. Communication</h3>
+            <p className="text-gray-400 text-sm">Maintain clear and timely communication with customers. Respond to messages promptly and professionally.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">4. Punctuality</h3>
+            <p className="text-gray-400 text-sm">Be on time for scheduled sessions. If you need to cancel, provide at least 24 hours notice.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">5. Payment & Payouts</h3>
+            <p className="text-gray-400 text-sm">Complete sessions properly to receive payment. Request payouts through the dashboard after session completion.</p>
+          </div>
+
+          <div className="p-4 bg-[#2a2a2a] rounded-lg">
+            <h3 className="text-white font-medium mb-2">6. Platform Guidelines</h3>
+            <p className="text-gray-400 text-sm">Follow all platform guidelines and terms of service. Violations may result in account suspension.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return renderDashboardTab();
+      case 'order-history':
+        return renderOrderHistoryTab();
+      case 'quest':
+        return renderQuestTab();
+      case 'teammate-rules':
+        return renderTeammateRulesTab();
+      default:
+        return renderDashboardTab();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Welcome Header */}
+        {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome back, {getDisplayName()}! 
-                {user.verified && <Shield className="inline ml-2 text-blue-400" size={24} />}
-                {user.isPro && <Crown className="inline ml-2 text-yellow-400" size={24} />}
-              </h1>
-              <p className="text-gray-400">Here&apos;s what&apos;s happening with your gaming profile</p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                asChild
-                className="bg-[#e6915b] hover:bg-[#d18251]"
-              >
-                <Link href="/profile">View Profile</Link>
-              </Button>
-              <Button 
-                asChild
-                variant="outline"
-                className="border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10"
-              >
-                <Link href="/duo">Find Duo</Link>
-              </Button>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Teammate Dashboard
+          </h1>
+          <p className="text-gray-400">Manage your orders, track performance, and grow your business</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-[#e6915b]/20 p-3 rounded-lg">
-                <Calendar className="text-[#e6915b]" size={24} />
-              </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +12%
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.upcomingSessions}</h3>
-            <p className="text-gray-400">Upcoming Sessions</p>
-          </div>
-
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-[#6b8ab0]/20 p-3 rounded-lg">
-                <Users className="text-[#6b8ab0]" size={24} />
-              </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +8%
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.completedSessions}</h3>
-            <p className="text-gray-400">Completed Sessions</p>
-          </div>
-
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-yellow-500/20 p-3 rounded-lg">
-                <Star className="text-yellow-400" size={24} />
-              </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +0.2
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.averageRating}</h3>
-            <p className="text-gray-400">Average Rating</p>
-          </div>
-
-          <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-green-500/20 p-3 rounded-lg">
-                <Target className="text-green-400" size={24} />
-              </div>
-              <span className="text-green-400 text-sm flex items-center">
-                <TrendingUp size={14} className="mr-1" />
-                +5%
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{stats.winRate}%</h3>
-            <p className="text-gray-400">Win Rate</p>
-          </div>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Activity */}
-          <div className="lg:col-span-2 bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Clock className="text-[#e6915b]" size={20} />
-                Recent Activity
-              </h2>
-              <Button 
-                asChild
-                variant="outline" 
-                size="sm"
-                className="border-gray-600 text-gray-400"
-              >
-                <Link href="/activity">View All</Link>
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div 
-                  key={activity.id}
-                  className="flex items-center gap-4 p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#333] transition-colors"
-                >
-                  <div className="flex-shrink-0">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white truncate">{activity.title}</h3>
-                    <p className="text-gray-400 text-sm truncate">{activity.description}</p>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <p className={`text-sm font-medium ${getStatusColor(activity.status)}`}>
-                      {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
-                    </p>
-                    <p className="text-gray-500 text-xs">{formatTimestamp(activity.timestamp)}</p>
-                  </div>
+        <div className="flex gap-8">
+          {/* Left Info Panel */}
+          <div className="w-80 flex-shrink-0">
+            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6 mb-6">
+              <div className="text-center mb-4">
+                <div className="w-20 h-20 bg-[#e6915b] rounded-full flex items-center justify-center mx-auto mb-3">
+                  {user.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.username}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-bold text-2xl">
+                      {user.username.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+                <h2 className="text-white font-bold text-lg">{getDisplayName()}</h2>
+                <p className="text-gray-400">@{user.username}</p>
+              </div>
 
-          {/* Quick Actions & Stats */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Gamepad2 className="text-[#e6915b]" size={20} />
-                Quick Actions
-              </h2>
               <div className="space-y-3">
-                <Button 
-                  asChild
-                  className="w-full bg-gradient-to-r from-[#e6915b] to-[#e6915b] hover:from-[#d18251] hover:to-[#d18251] justify-start"
-                >
-                  <Link href="/duo">
-                    <Users size={16} className="mr-2" />
-                    Find Duo Partner
-                  </Link>
-                </Button>
-                <Button 
-                  asChild
-                  className="w-full bg-gradient-to-r from-[#6b8ab0] to-[#6b8ab0] hover:from-[#5a79a0] hover:to-[#5a79a0] justify-start"
-                >
-                  <Link href="/coaching">
-                    <User size={16} className="mr-2" />
-                    Book Coaching
-                  </Link>
-                </Button>
-                <Button 
-                  asChild
-                  className="w-full bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-700 hover:to-yellow-700 justify-start"
-                >
-                  <Link href="/tournaments">
-                    <Trophy size={16} className="mr-2" />
-                    Join Tournament
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Performance Summary */}
-            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Award className="text-[#e6915b]" size={20} />
-                Performance
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Earnings</span>
-                  <span className="text-green-400 font-bold">${stats.totalEarnings}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Rating:</span>
+                  <span className="text-white flex items-center">
+                    ⭐ 5.00 (27)
+                  </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Active Tournaments</span>
-                  <span className="text-white font-bold">{stats.activeTournaments}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Sessions:</span>
+                  <span className="text-white">71</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Win Rate</span>
-                  <span className="text-blue-400 font-bold">{stats.winRate}%</span>
-                </div>
-                <div className="pt-2 border-t border-[#2a2a2a]">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-400">Monthly Goal</span>
-                    <span className="text-gray-400">75%</span>
-                  </div>
-                  <div className="w-full bg-[#2a2a2a] rounded-full h-2">
-                    <div className="bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] h-2 rounded-full" style={{width: '75%'}}></div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Status:</span>
+                  <span className={`flex items-center ${isOnline ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-red-400'} mr-2`}></div>
+                    {isOnline ? 'Online' : 'Offline'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Gaming Profile Summary */}
-            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Gaming Profile</h2>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#2a2a2a] rounded-lg flex items-center justify-center">
-                    {user.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt={user.username}
-                        className="w-full h-full rounded-lg object-cover"
-                      />
-                    ) : (
-                      <span className="text-[#e6915b] font-bold text-lg">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">@{user.username}</p>
-                    <p className="text-gray-400 text-sm">{user.game || 'No game set'}</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Rank</span>
-                    <span className="text-white">{user.rank || 'Unranked'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Role</span>
-                    <span className="text-white">{user.role || 'Flex'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Status</span>
-                    <span className="text-green-400">Online</span>
-                  </div>
-                </div>
-                <Button 
-                  asChild
-                  variant="outline" 
-                  className="w-full border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10"
+            {/* Vertical Button Menu */}
+            <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-4">
+              <div className="space-y-2">
+                <Button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`w-full justify-start ${activeTab === 'dashboard' ? 'bg-[#e6915b] hover:bg-[#d18251]' : 'bg-transparent hover:bg-[#2a2a2a]'}`}
                 >
-                  <Link href="/profile">Edit Profile</Link>
+                  <Gamepad2 size={16} className="mr-3" />
+                  Dashboard
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('order-history')}
+                  className={`w-full justify-start ${activeTab === 'order-history' ? 'bg-[#e6915b] hover:bg-[#d18251]' : 'bg-transparent hover:bg-[#2a2a2a]'}`}
+                >
+                  <History size={16} className="mr-3" />
+                  Order History
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('quest')}
+                  className={`w-full justify-start ${activeTab === 'quest' ? 'bg-[#e6915b] hover:bg-[#d18251]' : 'bg-transparent hover:bg-[#2a2a2a]'}`}
+                >
+                  <Trophy size={16} className="mr-3" />
+                  Quest Button
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('teammate-rules')}
+                  className={`w-full justify-start ${activeTab === 'teammate-rules' ? 'bg-[#e6915b] hover:bg-[#d18251]' : 'bg-transparent hover:bg-[#2a2a2a]'}`}
+                >
+                  <BookOpen size={16} className="mr-3" />
+                  Teammate Rules
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1">
+            {renderContent()}
           </div>
         </div>
       </div>
