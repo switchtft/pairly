@@ -297,7 +297,7 @@ export async function PUT(request: NextRequest) {
 
     // Update user
     const updatedUser = await prisma.user.update({
-      where: { id: parseInt(userId) },
+              where: { id: userId },
       data: {
         ...(username !== undefined && { username }),
         ...(email !== undefined && { email }),
@@ -376,7 +376,7 @@ export async function DELETE(request: NextRequest) {
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: parseInt(userId) }
+      where: { id: userId }
     });
 
     if (!existingUser) {
@@ -384,13 +384,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Prevent admin from deleting themselves
-    if (parseInt(userId) === decoded.userId) {
+    if (userId === decoded.userId) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
     }
 
     // Delete user (this will cascade to related records)
     await prisma.user.delete({
-      where: { id: parseInt(userId) }
+      where: { id: userId }
     });
 
     return NextResponse.json({

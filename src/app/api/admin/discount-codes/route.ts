@@ -155,7 +155,7 @@ export async function PUT(request: NextRequest) {
 
     // Update discount code
     const discountCode = await prisma.discountCode.update({
-      where: { id: parseInt(id) },
+      where: { id: id },
       data: updateData
     });
 
@@ -198,7 +198,7 @@ export async function DELETE(request: NextRequest) {
 
     // Delete discount code
     await prisma.discountCode.delete({
-      where: { id: parseInt(id) }
+      where: { id: id }
     });
 
     return NextResponse.json({ success: true });
