@@ -7,6 +7,24 @@ async function main() {
   // Hash password for all users
   const hashedPassword = await bcrypt.hash('password123', 10);
   
+  // Create administrator user
+  const adminUser = {
+    email: 'admin@pairly.com',
+    password: hashedPassword,
+    username: 'admin',
+    firstName: 'Admin',
+    lastName: 'User',
+    role: 'administrator',
+    verified: true,
+    isPro: false,
+  };
+
+  await prisma.user.upsert({
+    where: { email: adminUser.email },
+    update: {},
+    create: adminUser,
+  });
+
   // Create some pro players
   const proPlayers = [
     {
@@ -61,6 +79,82 @@ async function main() {
       where: { email: player.email },
       update: {},
       create: player,
+    });
+  }
+
+  // Create some regular customers
+  const customers = [
+    {
+      email: 'customer1@example.com',
+      password: hashedPassword,
+      username: 'Customer1',
+      firstName: 'John',
+      lastName: 'Doe',
+      role: 'customer',
+      verified: true,
+      isPro: false,
+    },
+    {
+      email: 'customer2@example.com',
+      password: hashedPassword,
+      username: 'Customer2',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      role: 'customer',
+      verified: false,
+      isPro: false,
+    },
+  ];
+
+  for (const customer of customers) {
+    await prisma.user.upsert({
+      where: { email: customer.email },
+      update: {},
+      create: customer,
+    });
+  }
+
+  // Create some sample sessions for testing
+  const sessions = [
+    {
+      game: 'valorant',
+      mode: 'Competitive',
+      status: 'active',
+      startTime: new Date(),
+      price: 25.0,
+      duration: 60,
+      clientId: 7, // Customer1
+      proTeammateId: 2, // CapyZen
+    },
+    {
+      game: 'league',
+      mode: 'Ranked',
+      status: 'completed',
+      startTime: new Date(Date.now() - 86400000), // 1 day ago
+      endTime: new Date(Date.now() - 82800000), // 1 day ago + 1 hour
+      price: 30.0,
+      duration: 60,
+      clientId: 8, // Customer2
+      proTeammateId: 5, // CapyKing
+    },
+    {
+      game: 'valorant',
+      mode: 'Unrated',
+      status: 'pending',
+      startTime: new Date(Date.now() + 3600000), // 1 hour from now
+      price: 20.0,
+      duration: 45,
+      clientId: 7, // Customer1
+    },
+  ];
+
+  for (const session of sessions) {
+    await prisma.session.upsert({
+      where: { 
+        id: sessions.indexOf(session) + 1 
+      },
+      update: {},
+      create: session,
     });
   }
 
