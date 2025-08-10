@@ -1,145 +1,442 @@
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+// app/tournaments/page.tsx
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import HorizontalGameSelector from '@/components/HorizontalGameSelector';
+
+type Tournament = {
+  id: string;
+  name: string;
+  game: string;
+  date: string;
+  prize: number;
+  participants: number;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  region: string;
+  entryFee: number;
+};
+
+const TOURNAMENTS: Tournament[] = [
+  { id: '1', name: 'Summer Clash', game: 'league', date: '2023-08-15', prize: 10000, participants: 32, status: 'upcoming', region: 'North America', entryFee: 25 },
+  { id: '2', name: 'Valorant Masters', game: 'valorant', date: '2023-08-22', prize: 15000, participants: 16, status: 'upcoming', region: 'Europe', entryFee: 20 },
+  { id: '3', name: 'CS:GO Major', game: 'csgo', date: '2023-08-30', prize: 25000, participants: 24, status: 'upcoming', region: 'Global', entryFee: 30 },
+  { id: '4', name: 'LoL Championship', game: 'league', date: '2023-09-05', prize: 50000, participants: 16, status: 'upcoming', region: 'Global', entryFee: 50 },
+  { id: '5', name: 'Valorant Open', game: 'valorant', date: '2023-09-12', prize: 8000, participants: 32, status: 'upcoming', region: 'Asia', entryFee: 15 },
+  { id: '6', name: 'CS:GO Challenger', game: 'csgo', date: '2023-09-20', prize: 12000, participants: 24, status: 'upcoming', region: 'North America', entryFee: 20 },
+  { id: '7', name: 'Radiant Rush', game: 'valorant', date: '2023-08-10', prize: 5000, participants: 16, status: 'ongoing', region: 'Europe', entryFee: 10 },
+  { id: '8', name: 'Dragon League', game: 'league', date: '2023-08-12', prize: 7500, participants: 24, status: 'ongoing', region: 'Asia', entryFee: 15 },
+  { id: '9', name: 'Global Offensive', game: 'csgo', date: '2023-07-25', prize: 18000, participants: 32, status: 'completed', region: 'Global', entryFee: 25 },
+  { id: '10', name: 'Summoner Showdown', game: 'league', date: '2023-07-30', prize: 22000, participants: 24, status: 'completed', region: 'North America', entryFee: 30 },
+];
+
+const GAMES = [
+  { id: 'league', name: 'League of Legends', imageUrl: '/images/games/league-icon.png' },
+  { id: 'valorant', name: 'Valorant', imageUrl: '/images/games/valorant-icon.png' },
+  { id: 'csgo', name: 'CS:GO 2', imageUrl: '/images/games/csgo-icon.png' },
+];
+
+const REGIONS = ['All', 'North America', 'Europe', 'Asia', 'Global'];
+const STATUSES = ['All', 'Upcoming', 'Ongoing', 'Completed'];
 
 export default function TournamentsPage() {
-  const tournaments = [
-    {
-      id: 1,
-      title: "Weekly Valorant Cup",
-      game: "Valorant",
-      date: "Every Saturday",
-      prize: "$500",
-      participants: 128,
-      image: "/images/tournament1.jpg"
-    },
-    {
-      id: 2,
-      title: "League of Legends Clash",
-      game: "League of Legends",
-      date: "Monthly Finals",
-      prize: "$1,000",
-      participants: 256,
-      image: "/images/tournament2.jpg"
-    },
-    {
-      id: 3,
-      title: "CS:GO Open Series",
-      game: "CS:GO",
-      date: "Bi-weekly",
-      prize: "$750",
-      participants: 64,
-      image: "/images/tournament3.jpg"
-    },
-    {
-      id: 4,
-      title: "Rocket League Showdown",
-      game: "Rocket League",
-      date: "Every Sunday",
-      prize: "$300",
-      participants: 32,
-      image: "/images/tournament4.jpg"
+  const [selectedGame, setSelectedGame] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [prizeFilter, setPrizeFilter] = useState<number | ''>('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [regionFilter, setRegionFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  // Filter tournaments based on all criteria
+  const filteredTournaments = TOURNAMENTS.filter(tournament => {
+    // Game filter
+    if (selectedGame !== 'all' && tournament.game !== selectedGame) return false;
+    
+    // Search filter
+    if (searchQuery && !tournament.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    
+    // Prize filter
+    if (prizeFilter && tournament.prize < prizeFilter) return false;
+    
+    // Date filter
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      const tournamentDate = new Date(tournament.date);
+      if (tournamentDate < filterDate) return false;
     }
-  ];
+    
+    // Region filter
+    if (regionFilter !== 'All' && tournament.region !== regionFilter) return false;
+    
+    // Status filter
+    if (statusFilter !== 'All') {
+      const statusLower = statusFilter.toLowerCase();
+      if (statusLower === 'upcoming' && tournament.status !== 'upcoming') return false;
+      if (statusLower === 'ongoing' && tournament.status !== 'ongoing') return false;
+      if (statusLower === 'completed' && tournament.status !== 'completed') return false;
+    }
+    
+    return true;
+  });
+  
+  // Sort tournaments
+  const sortedTournaments = [...filteredTournaments].sort((a, b) => {
+    const multiplier = sortOrder === 'asc' ? 1 : -1;
+    
+    if (sortBy === 'date') {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return (dateA - dateB) * multiplier;
+    }
+    
+    if (sortBy === 'prize') {
+      return (a.prize - b.prize) * multiplier;
+    }
+    
+    if (sortBy === 'participants') {
+      return (a.participants - b.participants) * multiplier;
+    }
+    
+    return 0;
+  });
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setSelectedGame('all');
+    setSearchQuery('');
+    setPrizeFilter('');
+    setDateFilter('');
+    setRegionFilter('All');
+    setStatusFilter('All');
+  };
+  
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-6">
-      <div className="text-center mb-20">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#e6915b] to-[#a8724c]">
-          Compete in Exciting Tournaments
-        </h1>
-        <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-          Join our competitive tournaments with cash prizes and sponsorship opportunities. 
-          Whether you&apos;re looking for casual fun or serious competition, we have events for every skill level.
-        </p>
-      </div>
-      
-      <div className="grid md:grid-cols-2 gap-8 mb-20">
-        <div className="bg-[#1a1a1a] rounded-2xl p-8">
-          <h2 className="text-2xl font-bold mb-6">Upcoming Tournaments</h2>
-          <div className="space-y-6">
-            {tournaments.map(tournament => (
-              <div key={tournament.id} className="flex items-center p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#333] transition">
-                <div className="relative w-24 h-24 rounded-md overflow-hidden mr-6">
-                  <Image
-                    src={tournament.image}
-                    alt={tournament.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">{tournament.title}</h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <span className="text-sm bg-[#e6915b]/20 text-[#e6915b] px-2 py-1 rounded">{tournament.game}</span>
-                    <span className="text-sm bg-[#6b8ab0]/20 text-[#6b8ab0] px-2 py-1 rounded">{tournament.date}</span>
-                    <span className="text-sm bg-[#8a675e]/20 text-[#8a675e] px-2 py-1 rounded">Prize: {tournament.prize}</span>
-                  </div>
-                </div>
-                <Button className="ml-auto bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e]">
-                  Register
-                </Button>
-              </div>
-            ))}
-          </div>
+    <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
+            Competitive Tournaments
+          </h1>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Join the competition and prove your skills. Compete against the best players and win amazing prizes!
+          </p>
         </div>
         
-        <div className="bg-[#1a1a1a] rounded-2xl p-8">
-          <h2 className="text-2xl font-bold mb-6">Create Your Tournament</h2>
-          <p className="text-gray-300 mb-8">
-            Host your own custom tournament with our easy-to-use tools. Set your rules, invite players, and manage everything in one place.
-          </p>
-          
-          <div className="space-y-6">
-            <div className="bg-[#2a2a2a] p-6 rounded-lg">
-              <h3 className="font-bold text-lg mb-4">Basic Tournament</h3>
-              <p className="text-gray-400 mb-4">Perfect for small groups and casual events</p>
-              <p className="text-2xl font-bold mb-4 text-[#e6915b]">Free</p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Up to 16 teams</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Basic bracket management</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Simple registration</span>
-                </li>
-              </ul>
-              <Button className="w-full">Create Tournament</Button>
+        {/* Game Selector */}
+        <div className="mb-8">
+          <HorizontalGameSelector 
+            games={GAMES}
+            onGameSelect={setSelectedGame}
+            selectedGameId={selectedGame}
+          />
+        </div>
+        
+        {/* Filter Bar */}
+        <div className="bg-[#1a1a1a] rounded-xl p-6 mb-8 border border-[#2a2a2a]">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex-1 w-full">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search tournaments..."
+                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <svg 
+                  className="absolute left-3 top-3.5 text-gray-400 h-5 w-5" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                  />
+                </svg>
+              </div>
             </div>
             
-            <div className="bg-[#2a2a2a] p-6 rounded-lg border-2 border-[#e6915b]">
-              <h3 className="font-bold text-lg mb-4">Premium Tournament</h3>
-              <p className="text-gray-400 mb-4">For serious events with cash prizes</p>
-              <p className="text-2xl font-bold mb-4 text-[#e6915b]">$29.99</p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Unlimited teams</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Advanced bracket options</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Prize pool management</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Stream integration</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="mr-3 text-[#6b8ab0]">✓</div>
-                  <span>Custom branding</span>
-                </li>
-              </ul>
-              <Button className="w-full bg-gradient-to-r from-[#e6915b] to-[#a8724c] hover:from-[#d8824a] hover:to-[#976040]">
-                Create Tournament
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="bg-[#2a2a2a] hover:bg-[#333] px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <svg 
+                  className="h-5 w-5 text-gray-300" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" 
+                  />
+                </svg>
+                Filters
               </Button>
+              
+              <Button 
+                onClick={resetFilters}
+                className="bg-[#2a2a2a] hover:bg-[#333] px-4 py-2 rounded-lg"
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
+          
+          {/* Advanced Filters */}
+          {isFilterOpen && (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Min Prize</label>
+                <input
+                  type="number"
+                  placeholder="$0"
+                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
+                  value={prizeFilter}
+                  onChange={(e) => setPrizeFilter(e.target.value ? Number(e.target.value) : '')}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Starting After</label>
+                <input
+                  type="date"
+                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Region</label>
+                <select
+                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
+                  value={regionFilter}
+                  onChange={(e) => setRegionFilter(e.target.value)}
+                >
+                  {REGIONS.map(region => (
+                    <option key={region} value={region}>{region}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Status</label>
+                <select
+                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  {STATUSES.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Sort By</label>
+                <div className="flex gap-2">
+                  <select
+                    className="flex-1 bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="date">Date</option>
+                    <option value="prize">Prize</option>
+                    <option value="participants">Participants</option>
+                  </select>
+                  <button
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="bg-[#2a2a2a] hover:bg-[#333] px-3 rounded-lg border border-[#333]"
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Tournaments Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {sortedTournaments.map(tournament => {
+            const game = GAMES.find(g => g.id === tournament.game);
+            const formattedDate = formatDate(tournament.date);
+            const formattedPrize = formatCurrency(tournament.prize);
+            const formattedEntryFee = formatCurrency(tournament.entryFee);
+            
+            return (
+              <div 
+                key={tournament.id} 
+                className={`bg-[#1a1a1a] rounded-xl overflow-hidden border transition-all ${
+                  tournament.status === 'ongoing' 
+                    ? 'border-green-500/30 hover:border-green-500' 
+                    : tournament.status === 'completed'
+                      ? 'border-gray-500/30 hover:border-gray-500'
+                      : 'border-[#2a2a2a] hover:border-[#e6915b]'
+                }`}
+              >
+                <div className="p-6 pb-4 flex justify-between items-start">
+                  <div className="flex items-center gap-4">
+                    {game && (
+                      <div className="bg-gray-800 rounded-lg p-2">
+                        <div className="relative w-12 h-12">
+                          <Image 
+                            src={game.imageUrl} 
+                            alt={game.name} 
+                            layout="fill"
+                            objectFit="contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-xl font-bold">{tournament.name}</h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-gray-400 text-sm">{game?.name}</span>
+                        <span className="text-gray-600">•</span>
+                        <span className="text-gray-400 text-sm">{tournament.region}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    tournament.status === 'ongoing' 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : tournament.status === 'completed'
+                        ? 'bg-gray-500/20 text-gray-400'
+                        : 'bg-blue-500/20 text-blue-400'
+                  }`}>
+                    {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                  </span>
+                </div>
+                
+                <div className="p-6 pt-0 grid grid-cols-3 gap-4">
+                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm">Prize Pool</p>
+                    <p className="text-xl font-bold text-[#e6915b]">{formattedPrize}</p>
+                  </div>
+                  
+                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm">Start Date</p>
+                    <p className="text-xl font-bold">{formattedDate}</p>
+                  </div>
+                  
+                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm">Entry Fee</p>
+                    <p className="text-xl font-bold">{formattedEntryFee}</p>
+                  </div>
+                </div>
+                
+                <div className="p-6 pt-0 flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <svg 
+                      className="h-5 w-5" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+                      />
+                    </svg>
+                    <span>{tournament.participants} teams</span>
+                  </div>
+                  
+                  <Button className="bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e] px-6 py-3">
+                    {tournament.status === 'completed' ? 'View Results' : tournament.status === 'ongoing' ? 'Join Now' : 'Register'}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Empty State */}
+        {sortedTournaments.length === 0 && (
+          <div className="text-center py-20 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] mt-6">
+            <div className="bg-gray-800 w-24 h-24 rounded-full mx-auto flex items-center justify-center mb-6">
+              <svg 
+                className="h-12 w-12 text-gray-400" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold mb-2">No tournaments found</h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              Try adjusting your filters or search term to find what you&apos;re looking for.
+            </p>
+            <Button 
+              onClick={resetFilters}
+              className="bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] px-8 py-3"
+            >
+              Reset Filters
+            </Button>
+          </div>
+        )}
+        
+        {/* Stats Bar */}
+        <div className="mt-12 bg-[#1a1a1a] rounded-xl p-6 border border-[#2a2a2a]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4">
+              <div className="text-4xl font-bold text-[#e6915b] mb-2">
+                {formatCurrency(TOURNAMENTS.reduce((sum, t) => sum + t.prize, 0))}
+              </div>
+              <p className="text-gray-400">Total Prize Money</p>
+            </div>
+            
+            <div className="text-center p-4">
+              <div className="text-4xl font-bold text-[#6b8ab0] mb-2">
+                {TOURNAMENTS.reduce((sum, t) => sum + t.participants, 0)}
+              </div>
+              <p className="text-gray-400">Total Participants</p>
+            </div>
+            
+            <div className="text-center p-4">
+              <div className="text-4xl font-bold text-[#8a675e] mb-2">
+                {TOURNAMENTS.length}
+              </div>
+              <p className="text-gray-400">Total Tournaments</p>
             </div>
           </div>
         </div>
