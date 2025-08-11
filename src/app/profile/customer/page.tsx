@@ -81,7 +81,14 @@ export default function CustomerProfilePage() {
       return;
     }
 
-    if (user) {
+    // Only teammates are restricted from accessing the customer profile
+    if (user && user.role === 'teammate') {
+      router.push('/profile');
+      return;
+    }
+
+    // Administrators and customers can access the customer profile
+    if (user && (user.role === 'customer' || user.role === 'administrator')) {
       fetchProfileData();
     }
   }, [user, isLoading, isAuthenticated, router]);

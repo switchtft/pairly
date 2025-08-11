@@ -98,7 +98,13 @@ export default function AdministratorProfilePage() {
       return;
     }
 
-    if (isAuthenticated) {
+    // Only administrators can access the admin profile
+    if (user && user.role !== 'administrator') {
+      router.push('/profile');
+      return;
+    }
+
+    if (isAuthenticated && user?.role === 'administrator') {
       fetchAdminProfile();
     }
   }, [user, isLoading, isAuthenticated, router]);

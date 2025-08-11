@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Clock, User, CheckCircle, XCircle, MessageCircle, Play } from 'lucide-react';
@@ -35,11 +36,30 @@ interface Session {
 }
 
 export default function TeammateDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [pendingRequests, setPendingRequests] = useState<QueueRequest[]>([]);
   const [activeSessions, setActiveSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    // Only customers are restricted from accessing the teammate dashboard
+    if (user && user.role === 'customer') {
+      router.push('/profile');
+      return;
+    }
+
+    // Administrators and teammates can access the teammate dashboard
+    if (user && (user.role === 'teammate' || user.role === 'administrator')) {
+      fetchData();
+    }
+  }, [user, isLoading, isAuthenticated, router]);
 
   // Fetch pending requests and active sessions
   const fetchData = async () => {

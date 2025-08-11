@@ -17,12 +17,18 @@ export default function ProfilePage() {
 
     if (user) {
       // Route to appropriate profile based on user role
-      // For Phase 1, we'll use placeholder logic
-      // In future phases, this will be based on actual user role from database
-      
-      // For now, redirect to customer profile as default
-      // This will be updated in Phase 3 when we implement role-based routing
-      router.push('/profile/customer');
+      switch (user.role) {
+        case 'administrator':
+          router.push('/profile/administrator');
+          break;
+        case 'teammate':
+          router.push('/profile/teammate');
+          break;
+        case 'customer':
+        default:
+          router.push('/profile/customer');
+          break;
+      }
     }
   }, [user, isLoading, isAuthenticated, router]);
 
