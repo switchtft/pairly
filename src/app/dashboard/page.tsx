@@ -99,7 +99,14 @@ export default function DashboardPage() {
       return;
     }
 
-    if (user) {
+    // Only customers are restricted from accessing the dashboard
+    if (user && user.role === 'customer') {
+      router.push('/profile/customer');
+      return;
+    }
+
+    // Administrators and teammates can access the dashboard
+    if (user && (user.role === 'teammate' || user.role === 'administrator')) {
       fetchDashboardData();
     }
   }, [user, isLoading, isAuthenticated, router]);

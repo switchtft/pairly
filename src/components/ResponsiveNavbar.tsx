@@ -28,7 +28,6 @@ const publicNavLinks = [
 ];
 
 const authenticatedNavLinks = [
-  { name: 'Dashboard', href: '/dashboard', icon: <Gamepad2 size={16} /> },
   { name: 'Duo', href: '/duo', icon: <UsersIcon size={16} /> },
   { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
   { name: 'Tournaments', href: '/tournaments', icon: <Trophy size={16} /> },
@@ -170,13 +169,15 @@ export default function ResponsiveNavbar() {
                     <p className="text-[#e6915b]/70 text-xs">{user.email}</p>
                     </div>
                     
-                    <Link
-                      href="/dashboard"
-                      className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
-                    >
-                      <Gamepad2 size={16} className="mr-3" />
-                      Dashboard
-                    </Link>
+                    {(user.role === 'teammate' || user.role === 'administrator') && (
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Gamepad2 size={16} className="mr-3" />
+                        Dashboard
+                      </Link>
+                    )}
                     
                     <Link
                       href="/profile"
@@ -194,15 +195,25 @@ export default function ResponsiveNavbar() {
                       Settings
                     </Link>
                     
-                    {user.isPro && (
-                      <Link
-                        href="/dashboard/teammate"
-                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
-                      >
-                        <Crown size={16} className="mr-3" />
-                        Teammate Dashboard
-                      </Link>
-                    )}
+                                         {(user.role === 'teammate' || user.role === 'administrator') && (
+                       <Link
+                         href="/dashboard/teammate"
+                         className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                       >
+                         <Crown size={16} className="mr-3" />
+                         Teammate Dashboard
+                       </Link>
+                     )}
+                     
+                     {user.role === 'administrator' && (
+                       <Link
+                         href="/profile/administrator"
+                         className="flex items-center px-4 py-2 text-red-400 hover:text-red-300 hover:bg-[#2a2a2a] transition-colors"
+                       >
+                         <Shield size={16} className="mr-3" />
+                         Admin Dashboard
+                       </Link>
+                     )}
                     
                     {!user.isPro && (
                       <Link

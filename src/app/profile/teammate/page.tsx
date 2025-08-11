@@ -111,7 +111,14 @@ export default function TeammateProfilePage() {
       return;
     }
 
-    if (isAuthenticated) {
+    // Only customers are restricted from accessing the teammate profile
+    if (user && user.role === 'customer') {
+      router.push('/profile');
+      return;
+    }
+
+    // Administrators and teammates can access the teammate profile
+    if (user && (user.role === 'teammate' || user.role === 'administrator')) {
       fetchTeammateProfile();
     }
   }, [user, isLoading, isAuthenticated, router]);
