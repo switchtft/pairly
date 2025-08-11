@@ -17,7 +17,7 @@ const updateProfileSchema = z.object({
   steam: z.string().optional(),
   timezone: z.string().optional(),
   languages: z.array(z.string()).optional(),
-  avatar: z.string().url().optional(),
+  avatar: z.string().optional(), // Allow any string for avatar (URL or base64)
 });
 
 // GET profile

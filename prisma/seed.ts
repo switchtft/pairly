@@ -33,8 +33,9 @@ async function main() {
       username: 'CapyChill',
       rank: 'Diamond 3',
       game: 'valorant',
-      role: 'Duelist',
+      role: 'teammate',
       isPro: true,
+      verified: true,
     },
     {
       email: 'capyzen@example.com',
@@ -42,8 +43,9 @@ async function main() {
       username: 'CapyZen',
       rank: 'Immortal 1',
       game: 'valorant',
-      role: 'Controller',
+      role: 'teammate',
       isPro: true,
+      verified: true,
     },
     {
       email: 'capynap@example.com',
@@ -51,8 +53,9 @@ async function main() {
       username: 'CapyNap',
       rank: 'Ascendant 2',
       game: 'valorant',
-      role: 'Initiator',
+      role: 'teammate',
       isPro: true,
+      verified: true,
     },
     {
       email: 'capyleaf@example.com',
@@ -60,8 +63,9 @@ async function main() {
       username: 'CapyLeaf',
       rank: 'Master',
       game: 'league',
-      role: 'Jungle',
+      role: 'teammate',
       isPro: true,
+      verified: true,
     },
     {
       email: 'capyking@example.com',
@@ -69,8 +73,9 @@ async function main() {
       username: 'CapyKing',
       rank: 'Radiant',
       game: 'valorant',
-      role: 'Sentinel',
+      role: 'teammate',
       isPro: true,
+      verified: true,
     },
   ];
 
