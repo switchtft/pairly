@@ -25,47 +25,18 @@ import {
   DollarSign,
   Gamepad2,
   ArrowRight,
-  Settings
+  Settings,
+  AlertTriangle
 } from 'lucide-react';
 import { TeammateProfile } from '@/lib/types';
-
-// Placeholder data for Phase 1
-const placeholderTeammateProfile: TeammateProfile = {
-  id: 2,
-  email: 'teammate@example.com',
-  username: 'proteammate',
-  firstName: 'Sarah',
-  lastName: 'Johnson',
-  avatar: '',
-  bio: 'Professional gamer with 5+ years of competitive experience. Specialized in Valorant and League of Legends.',
-  rating: 4.8,
-  totalSessions: 127,
-  totalReviews: 89,
-  winRate: 0.78,
-  weeklyStats: {
-    totalPayment: 450.25,
-    orders: 12,
-    winRate: 0.83,
-    leaderboardPosition: 5
-  },
-  socials: {
-    discord: 'proteammate#5678',
-    steam: 'https://steamcommunity.com/id/proteammate',
-    twitter: '@proteammate'
-  },
-  favouriteCustomers: [1, 3, 7],
-  blockedCustomers: [4],
-  isOnline: true,
-  createdAt: '2023-06-15T00:00:00Z',
-  lastSeen: new Date().toISOString()
-};
 
 export default function TeammateProfilePage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [teammateProfile, setTeammateProfile] = useState<TeammateProfile>(placeholderTeammateProfile);
+  const [teammateProfile, setTeammateProfile] = useState<TeammateProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setSaving] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -77,62 +48,183 @@ export default function TeammateProfilePage() {
     twitter: '',
   });
 
+  // Fetch teammate profile data
+  const fetchTeammateProfile = async () => {
+    try {
+      const response = await fetch('/api/auth/profile');
+      if (!response.ok) throw new Error('Failed to fetch profile');
+      
+      const data = await response.json();
+      const userData = data.user;
+      
+      // Transform user data to TeammateProfile format
+      const teammateData: TeammateProfile = {
+        id: userData.id,
+        email: userData.email,
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        avatar: userData.avatar,
+        bio: userData.bio,
+        rating: userData.stats?.averageRating || 0,
+        totalSessions: userData.stats?.totalSessions || 0,
+        totalReviews: userData.stats?.totalReviews || 0,
+        winRate: 0.78, // This would come from a separate API in a real implementation
+        weeklyStats: {
+          totalPayment: 450.25, // This would come from a separate API
+          orders: 12,
+          winRate: 0.83,
+          leaderboardPosition: 5
+        },
+        socials: {
+          discord: userData.discord || '',
+          steam: userData.steam || '',
+          twitter: '', // Not in current schema, would need to be added
+        },
+        favouriteCustomers: [], // This would come from a separate API
+        blockedCustomers: [], // This would come from a separate API
+        isOnline: userData.isOnline || false,
+        createdAt: userData.createdAt,
+        lastSeen: userData.lastSeen
+      };
+      
+      setTeammateProfile(teammateData);
+      setFormData({
+        firstName: teammateData.firstName || '',
+        lastName: teammateData.lastName || '',
+        username: teammateData.username || '',
+        bio: teammateData.bio || '',
+        discord: teammateData.socials.discord || '',
+        steam: teammateData.socials.steam || '',
+        twitter: teammateData.socials.twitter || '',
+      });
+    } catch (error) {
+      console.error('Error fetching teammate profile:', error);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
       return;
     }
 
-    // In Phase 1, we use placeholder data
-    setFormData({
-      firstName: teammateProfile.firstName || '',
-      lastName: teammateProfile.lastName || '',
-      username: teammateProfile.username || '',
-      bio: teammateProfile.bio || '',
-      discord: teammateProfile.socials.discord || '',
-      steam: teammateProfile.socials.steam || '',
-      twitter: teammateProfile.socials.twitter || '',
-    });
+    if (isAuthenticated) {
+      fetchTeammateProfile();
+    }
   }, [user, isLoading, isAuthenticated, router]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // In Phase 1, just simulate saving
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setTeammateProfile(prev => ({
-        ...prev,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        username: formData.username,
-        bio: formData.bio,
-        socials: {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          bio: formData.bio,
           discord: formData.discord,
           steam: formData.steam,
-          twitter: formData.twitter,
-        }
-      }));
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+
+      const data = await response.json();
+      
+      // Update local state with the response data
+      if (teammateProfile) {
+        setTeammateProfile(prev => prev ? {
+          ...prev,
+          firstName: data.user.firstName,
+          lastName: data.user.lastName,
+          username: data.user.username,
+          bio: data.user.bio,
+          socials: {
+            ...prev.socials,
+            discord: data.user.discord || '',
+            steam: data.user.steam || '',
+          }
+        } : null);
+      }
+      
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
+      alert('Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleAvatarUpload = async (file: File) => {
-    // In Phase 1, just simulate upload
-    console.log('Avatar upload:', file.name);
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64String = e.target?.result as string;
+        
+        // Update profile with the base64 avatar
+        const response = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            avatar: base64String,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update avatar');
+        }
+
+        const data = await response.json();
+        
+        // Update local state with the new avatar
+        if (teammateProfile) {
+          setTeammateProfile(prev => prev ? {
+            ...prev,
+            avatar: data.user.avatar,
+          } : null);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      alert('Avatar upload failed. Please try again.');
+    }
   };
 
   const handleDashboardRedirect = () => {
     router.push('/dashboard');
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#e6915b]"></div>
+      </div>
+    );
+  }
+
+  if (!teammateProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto mb-4 text-red-400" size={48} />
+          <p className="text-white">Failed to load teammate profile</p>
+        </div>
       </div>
     );
   }
@@ -205,7 +297,7 @@ export default function TeammateProfilePage() {
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                     placeholder="Enter first name"
                   />
                 ) : (
@@ -223,7 +315,7 @@ export default function TeammateProfilePage() {
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                     placeholder="Enter last name"
                   />
                 ) : (
@@ -241,7 +333,7 @@ export default function TeammateProfilePage() {
                     type="text"
                     value={formData.username}
                     onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                     placeholder="Enter username"
                   />
                 ) : (
@@ -257,7 +349,7 @@ export default function TeammateProfilePage() {
                     value={formData.bio}
                     onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                     rows={3}
-                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all resize-none"
+                    className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all resize-none text-white"
                     placeholder="Tell us about yourself..."
                   />
                 ) : (
@@ -319,7 +411,7 @@ export default function TeammateProfilePage() {
                       type="text"
                       value={formData.discord}
                       onChange={(e) => setFormData(prev => ({ ...prev, discord: e.target.value }))}
-                      className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                      className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                       placeholder="username#1234"
                     />
                   </div>
@@ -341,7 +433,7 @@ export default function TeammateProfilePage() {
                       type="text"
                       value={formData.steam}
                       onChange={(e) => setFormData(prev => ({ ...prev, steam: e.target.value }))}
-                      className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                      className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                       placeholder="Steam profile URL"
                     />
                   </div>
@@ -363,7 +455,7 @@ export default function TeammateProfilePage() {
                       type="text"
                       value={formData.twitter}
                       onChange={(e) => setFormData(prev => ({ ...prev, twitter: e.target.value }))}
-                      className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                      className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                       placeholder="@username"
                     />
                   </div>

@@ -32,33 +32,13 @@ import {
 } from 'lucide-react';
 import { AdministratorProfile } from '@/lib/types';
 
-// Placeholder data for Phase 1
-const placeholderAdminProfile: AdministratorProfile = {
-  id: 3,
-  email: 'admin@pairly.com',
-  username: 'admin',
-  firstName: 'Admin',
-  lastName: 'User',
-  avatar: '',
-  bio: 'System Administrator with full platform access and management capabilities.',
-  permissions: [
-    'manage_users',
-    'view_orders',
-    'manage_teammates',
-    'system_settings',
-    'analytics_access',
-    'content_moderation'
-  ],
-  createdAt: '2023-01-01T00:00:00Z',
-  lastSeen: new Date().toISOString()
-};
-
 export default function AdministratorProfilePage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [adminProfile, setAdminProfile] = useState<AdministratorProfile>(placeholderAdminProfile);
+  const [adminProfile, setAdminProfile] = useState<AdministratorProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setSaving] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'teammates' | 'users'>('profile');
   
   const [formData, setFormData] = useState({
@@ -68,50 +48,159 @@ export default function AdministratorProfilePage() {
     bio: '',
   });
 
+  // Fetch admin profile data
+  const fetchAdminProfile = async () => {
+    try {
+      const response = await fetch('/api/auth/profile');
+      if (!response.ok) throw new Error('Failed to fetch profile');
+      
+      const data = await response.json();
+      const userData = data.user;
+      
+      // Transform user data to AdministratorProfile format
+      const adminData: AdministratorProfile = {
+        id: userData.id,
+        email: userData.email,
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        avatar: userData.avatar,
+        bio: userData.bio,
+        permissions: [
+          'manage_users',
+          'view_orders',
+          'manage_teammates',
+          'system_settings',
+          'analytics_access',
+          'content_moderation'
+        ],
+        createdAt: userData.createdAt,
+        lastSeen: userData.lastSeen
+      };
+      
+      setAdminProfile(adminData);
+      setFormData({
+        firstName: adminData.firstName || '',
+        lastName: adminData.lastName || '',
+        username: adminData.username || '',
+        bio: adminData.bio || '',
+      });
+    } catch (error) {
+      console.error('Error fetching admin profile:', error);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
       return;
     }
 
-    // In Phase 1, we use placeholder data
-    setFormData({
-      firstName: adminProfile.firstName || '',
-      lastName: adminProfile.lastName || '',
-      username: adminProfile.username || '',
-      bio: adminProfile.bio || '',
-    });
+    if (isAuthenticated) {
+      fetchAdminProfile();
+    }
   }, [user, isLoading, isAuthenticated, router]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // In Phase 1, just simulate saving
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setAdminProfile(prev => ({
-        ...prev,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        username: formData.username,
-        bio: formData.bio,
-      }));
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          bio: formData.bio,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+
+      const data = await response.json();
+      
+      // Update local state with the response data
+      if (adminProfile) {
+        setAdminProfile(prev => prev ? {
+          ...prev,
+          firstName: data.user.firstName,
+          lastName: data.user.lastName,
+          username: data.user.username,
+          bio: data.user.bio,
+        } : null);
+      }
+      
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
+      alert('Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleAvatarUpload = async (file: File) => {
-    // In Phase 1, just simulate upload
-    console.log('Avatar upload:', file.name);
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64String = e.target?.result as string;
+        
+        // Update profile with the base64 avatar
+        const response = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            avatar: base64String,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update avatar');
+        }
+
+        const data = await response.json();
+        
+        // Update local state with the new avatar
+        if (adminProfile) {
+          setAdminProfile(prev => prev ? {
+            ...prev,
+            avatar: data.user.avatar,
+          } : null);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      alert('Avatar upload failed. Please try again.');
+    }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#e6915b]"></div>
+      </div>
+    );
+  }
+
+  if (!adminProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto mb-4 text-red-400" size={48} />
+          <p className="text-white">Failed to load admin profile</p>
+        </div>
       </div>
     );
   }
@@ -214,7 +303,7 @@ export default function AdministratorProfilePage() {
                         type="text"
                         value={formData.firstName}
                         onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                         placeholder="Enter first name"
                       />
                     ) : (
@@ -232,7 +321,7 @@ export default function AdministratorProfilePage() {
                         type="text"
                         value={formData.lastName}
                         onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                         placeholder="Enter last name"
                       />
                     ) : (
@@ -250,7 +339,7 @@ export default function AdministratorProfilePage() {
                         type="text"
                         value={formData.username}
                         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all"
+                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all text-white"
                         placeholder="Enter username"
                       />
                     ) : (
@@ -266,7 +355,7 @@ export default function AdministratorProfilePage() {
                         value={formData.bio}
                         onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                         rows={3}
-                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all resize-none"
+                        className="w-full bg-[#333] rounded-lg px-4 py-3 border border-[#444] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0] transition-all resize-none text-white"
                         placeholder="Tell us about yourself..."
                       />
                     ) : (
@@ -326,8 +415,6 @@ export default function AdministratorProfilePage() {
           {activeTab === 'teammates' && <AdminTeammatesView />}
           {activeTab === 'users' && <AdminUserManagement />}
         </div>
-
-
 
         {/* Quick Actions */}
         <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
