@@ -42,6 +42,7 @@ model User {
   favouritedBy             UserFavourite[]         @relation("FavouritedByUser")
   blockedUsers             UserBlock[]             @relation("UserBlocks")
   blockedBy                UserBlock[]             @relation("BlockedByUser")
+  duoPosts                 DuoPost[]
 }
 
 model AuthSession {
@@ -189,4 +190,44 @@ model UserBlock {
 
   @@unique([userId, blockedId])
   @@map("user_blocks")
+}
+
+model DuoPost {
+  id          Int      @id @default(autoincrement())
+  authorId    Int
+  gameId      Int
+  inGameName  String
+  rank        String
+  roles       String[]
+  lookingFor  String[]
+  champions   String[]
+  message     String?
+  discord     String?
+  showDiscord Boolean  @default(true)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
+  views       Int      @default(0)
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model Game {
+  id        Int        @id @default(autoincrement())
+  name      String
+  slug      String     @unique
+  roles     String[]
+  ranks     String[]
+  champions Champion[]
+  posts     DuoPost[]
+}
+
+model Champion {
+  id      Int     @id @default(autoincrement())
+  name    String
+  iconUrl String?
+  gameId  Int
+  game    Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
 }

@@ -163,6 +163,64 @@ async function main() {
     });
   }
 
+  // Create games for duo posts
+  const games = [
+    {
+      name: 'League of Legends',
+      slug: 'league-of-legends',
+      roles: ['top', 'jungle', 'mid', 'adc', 'support'],
+      ranks: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster', 'Challenger'],
+    },
+    {
+      name: 'Valorant',
+      slug: 'valorant',
+      roles: ['duelist', 'initiator', 'controller', 'sentinel'],
+      ranks: ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Immortal', 'Radiant'],
+    },
+  ];
+
+  for (const game of games) {
+    await prisma.game.upsert({
+      where: { slug: game.slug },
+      update: {},
+      create: game,
+    });
+  }
+
+  // Create champions for League of Legends
+  const leagueChampions = [
+    { name: 'Ahri', iconUrl: null, gameId: 1 },
+    { name: 'LeBlanc', iconUrl: null, gameId: 1 },
+    { name: 'Yasuo', iconUrl: null, gameId: 1 },
+    { name: 'Jinx', iconUrl: null, gameId: 1 },
+    { name: 'Thresh', iconUrl: null, gameId: 1 },
+    { name: 'Lux', iconUrl: null, gameId: 1 },
+    { name: 'Zed', iconUrl: null, gameId: 1 },
+    { name: 'Vayne', iconUrl: null, gameId: 1 },
+    { name: 'Lee Sin', iconUrl: null, gameId: 1 },
+    { name: 'Morgana', iconUrl: null, gameId: 1 },
+  ];
+
+  // Create agents for Valorant
+  const valorantAgents = [
+    { name: 'Jett', iconUrl: null, gameId: 2 },
+    { name: 'Sova', iconUrl: null, gameId: 2 },
+    { name: 'Sage', iconUrl: null, gameId: 2 },
+    { name: 'Phoenix', iconUrl: null, gameId: 2 },
+    { name: 'Reyna', iconUrl: null, gameId: 2 },
+    { name: 'Omen', iconUrl: null, gameId: 2 },
+    { name: 'Brimstone', iconUrl: null, gameId: 2 },
+    { name: 'Cypher', iconUrl: null, gameId: 2 },
+    { name: 'Breach', iconUrl: null, gameId: 2 },
+    { name: 'Viper', iconUrl: null, gameId: 2 },
+  ];
+
+  // Insert champions with skipDuplicates to make it idempotent
+  await prisma.champion.createMany({
+    data: [...leagueChampions, ...valorantAgents],
+    skipDuplicates: true,
+  });
+
   console.log('Seed data created successfully!');
 }
 
