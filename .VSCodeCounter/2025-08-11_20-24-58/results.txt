@@ -1,0 +1,207 @@
+Date : 2025-08-11 20:24:58
+Directory : c:\Users\Utilizador\pairly-landing
+Total : 110 files,  30168 codes, 5858 comments, 3149 blanks, all 39175 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| TypeScript         |         48 |     13,303 |      5,442 |      2,109 |     20,854 |
+| JSON               |          4 |      7,912 |          0 |          2 |      7,914 |
+| TypeScript JSX     |         31 |      7,177 |        269 |        660 |      8,106 |
+| JavaScript         |         15 |      1,137 |        116 |        231 |      1,484 |
+| Markdown           |          3 |        348 |          0 |         99 |        447 |
+| MS SQL             |          2 |        138 |         31 |         41 |        210 |
+| PostCSS            |          1 |        117 |          0 |          6 |        123 |
+| JSON with Comments |          1 |         31 |          0 |          1 |         32 |
+| XML                |          5 |          5 |          0 |          0 |          5 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                               | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                  |        110 |     30,168 |      5,858 |      3,149 |     39,175 |
+| . (Files)                                                                                          |         10 |      8,161 |          1 |        112 |      8,274 |
+| prisma                                                                                             |         24 |     11,280 |      5,388 |      1,848 |     18,516 |
+| prisma (Files)                                                                                     |         13 |      8,174 |      4,458 |      1,177 |     13,809 |
+| prisma\migrations                                                                                  |          2 |        138 |         31 |         41 |        210 |
+| prisma\migrations\20250801141316_init                                                              |          1 |         75 |         18 |         24 |        117 |
+| prisma\migrations\20250804152400_add_queue_system                                                  |          1 |         63 |         13 |         17 |         93 |
+| prisma\runtime                                                                                     |          9 |      2,968 |        899 |        630 |      4,497 |
+| public                                                                                             |          5 |          5 |          0 |          0 |          5 |
+| src                                                                                                |         71 |     10,722 |        469 |      1,189 |     12,380 |
+| src\app                                                                                            |         42 |      7,242 |        350 |        815 |      8,407 |
+| src\app (Files)                                                                                    |          3 |        248 |          9 |         16 |        273 |
+| src\app\api                                                                                        |         27 |      2,608 |        147 |        399 |      3,154 |
+| src\app\api\admin                                                                                  |          3 |        465 |          1 |         62 |        528 |
+| src\app\api\admin\orders                                                                           |          1 |        137 |          0 |         16 |        153 |
+| src\app\api\admin\teammates                                                                        |          1 |        124 |          0 |         17 |        141 |
+| src\app\api\admin\users                                                                            |          1 |        204 |          1 |         29 |        234 |
+| src\app\api\auth                                                                                   |          5 |        414 |         26 |         57 |        497 |
+| src\app\api\auth\login                                                                             |          1 |         89 |          8 |         14 |        111 |
+| src\app\api\auth\logout                                                                            |          1 |         38 |          5 |          8 |         51 |
+| src\app\api\auth\me                                                                                |          1 |         53 |          3 |          7 |         63 |
+| src\app\api\auth\profile                                                                           |          1 |        163 |          6 |         19 |        188 |
+| src\app\api\auth\register                                                                          |          1 |         71 |          4 |          9 |         84 |
+| src\app\api\chat                                                                                   |          1 |        105 |          6 |         21 |        132 |
+| src\app\api\orders                                                                                 |          1 |        102 |          7 |         17 |        126 |
+| src\app\api\orders\direct                                                                          |          1 |        102 |          7 |         17 |        126 |
+| src\app\api\queue                                                                                  |          1 |        212 |         14 |         28 |        254 |
+| src\app\api\sessions                                                                               |          2 |        172 |          9 |         27 |        208 |
+| src\app\api\sessions (Files)                                                                       |          1 |        125 |          6 |         20 |        151 |
+| src\app\api\sessions\teammate                                                                      |          1 |         47 |          3 |          7 |         57 |
+| src\app\api\teammates                                                                              |          9 |        693 |         55 |        116 |        864 |
+| src\app\api\teammates\accept-order                                                                 |          1 |         87 |          5 |         17 |        109 |
+| src\app\api\teammates\incoming-orders                                                              |          1 |         59 |          4 |          9 |         72 |
+| src\app\api\teammates\notifications                                                                |          1 |        124 |          7 |         20 |        151 |
+| src\app\api\teammates\order-history                                                                |          1 |         77 |          5 |         10 |         92 |
+| src\app\api\teammates\quests                                                                       |          1 |        119 |          9 |         11 |        139 |
+| src\app\api\teammates\reject-order                                                                 |          1 |         43 |          5 |         13 |         61 |
+| src\app\api\teammates\request-payout                                                               |          1 |         72 |          7 |         13 |         92 |
+| src\app\api\teammates\stats                                                                        |          1 |         70 |         10 |         13 |         93 |
+| src\app\api\teammates\toggle-online                                                                |          1 |         42 |          3 |         10 |         55 |
+| src\app\api\users                                                                                  |          5 |        445 |         29 |         71 |        545 |
+| src\app\api\users (Files)                                                                          |          1 |         32 |          1 |          3 |         36 |
+| src\app\api\users\become-teammate                                                                  |          1 |         47 |          9 |         10 |         66 |
+| src\app\api\users\blocks                                                                           |          1 |        133 |          7 |         24 |        164 |
+| src\app\api\users\favourites                                                                       |          1 |        146 |          8 |         25 |        179 |
+| src\app\api\users\match-history                                                                    |          1 |         87 |          4 |          9 |        100 |
+| src\app\become-teammate                                                                            |          1 |        278 |          3 |         24 |        305 |
+| src\app\coaching                                                                                   |          1 |        147 |          3 |         11 |        161 |
+| src\app\dashboard                                                                                  |          2 |        940 |         32 |         86 |      1,058 |
+| src\app\dashboard (Files)                                                                          |          1 |        644 |         20 |         55 |        719 |
+| src\app\dashboard\teammate                                                                         |          1 |        296 |         12 |         31 |        339 |
+| src\app\duo                                                                                        |          1 |        505 |         31 |         47 |        583 |
+| src\app\login                                                                                      |          1 |        154 |         12 |         15 |        181 |
+| src\app\profile                                                                                    |          4 |      1,613 |         77 |        146 |      1,836 |
+| src\app\profile (Files)                                                                            |          1 |         33 |          3 |          5 |         41 |
+| src\app\profile\administrator                                                                      |          1 |        418 |         19 |         41 |        478 |
+| src\app\profile\customer                                                                           |          1 |        675 |         28 |         57 |        760 |
+| src\app\profile\teammate                                                                           |          1 |        487 |         27 |         43 |        557 |
+| src\app\register                                                                                   |          1 |        364 |         18 |         28 |        410 |
+| src\app\tournaments                                                                                |          1 |        385 |         18 |         43 |        446 |
+| src\components                                                                                     |         16 |      2,519 |         63 |        224 |      2,806 |
+| src\components (Files)                                                                             |         15 |      2,465 |         63 |        218 |      2,746 |
+| src\components\ui                                                                                  |          1 |         54 |          0 |          6 |         60 |
+| src\contexts                                                                                       |          1 |        141 |          3 |         26 |        170 |
+| src\hooks                                                                                          |          5 |        360 |         16 |         63 |        439 |
+| src\lib                                                                                            |          7 |        460 |         37 |         61 |        558 |
++----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                           | language           | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| c:\Users\Utilizador\pairly-landing\ADMIN_TESTING_GUIDE.md                                          | Markdown           |        242 |          0 |         58 |        300 |
+| c:\Users\Utilizador\pairly-landing\AUTHENTICATION_SETUP.md                                         | Markdown           |         83 |          0 |         27 |        110 |
+| c:\Users\Utilizador\pairly-landing\README.md                                                       | Markdown           |         23 |          0 |         14 |         37 |
+| c:\Users\Utilizador\pairly-landing\components.json                                                 | JSON               |         21 |          0 |          0 |         21 |
+| c:\Users\Utilizador\pairly-landing\eslint.config.mjs                                               | JavaScript         |         12 |          0 |          5 |         17 |
+| c:\Users\Utilizador\pairly-landing\next.config.ts                                                  | TypeScript         |          4 |          1 |          3 |          8 |
+| c:\Users\Utilizador\pairly-landing\package-lock.json                                               | JSON               |      7,698 |          0 |          1 |      7,699 |
+| c:\Users\Utilizador\pairly-landing\package.json                                                    | JSON               |         43 |          0 |          1 |         44 |
+| c:\Users\Utilizador\pairly-landing\postcss.config.mjs                                              | JavaScript         |          4 |          0 |          2 |          6 |
+| c:\Users\Utilizador\pairly-landing\prisma\client.d.ts                                              | TypeScript         |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\prisma\client.js                                                | JavaScript         |          1 |          2 |          1 |          4 |
+| c:\Users\Utilizador\pairly-landing\prisma\default.d.ts                                             | TypeScript         |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\prisma\default.js                                               | JavaScript         |          1 |          2 |          1 |          4 |
+| c:\Users\Utilizador\pairly-landing\prisma\edge.d.ts                                                | TypeScript         |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\prisma\edge.js                                                  | JavaScript         |        200 |         21 |         34 |        255 |
+| c:\Users\Utilizador\pairly-landing\prisma\index-browser.js                                         | JavaScript         |        188 |         21 |         33 |        242 |
+| c:\Users\Utilizador\pairly-landing\prisma\index.d.ts                                               | TypeScript         |      7,069 |      4,363 |      1,024 |     12,456 |
+| c:\Users\Utilizador\pairly-landing\prisma\index.js                                                 | JavaScript         |        214 |         23 |         39 |        276 |
+| c:\Users\Utilizador\pairly-landing\prisma\migrations\20250801141316_init\migration.sql             | MS SQL             |         75 |         18 |         24 |        117 |
+| c:\Users\Utilizador\pairly-landing\prisma\migrations\20250804152400_add_queue_system\migration.sql | MS SQL             |         63 |         13 |         17 |         93 |
+| c:\Users\Utilizador\pairly-landing\prisma\package.json                                             | JSON               |        150 |          0 |          0 |        150 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\edge-esm.js                                      | JavaScript         |         26 |          2 |          7 |         35 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\edge.js                                          | JavaScript         |         26 |          2 |          7 |         35 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\index-browser.d.ts                               | TypeScript         |        264 |         20 |         87 |        371 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\index-browser.js                                 | JavaScript         |          1 |         14 |          2 |         17 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\library.d.ts                                     | TypeScript         |      2,375 |        853 |        460 |      3,688 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\library.js                                       | JavaScript         |        116 |          2 |         29 |        147 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\react-native.js                                  | JavaScript         |         67 |          2 |         15 |         84 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\wasm-compiler-edge.js                            | JavaScript         |         66 |          2 |         16 |         84 |
+| c:\Users\Utilizador\pairly-landing\prisma\runtime\wasm-engine-edge.js                              | JavaScript         |         27 |          2 |          7 |         36 |
+| c:\Users\Utilizador\pairly-landing\prisma\seed.ts                                                  | TypeScript         |        159 |          5 |         12 |        176 |
+| c:\Users\Utilizador\pairly-landing\prisma\wasm.d.ts                                                | TypeScript         |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\prisma\wasm.js                                                  | JavaScript         |        188 |         21 |         33 |        242 |
+| c:\Users\Utilizador\pairly-landing\public\file.svg                                                 | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\public\globe.svg                                                | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\public\next.svg                                                 | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\public\vercel.svg                                               | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\public\window.svg                                               | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\admin\orders\route.ts                               | TypeScript         |        137 |          0 |         16 |        153 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\admin\teammates\route.ts                            | TypeScript         |        124 |          0 |         17 |        141 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\admin\users\route.ts                                | TypeScript         |        204 |          1 |         29 |        234 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\auth\login\route.ts                                 | TypeScript         |         89 |          8 |         14 |        111 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\auth\logout\route.ts                                | TypeScript         |         38 |          5 |          8 |         51 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\auth\me\route.ts                                    | TypeScript         |         53 |          3 |          7 |         63 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\auth\profile\route.ts                               | TypeScript         |        163 |          6 |         19 |        188 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\auth\register\route.ts                              | TypeScript         |         71 |          4 |          9 |         84 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\chat\route.ts                                       | TypeScript         |        105 |          6 |         21 |        132 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\orders\direct\route.ts                              | TypeScript         |        102 |          7 |         17 |        126 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\queue\route.ts                                      | TypeScript         |        212 |         14 |         28 |        254 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\sessions\route.ts                                   | TypeScript         |        125 |          6 |         20 |        151 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\sessions\teammate\route.ts                          | TypeScript         |         47 |          3 |          7 |         57 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\accept-order\route.ts                     | TypeScript         |         87 |          5 |         17 |        109 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\incoming-orders\route.ts                  | TypeScript         |         59 |          4 |          9 |         72 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\notifications\route.ts                    | TypeScript         |        124 |          7 |         20 |        151 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\order-history\route.ts                    | TypeScript         |         77 |          5 |         10 |         92 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\quests\route.ts                           | TypeScript         |        119 |          9 |         11 |        139 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\reject-order\route.ts                     | TypeScript         |         43 |          5 |         13 |         61 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\request-payout\route.ts                   | TypeScript         |         72 |          7 |         13 |         92 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\stats\route.ts                            | TypeScript         |         70 |         10 |         13 |         93 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\teammates\toggle-online\route.ts                    | TypeScript         |         42 |          3 |         10 |         55 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\users\become-teammate\route.ts                      | TypeScript         |         47 |          9 |         10 |         66 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\users\blocks\route.ts                               | TypeScript         |        133 |          7 |         24 |        164 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\users\favourites\route.ts                           | TypeScript         |        146 |          8 |         25 |        179 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\users\match-history\route.ts                        | TypeScript         |         87 |          4 |          9 |        100 |
+| c:\Users\Utilizador\pairly-landing\src\app\api\users\route.ts                                      | TypeScript         |         32 |          1 |          3 |         36 |
+| c:\Users\Utilizador\pairly-landing\src\app\become-teammate\page.tsx                                | TypeScript JSX     |        278 |          3 |         24 |        305 |
+| c:\Users\Utilizador\pairly-landing\src\app\coaching\page.tsx                                       | TypeScript JSX     |        147 |          3 |         11 |        161 |
+| c:\Users\Utilizador\pairly-landing\src\app\dashboard\page.tsx                                      | TypeScript JSX     |        644 |         20 |         55 |        719 |
+| c:\Users\Utilizador\pairly-landing\src\app\dashboard\teammate\page.tsx                             | TypeScript JSX     |        296 |         12 |         31 |        339 |
+| c:\Users\Utilizador\pairly-landing\src\app\duo\page.tsx                                            | TypeScript JSX     |        505 |         31 |         47 |        583 |
+| c:\Users\Utilizador\pairly-landing\src\app\globals.css                                             | PostCSS            |        117 |          0 |          6 |        123 |
+| c:\Users\Utilizador\pairly-landing\src\app\layout.tsx                                              | TypeScript JSX     |         45 |          1 |          4 |         50 |
+| c:\Users\Utilizador\pairly-landing\src\app\login\page.tsx                                          | TypeScript JSX     |        154 |         12 |         15 |        181 |
+| c:\Users\Utilizador\pairly-landing\src\app\page.tsx                                                | TypeScript JSX     |         86 |          8 |          6 |        100 |
+| c:\Users\Utilizador\pairly-landing\src\app\profile\administrator\page.tsx                          | TypeScript JSX     |        418 |         19 |         41 |        478 |
+| c:\Users\Utilizador\pairly-landing\src\app\profile\customer\page.tsx                               | TypeScript JSX     |        675 |         28 |         57 |        760 |
+| c:\Users\Utilizador\pairly-landing\src\app\profile\page.tsx                                        | TypeScript JSX     |         33 |          3 |          5 |         41 |
+| c:\Users\Utilizador\pairly-landing\src\app\profile\teammate\page.tsx                               | TypeScript JSX     |        487 |         27 |         43 |        557 |
+| c:\Users\Utilizador\pairly-landing\src\app\register\page.tsx                                       | TypeScript JSX     |        364 |         18 |         28 |        410 |
+| c:\Users\Utilizador\pairly-landing\src\app\tournaments\page.tsx                                    | TypeScript JSX     |        385 |         18 |         43 |        446 |
+| c:\Users\Utilizador\pairly-landing\src\components\AdminOrdersView.tsx                              | TypeScript JSX     |        255 |          4 |         26 |        285 |
+| c:\Users\Utilizador\pairly-landing\src\components\AdminTeammatesView.tsx                           | TypeScript JSX     |        292 |          5 |         28 |        325 |
+| c:\Users\Utilizador\pairly-landing\src\components\AdminUserManagement.tsx                          | TypeScript JSX     |        394 |          6 |         34 |        434 |
+| c:\Users\Utilizador\pairly-landing\src\components\ChatInterface.tsx                                | TypeScript JSX     |        188 |          9 |         21 |        218 |
+| c:\Users\Utilizador\pairly-landing\src\components\FeatureCard.tsx                                  | TypeScript JSX     |         25 |          0 |          1 |         26 |
+| c:\Users\Utilizador\pairly-landing\src\components\Footer.tsx                                       | TypeScript JSX     |        103 |          0 |          6 |        109 |
+| c:\Users\Utilizador\pairly-landing\src\components\GameSelector.tsx                                 | TypeScript JSX     |        114 |          2 |          8 |        124 |
+| c:\Users\Utilizador\pairly-landing\src\components\HorizontalGameSelector.tsx                       | TypeScript JSX     |         73 |          0 |          7 |         80 |
+| c:\Users\Utilizador\pairly-landing\src\components\LoadingStates.tsx                                | TypeScript JSX     |        123 |          6 |          8 |        137 |
+| c:\Users\Utilizador\pairly-landing\src\components\Navbar.tsx                                       | TypeScript JSX     |         20 |          0 |          2 |         22 |
+| c:\Users\Utilizador\pairly-landing\src\components\ProfileHeader.tsx                                | TypeScript JSX     |        241 |          9 |         21 |        271 |
+| c:\Users\Utilizador\pairly-landing\src\components\ResponsiveNavbar.tsx                             | TypeScript JSX     |        331 |          9 |         29 |        369 |
+| c:\Users\Utilizador\pairly-landing\src\components\ScrollToTop.tsx                                  | TypeScript JSX     |         36 |          0 |          6 |         42 |
+| c:\Users\Utilizador\pairly-landing\src\components\SearchAndFilter.tsx                              | TypeScript JSX     |        256 |         13 |         21 |        290 |
+| c:\Users\Utilizador\pairly-landing\src\components\TestimonialCard.tsx                              | TypeScript JSX     |         14 |          0 |          0 |         14 |
+| c:\Users\Utilizador\pairly-landing\src\components\ui\button.tsx                                    | TypeScript JSX     |         54 |          0 |          6 |         60 |
+| c:\Users\Utilizador\pairly-landing\src\contexts\AuthContext.tsx                                    | TypeScript JSX     |        141 |          3 |         26 |        170 |
+| c:\Users\Utilizador\pairly-landing\src\hooks\index.ts                                              | TypeScript         |          3 |          0 |          0 |          3 |
+| c:\Users\Utilizador\pairly-landing\src\hooks\useAuthForm.ts                                        | TypeScript         |         94 |          2 |         15 |        111 |
+| c:\Users\Utilizador\pairly-landing\src\hooks\useLocalStorage.ts                                    | TypeScript         |         28 |          1 |          6 |         35 |
+| c:\Users\Utilizador\pairly-landing\src\hooks\useQueue.ts                                           | TypeScript         |         64 |          4 |         11 |         79 |
+| c:\Users\Utilizador\pairly-landing\src\hooks\useRealTimeQueue.ts                                   | TypeScript         |        171 |          9 |         31 |        211 |
+| c:\Users\Utilizador\pairly-landing\src\lib\auth.ts                                                 | TypeScript         |         19 |          0 |          4 |         23 |
+| c:\Users\Utilizador\pairly-landing\src\lib\constants.ts                                            | TypeScript         |        111 |          6 |          9 |        126 |
+| c:\Users\Utilizador\pairly-landing\src\lib\games.ts                                                | TypeScript         |         12 |          1 |          1 |         14 |
+| c:\Users\Utilizador\pairly-landing\src\lib\index.ts                                                | TypeScript         |         37 |          4 |          2 |         43 |
+| c:\Users\Utilizador\pairly-landing\src\lib\prisma.ts                                               | TypeScript         |          7 |          1 |          4 |         12 |
+| c:\Users\Utilizador\pairly-landing\src\lib\types.ts                                                | TypeScript         |        146 |          7 |         14 |        167 |
+| c:\Users\Utilizador\pairly-landing\src\lib\utils.ts                                                | TypeScript         |        128 |         18 |         27 |        173 |
+| c:\Users\Utilizador\pairly-landing\tsconfig.json                                                   | JSON with Comments |         31 |          0 |          1 |         32 |
+| Total                                                                                              |                    |     30,168 |      5,858 |      3,149 |     39,175 |
++----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
