@@ -27,7 +27,7 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 max-w-2xl mx-auto px-4">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e6915b] to-[#a8724c]">
-            Play <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4a574] to-[#b8860b]">for free</span> with amazing teammates! :D
+            Play <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4a574] to-[#b8860b]">for free</span> with amazing mentors! :D
           </h2>
           <p className="text-lg text-[#e0d6d1] max-w-xl mx-auto mb-8 drop-shadow-lg">
             Find your perfect duo partner for ranked games, get coaching from top players, join free Inhouses, or compete in tournaments!

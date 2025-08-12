@@ -28,8 +28,8 @@ export interface CustomerProfile {
     twitter?: string;
   };
   matchHistory: MatchHistoryItem[];
-  favouriteTeammates: number[]; // teammate user IDs
-  blockedTeammates: number[]; // blocked teammate user IDs
+  favouriteTeammates: number[]; // mentor user IDs
+  blockedTeammates: number[]; // blocked mentor user IDs
   createdAt: string;
   lastSeen: string;
 }

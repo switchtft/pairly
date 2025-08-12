@@ -175,7 +175,7 @@ export default function AdminUserManagement() {
   }
 
   const customers = users.filter(u => u.role === 'customer');
-  const teammates = users.filter(u => u.role === 'teammate');
+  const mentors = users.filter(u => u.role === 'teammate');
   const admins = users.filter(u => u.role === 'administrator');
 
   return (
@@ -188,7 +188,7 @@ export default function AdminUserManagement() {
             User Management
           </h2>
           <p className="text-gray-400 text-sm">
-            {pagination.total} total users • {customers.length} customers • {teammates.length} teammates • {admins.length} admins
+            {pagination.total} total users • {customers.length} customers • {mentors.length} mentors • {admins.length} admins
           </p>
         </div>
         <Button
@@ -212,7 +212,7 @@ export default function AdminUserManagement() {
           >
             <option value="">All Roles</option>
             <option value="customer">Customer</option>
-            <option value="teammate">Teammate</option>
+            <option value="teammate">Mentor</option>
             <option value="administrator">Administrator</option>
           </select>
         </div>
@@ -280,7 +280,7 @@ export default function AdminUserManagement() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                    {user.role || 'customer'}
+                    {user.role === 'teammate' ? 'mentor' : (user.role || 'customer')}
                   </span>
                   {editingUser === user.id ? (
                     <div className="flex gap-2">
@@ -364,7 +364,7 @@ export default function AdminUserManagement() {
                         }}
                       >
                         <option value="customer">Customer</option>
-                        <option value="teammate">Teammate</option>
+                        <option value="teammate">Mentor</option>
                         <option value="administrator">Administrator</option>
                       </select>
                     </div>

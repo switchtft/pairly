@@ -263,7 +263,7 @@ export default function AdministratorProfilePage() {
               }`}
             >
               <Users className="mr-2" size={16} />
-              Teammates
+                              Mentors
             </Button>
             <Button
               onClick={() => setActiveTab('users')}
@@ -446,7 +446,7 @@ export default function AdministratorProfilePage() {
               className="border-[#e6915b]/30 text-[#e6915b] hover:bg-[#e6915b] hover:text-white h-auto p-4 flex flex-col items-center gap-2"
             >
               <Users size={24} />
-              <span>Teammates</span>
+                              <span>Mentors</span>
               <span className="text-xs opacity-60">Online status</span>
             </Button>
 

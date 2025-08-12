@@ -99,7 +99,7 @@ export default function TeammateProfilePage() {
         twitter: teammateData.socials.twitter || '',
       });
     } catch (error) {
-      console.error('Error fetching teammate profile:', error);
+      console.error('Error fetching mentor profile:', error);
     } finally {
       setIsLoadingProfile(false);
     }
@@ -230,7 +230,7 @@ export default function TeammateProfilePage() {
       <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="mx-auto mb-4 text-red-400" size={48} />
-          <p className="text-white">Failed to load teammate profile</p>
+          <p className="text-white">Failed to load mentor profile</p>
         </div>
       </div>
     );
@@ -261,9 +261,9 @@ export default function TeammateProfilePage() {
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-2">
                 <Settings className="text-[#e6915b]" size={20} />
-                Teammate Dashboard
+                Mentor Dashboard
               </h2>
-              <p className="text-gray-400">Access your teammate dashboard to manage orders, view stats, and more.</p>
+                              <p className="text-gray-400">Access your mentor dashboard to manage orders, view stats, and more.</p>
             </div>
             <Button 
               onClick={handleDashboardRedirect}

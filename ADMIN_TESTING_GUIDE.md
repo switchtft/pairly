@@ -19,7 +19,7 @@ The database has been seeded with the following test data:
 
 ### Users
 - **Admin**: admin@pairly.com (administrator role)
-- **Teammates**: 
+- **Mentors**: 
   - capychill@example.com (Valorant, Diamond 3)
   - capyzen@example.com (Valorant, Immortal 1)
   - capynap@example.com (Valorant, Ascendant 2)
@@ -32,7 +32,7 @@ The database has been seeded with the following test data:
 ### Sessions
 - Active Valorant session (Customer1 + CapyZen)
 - Completed League session (Customer2 + CapyKing)
-- Pending Valorant session (Customer1, no teammate assigned)
+- Pending Valorant session (Customer1, no mentor assigned)
 
 ## Testing Steps
 
@@ -73,7 +73,7 @@ The database has been seeded with the following test data:
 - ✅ View real-time orders with pagination
 - ✅ Filter orders by status (pending, active, completed, cancelled)
 - ✅ Filter orders by game (Valorant, League of Legends, CS:GO)
-- ✅ View order details (client, teammate, price, duration, creation date)
+- ✅ View order details (client, mentor, price, duration, creation date)
 - ✅ Refresh orders data
 - ✅ Load more orders (pagination)
 
@@ -90,35 +90,35 @@ The database has been seeded with the following test data:
 5. Test refresh functionality
 6. Verify order details are correct:
    - Order IDs, games, modes, statuses
-   - Client and teammate information
+   - Client and mentor information
    - Pricing and duration
    - Creation timestamps
 
-### 4. Test Teammates Tab
+### 4. Test Mentors Tab
 
 **Features to test**:
-- ✅ View all teammates with pagination
+- ✅ View all mentors with pagination
 - ✅ Filter by online status
 - ✅ Filter by game
-- ✅ View teammate statistics (online/offline count, average rating)
-- ✅ View teammate details (profile, game, rank, sessions, ratings)
-- ✅ Refresh teammates data
-- ✅ Load more teammates (pagination)
+- ✅ View mentor statistics (online/offline count, average rating)
+- ✅ View mentor details (profile, game, rank, sessions, ratings)
+- ✅ Refresh mentors data
+- ✅ Load more mentors (pagination)
 
 **Test scenarios**:
-1. Navigate to Teammates tab
-2. Verify all 5 teammates are displayed
+1. Navigate to Mentors tab
+2. Verify all 5 mentors are displayed
 3. Test online filter:
-   - Check "Online only" - should show only online teammates
-   - Uncheck - should show all teammates
+   - Check "Online only" - should show only online mentors
+   - Uncheck - should show all mentors
 4. Test game filter:
-   - Select "Valorant" - should show 4 teammates
-   - Select "League of Legends" - should show 1 teammate
+   - Select "Valorant" - should show 4 mentors
+   - Select "League of Legends" - should show 1 mentor
 5. Verify statistics cards:
    - Online count
    - Offline count
    - Average rating
-6. Check teammate details:
+6. Check mentor details:
    - Names, usernames, emails
    - Games and ranks
    - Session counts and ratings
@@ -128,7 +128,7 @@ The database has been seeded with the following test data:
 
 **Features to test**:
 - ✅ View all users with pagination
-- ✅ Filter by role (customer, teammate, administrator)
+- ✅ Filter by role (customer, mentor, administrator)
 - ✅ Filter by game
 - ✅ Filter by verification status
 - ✅ Edit user roles, verification status, and pro status
@@ -138,17 +138,17 @@ The database has been seeded with the following test data:
 
 **Test scenarios**:
 1. Navigate to User Management tab
-2. Verify all users are displayed (admin + 5 teammates + 2 customers)
+2. Verify all users are displayed (admin + 5 mentors + 2 customers)
 3. Test role filter:
    - Select "Customer" - should show 2 users
-   - Select "Teammate" - should show 5 users
+   - Select "Mentor" - should show 5 users
    - Select "Administrator" - should show 1 user
 4. Test verification filter:
    - Select "Verified Only" - should show verified users
    - Select "Unverified Only" - should show unverified users
 5. Test user editing:
    - Click edit button on a user
-   - Change their role (e.g., customer to teammate)
+   - Change their role (e.g., customer to mentor)
    - Toggle verification status
    - Toggle pro status
    - Verify changes are saved
@@ -162,13 +162,13 @@ The database has been seeded with the following test data:
 
 **Features to test**:
 - ✅ Quick navigation to Orders tab
-- ✅ Quick navigation to Teammates tab
+- ✅ Quick navigation to Mentors tab
 - ✅ Quick navigation to User Management tab
 - ✅ Analytics button (disabled, coming soon)
 
 **Test scenarios**:
 1. Click "View Orders" - should navigate to Orders tab
-2. Click "Teammates" - should navigate to Teammates tab
+2. Click "Mentors" - should navigate to Mentors tab
 3. Click "User Management" - should navigate to User Management tab
 4. Verify "Analytics" button is disabled with "Coming Soon" text
 
@@ -180,7 +180,7 @@ The database has been seeded with the following test data:
    - Test with different query parameters
    - Verify authentication and authorization
 
-2. **GET /api/admin/teammates**
+2. **GET /api/admin/mentors**
    - Test with different query parameters
    - Verify authentication and authorization
 
@@ -198,8 +198,8 @@ The database has been seeded with the following test data:
 # Test orders endpoint
 curl -H "Cookie: token=YOUR_TOKEN" "http://localhost:3000/api/admin/orders?status=active&game=valorant"
 
-# Test teammates endpoint
-curl -H "Cookie: token=YOUR_TOKEN" "http://localhost:3000/api/admin/teammates?online=true"
+# Test mentors endpoint
+curl -H "Cookie: token=YOUR_TOKEN" "http://localhost:3000/api/admin/mentors?online=true"
 
 # Test users endpoint
 curl -H "Cookie: token=YOUR_TOKEN" "http://localhost:3000/api/admin/users?role=customer"
@@ -290,7 +290,7 @@ The Phase 5 administrator features provide a comprehensive management interface 
 
 - **Profile Management**: Personal information editing and system status
 - **Order Management**: Real-time order tracking with filtering and pagination
-- **Teammate Management**: Teammate overview with online status and statistics
+- **Mentor Management**: Mentor overview with online status and statistics
 - **User Management**: Complete user administration with role and status editing
 - **Security**: Proper authentication and authorization
 - **Responsive Design**: Mobile-friendly interface

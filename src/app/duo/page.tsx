@@ -406,7 +406,7 @@ export default function DuoPage() {
               <h2 className="text-xl font-bold text-[#e6915b]">Queue Status</h2>
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-400">
-                  {availableTeammates} teammates available
+                  {availableTeammates} mentors available
                 </span>
                 <span className="text-sm text-gray-400">
                   {queueLength} in queue

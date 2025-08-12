@@ -136,10 +136,10 @@ export default function AdminTeammatesView() {
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Users className="text-[#e6915b]" size={20} />
-            Teammates Overview
+            Mentors Overview
           </h2>
           <p className="text-gray-400 text-sm">
-            {pagination.total} total teammates • {onlineTeammates.length} online
+            {pagination.total} total mentors • {onlineTeammates.length} online
           </p>
         </div>
         <Button
@@ -225,12 +225,12 @@ export default function AdminTeammatesView() {
         </div>
       </div>
 
-      {/* Teammates List */}
+      {/* Mentors List */}
       <div className="space-y-4">
         {teammates.length === 0 ? (
           <div className="text-center py-8">
             <Users className="mx-auto mb-4 text-gray-400" size={48} />
-            <p className="text-gray-400">No teammates found</p>
+            <p className="text-gray-400">No mentors found</p>
           </div>
         ) : (
           teammates.map((teammate) => (
@@ -315,7 +315,7 @@ export default function AdminTeammatesView() {
             variant="outline"
             className="border-[#e6915b]/30 text-[#e6915b] hover:bg-[#e6915b] hover:text-white"
           >
-            Load More Teammates
+            Load More Mentors
           </Button>
         </div>
       )}
