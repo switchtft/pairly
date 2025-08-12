@@ -90,7 +90,7 @@ export default function TeammateDashboard() {
 
     } catch (error) {
       setError('Failed to fetch data');
-      console.error('Error fetching teammate data:', error);
+      console.error('Error fetching mentor data:', error);
     } finally {
       setLoading(false);
     }
@@ -142,7 +142,7 @@ export default function TeammateDashboard() {
           <div className="text-center py-12">
             <XCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-300 mb-2">Access Denied</h3>
-            <p className="text-gray-500">You must be a verified teammate to access this dashboard.</p>
+            <p className="text-gray-500">You must be a verified mentor to access this dashboard.</p>
           </div>
         </div>
       </div>
@@ -168,7 +168,7 @@ export default function TeammateDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-2">
-            Teammate Dashboard
+            Mentor Dashboard
           </h1>
           <p className="text-gray-400">
             Manage incoming requests and active sessions

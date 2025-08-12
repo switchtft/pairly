@@ -200,7 +200,7 @@ export default function GameSelector() {
                       <div className="text-center">
                         <Plus size={48} className="text-[#e6915b] mx-auto mb-4" />
                         <h4 className="text-xl font-semibold text-[#e6915b]">More coming soon!</h4>
-                        <p className="text-[#e6915b]/80 text-sm mt-2">We're adding more games</p>
+                        <p className="text-[#e6915b]/80 text-sm mt-2">We&apos;re adding more games</p>
                       </div>
                     </div>
                   ) : (
@@ -255,7 +255,7 @@ export default function GameSelector() {
         {/* Call to Action */}
         <div className="text-center mt-12">
           <p className="text-[#e6915b]/80 mb-4">
-            Don't see your game? Let us know and we'll add it!
+            Don&apos;t see your game? Let us know and we&apos;ll add it!
           </p>
           <button className="bg-gradient-to-r from-[#e6915b] to-[#a8724c] hover:from-[#d8824a] hover:to-[#976040] text-white px-6 py-2 rounded-lg transition-all">
             Request Game

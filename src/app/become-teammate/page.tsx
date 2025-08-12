@@ -56,7 +56,7 @@ export default function BecomeTeammatePage() {
           <div className="text-center py-12">
             <Shield className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-300 mb-2">Login Required</h3>
-            <p className="text-gray-500">You must be logged in to apply as a teammate.</p>
+            <p className="text-gray-500">You must be logged in to apply as a mentor.</p>
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function BecomeTeammatePage() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-300 mb-2">Application Submitted!</h3>
             <p className="text-gray-500 mb-6">
-              Thank you for your interest in becoming a teammate. We&apos;ll review your application and get back to you within 24-48 hours.
+              Thank you for your interest in becoming a mentor. We&apos;ll review your application and get back to you within 24-48 hours.
             </p>
             <Button 
               onClick={() => window.location.href = '/dashboard'}
@@ -91,7 +91,7 @@ export default function BecomeTeammatePage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
-            Become a Teammate
+            Become a Mentor
           </h1>
           <p className="text-[#e6915b]/80 max-w-2xl mx-auto text-lg">
             Join our elite team of professional gamers and earn money doing what you love
@@ -267,7 +267,7 @@ export default function BecomeTeammatePage() {
                     onChange={(e) => handleInputChange('whyJoin', e.target.value)}
                     required
                     rows={4}
-                    placeholder="Tell us about your motivation, goals, and what makes you a great teammate..."
+                    placeholder="Tell us about your motivation, goals, and what makes you a great mentor..."
                     className="w-full bg-[#2a2a2a] border border-[#333] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#e6915b] resize-none"
                   />
                 </div>

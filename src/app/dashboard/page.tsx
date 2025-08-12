@@ -347,9 +347,9 @@ export default function DashboardPage() {
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white">Incoming Orders</h2>
-          <Link href="/teammate-rules" className="text-[#e6915b] hover:text-[#d18251] text-sm">
-            View Teammate Rules →
-          </Link>
+                  <Link href="/teammate-rules" className="text-[#e6915b] hover:text-[#d18251] text-sm">
+          View Mentor Rules →
+        </Link>
         </div>
         <div className="space-y-4">
           {incomingOrders.length > 0 ? (
@@ -541,10 +541,10 @@ export default function DashboardPage() {
     </div>
   );
 
-  const renderTeammateRulesTab = () => (
+  const renderMentorRulesTab = () => (
     <div className="space-y-4">
       <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
-        <h2 className="text-xl font-bold text-white mb-4">Teammate Rules</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Mentor Rules</h2>
         <div className="space-y-4">
           <div className="p-4 bg-[#2a2a2a] rounded-lg">
             <h3 className="text-white font-medium mb-2">1. Professional Conduct</h3>
@@ -599,7 +599,7 @@ export default function DashboardPage() {
       case 'quest':
         return renderQuestTab();
       case 'teammate-rules':
-        return renderTeammateRulesTab();
+        return renderMentorRulesTab();
       default:
         return renderDashboardTab();
     }
@@ -611,7 +611,7 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
-            Teammate Dashboard
+            Mentor Dashboard
           </h1>
           <p className="text-gray-400">Manage your orders, track performance, and grow your business</p>
         </div>
@@ -688,7 +688,7 @@ export default function DashboardPage() {
                   className={`w-full justify-start ${activeTab === 'teammate-rules' ? 'bg-[#e6915b] hover:bg-[#d18251]' : 'bg-transparent hover:bg-[#2a2a2a]'}`}
                 >
                   <BookOpen size={16} className="mr-3" />
-                  Teammate Rules
+                  Mentor Rules
                 </Button>
               </div>
             </div>

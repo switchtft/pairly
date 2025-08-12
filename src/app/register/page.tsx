@@ -98,7 +98,7 @@ export default function RegisterPage() {
             Pairly
           </Link>
           <h2 className="text-3xl font-bold text-white mb-2">Join the community</h2>
-          <p className="text-[#e6915b]">Create your gaming account and find your perfect teammates</p>
+          <p className="text-[#e6915b]">Create your gaming account and find your perfect mentors</p>
         </div>
 
         {/* Progress Indicator */}

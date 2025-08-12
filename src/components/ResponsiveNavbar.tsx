@@ -203,7 +203,7 @@ export default function ResponsiveNavbar() {
                          className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
                        >
                          <Crown size={16} className="mr-3" />
-                         Teammate Dashboard
+                         Mentor Dashboard
                        </Link>
                      )}
                      
@@ -223,7 +223,7 @@ export default function ResponsiveNavbar() {
                         className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
                       >
                         <Shield size={16} className="mr-3" />
-                        Become Teammate
+                        Become Mentor
                       </Link>
                     )}
                     

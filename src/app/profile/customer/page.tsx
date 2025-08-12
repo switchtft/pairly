@@ -630,13 +630,13 @@ export default function CustomerProfilePage() {
           </div>
         </div>
 
-        {/* Teammate Lists */}
+        {/* Mentor Lists */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Favourite Teammates */}
+          {/* Favourite Mentors */}
           <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
               <Heart className="text-red-400" size={20} />
-              Favourite Teammates
+              Favourite Mentors
             </h2>
 
             <div className="space-y-3">
@@ -684,18 +684,18 @@ export default function CustomerProfilePage() {
               ) : (
                 <div className="text-center py-8 text-gray-400">
                   <Heart className="mx-auto mb-4" size={48} />
-                  <p>No favourite teammates yet</p>
-                  <p className="text-sm">Add teammates to your favourites for quick access!</p>
+                  <p>No favourite mentors yet</p>
+                  <p className="text-sm">Add mentors to your favourites for quick access!</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Blocked Teammates */}
+          {/* Blocked Mentors */}
           <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] p-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
               <Ban className="text-red-500" size={20} />
-              Blocked Teammates
+              Blocked Mentors
             </h2>
 
             <div className="space-y-3">
