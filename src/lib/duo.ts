@@ -74,7 +74,7 @@ export const createPostSchema = z.object({
   champions: z.array(z.string()).min(1, 'At least one champion is required').max(3),
   message: z.string().max(500, 'Message too long').optional(),
   discord: z.string().max(50, 'Discord tag too long').optional(),
-  showDiscord: z.boolean().default(true),
+  showDiscord: z.boolean(),
 });
 
 export type CreatePostData = z.infer<typeof createPostSchema>;

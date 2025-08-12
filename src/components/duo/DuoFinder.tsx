@@ -14,11 +14,12 @@ import { DuoPost, CreatePostData } from '@/lib/duo';
 
 export function DuoFinder() {
   const { user } = useAuth();
-  const { games, isLoading: gamesLoading } = useGames();
+  const { games, loading: gamesLoading } = useGames();
   const [selectedGameId, setSelectedGameId] = useState<number>(1); // Default to League of Legends
-  const { posts, isLoading: postsLoading, refetch: refetchPosts } = usePosts(selectedGameId);
-  const { userPost, isLoading: userPostLoading } = useUserPost();
-  const { createPost, updatePost, deletePost, saveDraft, updateDraft } = usePostActions();
+  const { posts, loading: postsLoading, refetch: refetchPosts } = usePosts(selectedGameId);
+  const { userPostData: userPost, loading: userPostLoading } = useUserPost();
+  const { createPost, updatePost, deletePost } = usePostActions();
+  const { saveDraft, updateDraft } = useUserPost();
 
   // UI State
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -176,21 +177,25 @@ export function DuoFinder() {
                   <Edit className="h-3 w-3" />
                   Edit
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleCreatePost({
-                    gameId: userPost.savedDraft.gameId,
-                    inGameName: userPost.savedDraft.inGameName,
-                    rank: userPost.savedDraft.rank,
-                    roles: userPost.savedDraft.roles,
-                    lookingFor: userPost.savedDraft.lookingFor,
-                    champions: userPost.savedDraft.champions,
-                    message: userPost.savedDraft.message,
-                    discord: userPost.savedDraft.discord,
-                    showDiscord: userPost.savedDraft.showDiscord,
-                  })}
-                  className="flex items-center gap-1"
-                >
+                                 <Button
+                   size="sm"
+                   onClick={() => {
+                     if (userPost.savedDraft) {
+                       handleCreatePost({
+                         gameId: userPost.savedDraft.gameId,
+                         inGameName: userPost.savedDraft.inGameName,
+                         rank: userPost.savedDraft.rank,
+                         roles: userPost.savedDraft.roles,
+                         lookingFor: userPost.savedDraft.lookingFor,
+                         champions: userPost.savedDraft.champions,
+                         message: userPost.savedDraft.message,
+                         discord: userPost.savedDraft.discord,
+                         showDiscord: userPost.savedDraft.showDiscord,
+                       });
+                     }
+                   }}
+                   className="flex items-center gap-1"
+                 >
                   <Plus className="h-3 w-3" />
                   Post Now
                 </Button>
