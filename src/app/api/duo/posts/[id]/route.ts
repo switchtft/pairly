@@ -18,10 +18,11 @@ const updatePostSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const postId = parseInt(params.id);
+    const postId = parseInt(id);
     
     if (isNaN(postId)) {
       return NextResponse.json(
@@ -81,8 +82,9 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
@@ -95,7 +97,7 @@ export async function PUT(
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
-    const postId = parseInt(params.id);
+    const postId = parseInt(id);
     const body = await request.json();
 
     if (isNaN(postId)) {
@@ -165,8 +167,9 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
@@ -179,7 +182,7 @@ export async function DELETE(
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
-    const postId = parseInt(params.id);
+    const postId = parseInt(id);
 
     if (isNaN(postId)) {
       return NextResponse.json(
