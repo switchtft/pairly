@@ -22,15 +22,17 @@ import {
 
 const publicNavLinks = [
   { name: 'Home', href: '/', icon: <Gamepad2 size={16} /> },
+  { name: 'Inhouses', href: '/inhouses', icon: <UsersIcon size={16} /> },
   { name: 'Duo', href: '/duo', icon: <UsersIcon size={16} /> },
-  { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
   { name: 'Tournaments', href: '/tournaments', icon: <Trophy size={16} /> },
+  { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
 ];
 
 const authenticatedNavLinks = [
+  { name: 'Inhouses', href: '/inhouses', icon: <UsersIcon size={16} /> },
   { name: 'Duo', href: '/duo', icon: <UsersIcon size={16} /> },
-  { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
   { name: 'Tournaments', href: '/tournaments', icon: <Trophy size={16} /> },
+  { name: 'Coaching', href: '/coaching', icon: <User size={16} /> },
 ];
 
 export default function ResponsiveNavbar() {
@@ -103,7 +105,7 @@ export default function ResponsiveNavbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent flex items-center">
+            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-[#e6915b] to-[#d4a574] bg-clip-text text-transparent flex items-center">
               <Gamepad2 size={24} className="mr-2" />
               Pairly
             </Link>
@@ -240,7 +242,7 @@ export default function ResponsiveNavbar() {
             ) : (
               <div className="ml-4 flex items-center md:ml-6 space-x-3">
                 <Button 
-                  className="bg-transparent border border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10 text-sm py-1.5 px-4"
+                  className="bg-transparent border border-[#d4a574] text-[#d4a574] hover:bg-[#d4a574]/10 text-sm py-1.5 px-4"
                   asChild
                 >
                   <Link href="/login">
@@ -342,7 +344,7 @@ export default function ResponsiveNavbar() {
               ) : (
                 <>
                   <Button 
-                    className="w-full bg-transparent border border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10"
+                    className="w-full bg-transparent border border-[#d4a574] text-[#d4a574] hover:bg-[#d4a574]/10"
                     asChild
                   >
                     <Link href="/login">

@@ -1,0 +1,112 @@
+"filename", "language", "JSON with Comments", "Markdown", "JavaScript", "JSON", "XML", "TypeScript", "TypeScript JSX", "PostCSS", "MS SQL", "comment", "blank", "total"
+"c:\Users\Utilizador\pairly-landing\ADMIN_TESTING_GUIDE.md", "Markdown", 0, 242, 0, 0, 0, 0, 0, 0, 0, 0, 58, 300
+"c:\Users\Utilizador\pairly-landing\AUTHENTICATION_SETUP.md", "Markdown", 0, 83, 0, 0, 0, 0, 0, 0, 0, 0, 27, 110
+"c:\Users\Utilizador\pairly-landing\README.md", "Markdown", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 14, 37
+"c:\Users\Utilizador\pairly-landing\components.json", "JSON", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 21
+"c:\Users\Utilizador\pairly-landing\eslint.config.mjs", "JavaScript", 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 5, 17
+"c:\Users\Utilizador\pairly-landing\next.config.ts", "TypeScript", 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 3, 8
+"c:\Users\Utilizador\pairly-landing\package-lock.json", "JSON", 0, 0, 0, 7698, 0, 0, 0, 0, 0, 0, 1, 7699
+"c:\Users\Utilizador\pairly-landing\package.json", "JSON", 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 1, 44
+"c:\Users\Utilizador\pairly-landing\postcss.config.mjs", "JavaScript", 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 2, 6
+"c:\Users\Utilizador\pairly-landing\prisma\client.d.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\prisma\client.js", "JavaScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"c:\Users\Utilizador\pairly-landing\prisma\default.d.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\prisma\default.js", "JavaScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"c:\Users\Utilizador\pairly-landing\prisma\edge.d.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\prisma\edge.js", "JavaScript", 0, 0, 200, 0, 0, 0, 0, 0, 0, 21, 34, 255
+"c:\Users\Utilizador\pairly-landing\prisma\index-browser.js", "JavaScript", 0, 0, 188, 0, 0, 0, 0, 0, 0, 21, 33, 242
+"c:\Users\Utilizador\pairly-landing\prisma\index.d.ts", "TypeScript", 0, 0, 0, 0, 0, 7069, 0, 0, 0, 4363, 1024, 12456
+"c:\Users\Utilizador\pairly-landing\prisma\index.js", "JavaScript", 0, 0, 214, 0, 0, 0, 0, 0, 0, 23, 39, 276
+"c:\Users\Utilizador\pairly-landing\prisma\migrations\20250801141316_init\migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 0, 75, 18, 24, 117
+"c:\Users\Utilizador\pairly-landing\prisma\migrations\20250804152400_add_queue_system\migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 0, 63, 13, 17, 93
+"c:\Users\Utilizador\pairly-landing\prisma\package.json", "JSON", 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 150
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\edge-esm.js", "JavaScript", 0, 0, 26, 0, 0, 0, 0, 0, 0, 2, 7, 35
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\edge.js", "JavaScript", 0, 0, 26, 0, 0, 0, 0, 0, 0, 2, 7, 35
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\index-browser.d.ts", "TypeScript", 0, 0, 0, 0, 0, 264, 0, 0, 0, 20, 87, 371
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\index-browser.js", "JavaScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 14, 2, 17
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\library.d.ts", "TypeScript", 0, 0, 0, 0, 0, 2375, 0, 0, 0, 853, 460, 3688
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\library.js", "JavaScript", 0, 0, 116, 0, 0, 0, 0, 0, 0, 2, 29, 147
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\react-native.js", "JavaScript", 0, 0, 67, 0, 0, 0, 0, 0, 0, 2, 15, 84
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\wasm-compiler-edge.js", "JavaScript", 0, 0, 66, 0, 0, 0, 0, 0, 0, 2, 16, 84
+"c:\Users\Utilizador\pairly-landing\prisma\runtime\wasm-engine-edge.js", "JavaScript", 0, 0, 27, 0, 0, 0, 0, 0, 0, 2, 7, 36
+"c:\Users\Utilizador\pairly-landing\prisma\seed.ts", "TypeScript", 0, 0, 0, 0, 0, 159, 0, 0, 0, 5, 12, 176
+"c:\Users\Utilizador\pairly-landing\prisma\wasm.d.ts", "TypeScript", 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\prisma\wasm.js", "JavaScript", 0, 0, 188, 0, 0, 0, 0, 0, 0, 21, 33, 242
+"c:\Users\Utilizador\pairly-landing\public\file.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\public\globe.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\public\next.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\public\vercel.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\public\window.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\Utilizador\pairly-landing\src\app\api\admin\orders\route.ts", "TypeScript", 0, 0, 0, 0, 0, 137, 0, 0, 0, 0, 16, 153
+"c:\Users\Utilizador\pairly-landing\src\app\api\admin\teammates\route.ts", "TypeScript", 0, 0, 0, 0, 0, 124, 0, 0, 0, 0, 17, 141
+"c:\Users\Utilizador\pairly-landing\src\app\api\admin\users\route.ts", "TypeScript", 0, 0, 0, 0, 0, 204, 0, 0, 0, 1, 29, 234
+"c:\Users\Utilizador\pairly-landing\src\app\api\auth\login\route.ts", "TypeScript", 0, 0, 0, 0, 0, 89, 0, 0, 0, 8, 14, 111
+"c:\Users\Utilizador\pairly-landing\src\app\api\auth\logout\route.ts", "TypeScript", 0, 0, 0, 0, 0, 38, 0, 0, 0, 5, 8, 51
+"c:\Users\Utilizador\pairly-landing\src\app\api\auth\me\route.ts", "TypeScript", 0, 0, 0, 0, 0, 53, 0, 0, 0, 3, 7, 63
+"c:\Users\Utilizador\pairly-landing\src\app\api\auth\profile\route.ts", "TypeScript", 0, 0, 0, 0, 0, 163, 0, 0, 0, 6, 19, 188
+"c:\Users\Utilizador\pairly-landing\src\app\api\auth\register\route.ts", "TypeScript", 0, 0, 0, 0, 0, 71, 0, 0, 0, 4, 9, 84
+"c:\Users\Utilizador\pairly-landing\src\app\api\chat\route.ts", "TypeScript", 0, 0, 0, 0, 0, 105, 0, 0, 0, 6, 21, 132
+"c:\Users\Utilizador\pairly-landing\src\app\api\orders\direct\route.ts", "TypeScript", 0, 0, 0, 0, 0, 102, 0, 0, 0, 7, 17, 126
+"c:\Users\Utilizador\pairly-landing\src\app\api\queue\route.ts", "TypeScript", 0, 0, 0, 0, 0, 212, 0, 0, 0, 14, 28, 254
+"c:\Users\Utilizador\pairly-landing\src\app\api\sessions\route.ts", "TypeScript", 0, 0, 0, 0, 0, 125, 0, 0, 0, 6, 20, 151
+"c:\Users\Utilizador\pairly-landing\src\app\api\sessions\teammate\route.ts", "TypeScript", 0, 0, 0, 0, 0, 47, 0, 0, 0, 3, 7, 57
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\accept-order\route.ts", "TypeScript", 0, 0, 0, 0, 0, 87, 0, 0, 0, 5, 17, 109
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\incoming-orders\route.ts", "TypeScript", 0, 0, 0, 0, 0, 59, 0, 0, 0, 4, 9, 72
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\notifications\route.ts", "TypeScript", 0, 0, 0, 0, 0, 124, 0, 0, 0, 7, 20, 151
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\order-history\route.ts", "TypeScript", 0, 0, 0, 0, 0, 77, 0, 0, 0, 5, 10, 92
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\quests\route.ts", "TypeScript", 0, 0, 0, 0, 0, 119, 0, 0, 0, 9, 11, 139
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\reject-order\route.ts", "TypeScript", 0, 0, 0, 0, 0, 43, 0, 0, 0, 5, 13, 61
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\request-payout\route.ts", "TypeScript", 0, 0, 0, 0, 0, 72, 0, 0, 0, 7, 13, 92
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\stats\route.ts", "TypeScript", 0, 0, 0, 0, 0, 70, 0, 0, 0, 10, 13, 93
+"c:\Users\Utilizador\pairly-landing\src\app\api\teammates\toggle-online\route.ts", "TypeScript", 0, 0, 0, 0, 0, 42, 0, 0, 0, 3, 10, 55
+"c:\Users\Utilizador\pairly-landing\src\app\api\users\become-teammate\route.ts", "TypeScript", 0, 0, 0, 0, 0, 47, 0, 0, 0, 9, 10, 66
+"c:\Users\Utilizador\pairly-landing\src\app\api\users\blocks\route.ts", "TypeScript", 0, 0, 0, 0, 0, 133, 0, 0, 0, 7, 24, 164
+"c:\Users\Utilizador\pairly-landing\src\app\api\users\favourites\route.ts", "TypeScript", 0, 0, 0, 0, 0, 146, 0, 0, 0, 8, 25, 179
+"c:\Users\Utilizador\pairly-landing\src\app\api\users\match-history\route.ts", "TypeScript", 0, 0, 0, 0, 0, 87, 0, 0, 0, 4, 9, 100
+"c:\Users\Utilizador\pairly-landing\src\app\api\users\route.ts", "TypeScript", 0, 0, 0, 0, 0, 32, 0, 0, 0, 1, 3, 36
+"c:\Users\Utilizador\pairly-landing\src\app\become-teammate\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 278, 0, 0, 3, 24, 305
+"c:\Users\Utilizador\pairly-landing\src\app\coaching\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 147, 0, 0, 3, 11, 161
+"c:\Users\Utilizador\pairly-landing\src\app\dashboard\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 644, 0, 0, 20, 55, 719
+"c:\Users\Utilizador\pairly-landing\src\app\dashboard\teammate\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 296, 0, 0, 12, 31, 339
+"c:\Users\Utilizador\pairly-landing\src\app\duo\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 505, 0, 0, 31, 47, 583
+"c:\Users\Utilizador\pairly-landing\src\app\globals.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 6, 123
+"c:\Users\Utilizador\pairly-landing\src\app\layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 45, 0, 0, 1, 4, 50
+"c:\Users\Utilizador\pairly-landing\src\app\login\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 154, 0, 0, 12, 15, 181
+"c:\Users\Utilizador\pairly-landing\src\app\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 86, 0, 0, 8, 6, 100
+"c:\Users\Utilizador\pairly-landing\src\app\profile\administrator\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 418, 0, 0, 19, 41, 478
+"c:\Users\Utilizador\pairly-landing\src\app\profile\customer\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 675, 0, 0, 28, 57, 760
+"c:\Users\Utilizador\pairly-landing\src\app\profile\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 33, 0, 0, 3, 5, 41
+"c:\Users\Utilizador\pairly-landing\src\app\profile\teammate\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 487, 0, 0, 27, 43, 557
+"c:\Users\Utilizador\pairly-landing\src\app\register\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 364, 0, 0, 18, 28, 410
+"c:\Users\Utilizador\pairly-landing\src\app\tournaments\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 385, 0, 0, 18, 43, 446
+"c:\Users\Utilizador\pairly-landing\src\components\AdminOrdersView.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 255, 0, 0, 4, 26, 285
+"c:\Users\Utilizador\pairly-landing\src\components\AdminTeammatesView.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 292, 0, 0, 5, 28, 325
+"c:\Users\Utilizador\pairly-landing\src\components\AdminUserManagement.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 394, 0, 0, 6, 34, 434
+"c:\Users\Utilizador\pairly-landing\src\components\ChatInterface.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 188, 0, 0, 9, 21, 218
+"c:\Users\Utilizador\pairly-landing\src\components\FeatureCard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 1, 26
+"c:\Users\Utilizador\pairly-landing\src\components\Footer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 103, 0, 0, 0, 6, 109
+"c:\Users\Utilizador\pairly-landing\src\components\GameSelector.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 114, 0, 0, 2, 8, 124
+"c:\Users\Utilizador\pairly-landing\src\components\HorizontalGameSelector.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 73, 0, 0, 0, 7, 80
+"c:\Users\Utilizador\pairly-landing\src\components\LoadingStates.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 123, 0, 0, 6, 8, 137
+"c:\Users\Utilizador\pairly-landing\src\components\Navbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 2, 22
+"c:\Users\Utilizador\pairly-landing\src\components\ProfileHeader.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 241, 0, 0, 9, 21, 271
+"c:\Users\Utilizador\pairly-landing\src\components\ResponsiveNavbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 331, 0, 0, 9, 29, 369
+"c:\Users\Utilizador\pairly-landing\src\components\ScrollToTop.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 6, 42
+"c:\Users\Utilizador\pairly-landing\src\components\SearchAndFilter.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 256, 0, 0, 13, 21, 290
+"c:\Users\Utilizador\pairly-landing\src\components\TestimonialCard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14
+"c:\Users\Utilizador\pairly-landing\src\components\ui\button.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 6, 60
+"c:\Users\Utilizador\pairly-landing\src\contexts\AuthContext.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 141, 0, 0, 3, 26, 170
+"c:\Users\Utilizador\pairly-landing\src\hooks\index.ts", "TypeScript", 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3
+"c:\Users\Utilizador\pairly-landing\src\hooks\useAuthForm.ts", "TypeScript", 0, 0, 0, 0, 0, 94, 0, 0, 0, 2, 15, 111
+"c:\Users\Utilizador\pairly-landing\src\hooks\useLocalStorage.ts", "TypeScript", 0, 0, 0, 0, 0, 28, 0, 0, 0, 1, 6, 35
+"c:\Users\Utilizador\pairly-landing\src\hooks\useQueue.ts", "TypeScript", 0, 0, 0, 0, 0, 64, 0, 0, 0, 4, 11, 79
+"c:\Users\Utilizador\pairly-landing\src\hooks\useRealTimeQueue.ts", "TypeScript", 0, 0, 0, 0, 0, 171, 0, 0, 0, 9, 31, 211
+"c:\Users\Utilizador\pairly-landing\src\lib\auth.ts", "TypeScript", 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 4, 23
+"c:\Users\Utilizador\pairly-landing\src\lib\constants.ts", "TypeScript", 0, 0, 0, 0, 0, 111, 0, 0, 0, 6, 9, 126
+"c:\Users\Utilizador\pairly-landing\src\lib\games.ts", "TypeScript", 0, 0, 0, 0, 0, 12, 0, 0, 0, 1, 1, 14
+"c:\Users\Utilizador\pairly-landing\src\lib\index.ts", "TypeScript", 0, 0, 0, 0, 0, 37, 0, 0, 0, 4, 2, 43
+"c:\Users\Utilizador\pairly-landing\src\lib\prisma.ts", "TypeScript", 0, 0, 0, 0, 0, 7, 0, 0, 0, 1, 4, 12
+"c:\Users\Utilizador\pairly-landing\src\lib\types.ts", "TypeScript", 0, 0, 0, 0, 0, 146, 0, 0, 0, 7, 14, 167
+"c:\Users\Utilizador\pairly-landing\src\lib\utils.ts", "TypeScript", 0, 0, 0, 0, 0, 128, 0, 0, 0, 18, 27, 173
+"c:\Users\Utilizador\pairly-landing\tsconfig.json", "JSON with Comments", 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 32
+"Total", "-", 31, 348, 1137, 7912, 5, 13303, 7177, 117, 138, 5858, 3149, 39175
