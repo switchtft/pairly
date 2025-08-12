@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Copy, Eye, MessageCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 interface DuoPostCardProps {
   post: DuoPost;
@@ -132,12 +132,12 @@ export function DuoPostCard({
             </div>
           </div>
 
-          {/* Message */}
-          {post.message && (
-            <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
-              "{post.message}"
-            </div>
-          )}
+                     {/* Message */}
+           {post.message && (
+             <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
+               &ldquo;{post.message}&rdquo;
+             </div>
+           )}
 
           {/* Discord */}
           {post.discord && post.showDiscord && (

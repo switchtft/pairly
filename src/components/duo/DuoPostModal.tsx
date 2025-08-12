@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Copy, X, MessageCircle, Eye } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 interface DuoPostModalProps {
   post: DuoPost | null;
@@ -145,9 +145,9 @@ export function DuoPostModal({
                 <h3 className="font-semibold text-sm text-muted-foreground mb-2">
                   Message
                 </h3>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm leading-relaxed">"{post.message}"</p>
-                </div>
+                                 <div className="bg-muted/50 p-4 rounded-lg">
+                   <p className="text-sm leading-relaxed">&ldquo;{post.message}&rdquo;</p>
+                 </div>
               </div>
             )}
 
