@@ -11,12 +11,12 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <Gamepad2 size={24} className="text-[#e6915b] mr-2" />
-              <span className="text-xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-[#e6915b] to-[#d4a574] bg-clip-text text-transparent">
                 Pairly
               </span>
             </div>
             <p className="text-[#e6915b]/80 text-sm mb-6 max-w-xs">
-              Connecting gamers worldwide to find teammates, coaches, and competitive tournaments.
+              Free gaming platform for duo matching, coaching, casual Inhouses, and tournaments. Join thousands of gamers for fun, no-pressure gaming!
             </p>
             <div className="flex space-x-4">
               {[
@@ -40,7 +40,7 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
-              {['Home', 'Duo', 'Coaching', 'Tournaments', 'FAQ', 'Contact'].map((item) => (
+              {['Home', 'Duo', 'Coaching', 'Inhouses', 'Tournaments', 'FAQ'].map((item) => (
                 <li key={item}>
                   <Link 
                     href="#" 
@@ -72,13 +72,13 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Newsletter</h4>
             <p className="text-[#e6915b]/80 text-sm mb-4">
-              Subscribe to get updates on tournaments and special offers
+              Subscribe to get updates on duo matching, coaching, and special events
             </p>
             <div className="flex">
               <input
                 type="email"
                 placeholder="Your email"
-                className="bg-[#1a1a1a] text-sm px-4 py-2 rounded-l-lg w-full focus:outline-none focus:ring-1 focus:ring-[#6b8ab0]"
+                className="bg-[#1a1a1a] text-sm px-4 py-2 rounded-l-lg w-full focus:outline-none focus:ring-1 focus:ring-[#d4a574]"
               />
               <button className="bg-gradient-to-r from-[#e6915b] to-[#e6915b] hover:from-[#d18251] hover:to-[#d18251] text-sm px-4 py-2 rounded-r-lg">
                 Subscribe
