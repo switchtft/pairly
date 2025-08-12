@@ -25,7 +25,11 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: {
+      isActive: boolean;
+      expiresAt: { gt: Date };
+      gameId?: number;
+    } = {
       isActive: true,
       expiresAt: {
         gt: new Date(),
