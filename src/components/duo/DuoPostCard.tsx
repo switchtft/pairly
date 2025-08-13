@@ -5,10 +5,10 @@ import { DuoPost } from '@/lib/duo';
 import { formatTimeAgo, copyToClipboard } from '@/lib/duo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Copy, Eye, MessageCircle } from 'lucide-react';
-
+import { cn } from '@/lib/utils';
 
 interface DuoPostCardProps {
   post: DuoPost;
@@ -48,135 +48,152 @@ export function DuoPostCard({
     }
   };
 
+  // Role icons mapping
+  const roleIcons = {
+    'Top': '/images/roles/top.jpg',
+    'Jungle': '/images/roles/jungle.jpg',
+    'Mid': '/images/roles/mid.jpg',
+    'ADC': '/images/roles/adc.jpg',
+    'Support': '/images/roles/support.jpg',
+    'Fill': '/images/roles/fill.jpg'
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={post.author.avatar} alt={post.author.username} />
-              <AvatarFallback>
-                {post.author.username.charAt(0).toUpperCase()}
+    <Card className={cn(
+      "hover:shadow-lg transition-shadow duration-200 cursor-pointer bg-[#1a1a1a] border-[#e6915b]/30 hover:border-[#e6915b]/50 h-[120px]",
+      isOwnPost && "border-[#e6915b] bg-[#e6915b]/5"
+    )}>
+      <CardContent className="p-4 h-full">
+        <div className="flex items-center justify-between h-full">
+          {/* Left side - User info and basic details */}
+          <div className="flex items-center gap-4 flex-1">
+            <Avatar className="h-12 w-12">
+              {post.author?.avatar && (
+                <AvatarImage src={post.author.avatar} alt={post.author?.username} />
+              )}
+              <AvatarFallback className="bg-[#2a2a2a] text-[#e6915b]">
+                {post.author?.username?.charAt(0).toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
+            
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm truncate">
-                  {post.author.username}
+              <div className="flex items-center gap-3 mb-1">
+                <h3 className="font-semibold text-[#e6915b]">
+                  {post.author?.username || 'Unknown User'}
                 </h3>
                 {isOwnPost && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs bg-[#e6915b] text-white">
                     Your Post
                   </Badge>
                 )}
+                <span className="text-sm text-gray-400">•</span>
+                <span className="text-sm text-gray-400">{post.game.name}</span>
+                <span className="text-sm text-gray-400">•</span>
+                <span className="text-sm font-medium text-[#e6915b]">{post.rank}</span>
+                <span className="text-sm text-gray-400">•</span>
+                <span className="text-sm text-gray-400">{formatTimeAgo(post.createdAt)}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{post.game.name}</span>
-                <span>•</span>
-                <span className="font-medium">{post.rank}</span>
-                <span>•</span>
-                <span>{formatTimeAgo(post.createdAt)}</span>
+              
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-gray-400">In-game:</span>
+                <span className="font-medium text-[#e6915b]">{post.inGameName}</span>
+                
+                <span className="text-gray-400 ml-4">Discord:</span>
+                <span className="font-mono text-[#e6915b]">{post.discord}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyDiscord}
+                  className="h-6 w-6 p-0 text-gray-400 hover:text-[#e6915b] hover:bg-[#2a2a2a]"
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
               </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Eye className="h-3 w-3" />
-            <span>{post.views}</span>
-          </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          {/* In-game name */}
-          <div>
-            <span className="text-xs text-muted-foreground">In-game:</span>
-            <span className="ml-2 font-medium">{post.inGameName}</span>
-          </div>
-
-          {/* Roles and Champions */}
-          <div className="space-y-2">
-            <div>
-              <span className="text-xs text-muted-foreground">Plays:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
+          {/* Center - Role icons */}
+          <div className="flex items-center gap-6">
+            {/* Roles You Play */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs text-gray-400">Plays</span>
+              <div className="flex gap-1">
                 {post.roles.map((role) => (
-                  <Badge key={role} variant="outline" className="text-xs">
-                    {role}
-                  </Badge>
+                  <img 
+                    key={role}
+                    src={roleIcons[role as keyof typeof roleIcons]} 
+                    alt={role}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
                 ))}
               </div>
             </div>
-            
-            <div>
-              <span className="text-xs text-muted-foreground">Champions:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {post.champions.map((champion) => (
-                  <Badge key={champion} variant="secondary" className="text-xs">
+
+            {/* Champions */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs text-gray-400">Champions</span>
+              <div className="flex gap-1">
+                {post.champions.slice(0, 3).map((champion) => (
+                  <Badge key={champion} variant="secondary" className="text-xs px-1 py-0 bg-[#2a2a2a] text-[#e6915b] border border-[#e6915b]/30">
                     {champion}
                   </Badge>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Looking for */}
-          <div>
-            <span className="text-xs text-muted-foreground">Looking for:</span>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {post.lookingFor.map((role) => (
-                <Badge key={role} variant="default" className="text-xs">
-                  {role}
-                </Badge>
-              ))}
+            {/* Looking For */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs text-gray-400">Looking for</span>
+              <div className="flex gap-1">
+                {post.lookingFor.map((role) => (
+                  <img 
+                    key={role}
+                    src={roleIcons[role as keyof typeof roleIcons]} 
+                    alt={role}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-                     {/* Message */}
-           {post.message && (
-             <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
-               &ldquo;{post.message}&rdquo;
-             </div>
-           )}
-
-          {/* Discord */}
-          {post.discord && post.showDiscord && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Discord:</span>
-              <span className="text-sm font-mono">{post.discord}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyDiscord}
-                className="h-6 w-6 p-0"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewDetails}
-              className="flex items-center gap-1"
-            >
-              <MessageCircle className="h-3 w-3" />
-              View Details
-            </Button>
-
-            {(isOwnPost || isAdmin) && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                className="text-xs"
-              >
-                Delete
-              </Button>
+          {/* Right side - Actions and message preview */}
+          <div className="flex items-center gap-3">
+            {/* Message preview */}
+            {post.message && (
+              <div className="max-w-[200px] text-xs text-gray-300 bg-[#2a2a2a] p-2 rounded-md">
+                &ldquo;{post.message.length > 50 ? post.message.substring(0, 50) + '...' : post.message}&rdquo;
+              </div>
             )}
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <Eye className="h-3 w-3" />
+                <span>{post.views}</span>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewDetails}
+                className="flex items-center gap-1 border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white"
+              >
+                <MessageCircle className="h-3 w-3" />
+                View
+              </Button>
+
+              {(isOwnPost || isAdmin) && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                  className="text-xs"
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

@@ -9,7 +9,7 @@ import { DuoPostModal } from './DuoPostModal';
 import { GameSelector } from './GameSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Edit, Save, X } from 'lucide-react';
+import { Plus, Edit, X, LogIn } from 'lucide-react';
 import { DuoPost, CreatePostData } from '@/lib/duo';
 
 export function DuoFinder() {
@@ -22,11 +22,11 @@ export function DuoFinder() {
   const { saveDraft, updateDraft } = useUserPost();
 
   // UI State
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedPost, setSelectedPost] = useState<DuoPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastPostData, setLastPostData] = useState<CreatePostData | null>(null);
 
   // Set default game to League of Legends when games load
   useEffect(() => {
@@ -38,6 +38,20 @@ export function DuoFinder() {
     }
   }, [games, selectedGameId]);
 
+  // Load last post data from localStorage
+  useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(`duo-last-post-${user.id}`);
+      if (saved) {
+        try {
+          setLastPostData(JSON.parse(saved));
+        } catch (error) {
+          console.error('Failed to parse last post data:', error);
+        }
+      }
+    }
+  }, [user]);
+
   const handleGameSelect = (gameId: number) => {
     setSelectedGameId(gameId);
   };
@@ -46,26 +60,14 @@ export function DuoFinder() {
     setIsSubmitting(true);
     try {
       await createPost(data);
-      setShowCreateForm(false);
+      // Save the post data for next time
+      if (user) {
+        localStorage.setItem(`duo-last-post-${user.id}`, JSON.stringify(data));
+        setLastPostData(data);
+      }
       refetchPosts();
     } catch (error) {
       console.error('Failed to create post:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSaveDraft = async (data: CreatePostData) => {
-    setIsSubmitting(true);
-    try {
-      if (userPost?.savedDraft) {
-        await updateDraft(data);
-      } else {
-        await saveDraft(data);
-      }
-      setShowCreateForm(false);
-    } catch (error) {
-      console.error('Failed to save draft:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -103,15 +105,15 @@ export function DuoFinder() {
     }
   };
 
-  const isOwnPost = (post: DuoPost) => post.author.id === user?.id;
+  const isOwnPost = (post: DuoPost) => post.author?.id === user?.id;
   const isAdmin = user?.role === 'administrator';
 
   if (gamesLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading games...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#e6915b] mx-auto mb-4"></div>
+          <p className="text-[#e6915b]">Loading games...</p>
         </div>
       </div>
     );
@@ -120,8 +122,8 @@ export function DuoFinder() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Duo Finder</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold mb-2 text-[#e6915b]">Duo Finder</h1>
+        <p className="text-gray-300">
           Find duo partners for free! Create a post or browse existing ones to connect with other players.
         </p>
       </div>
@@ -135,67 +137,41 @@ export function DuoFinder() {
         isAdmin={isAdmin}
       />
 
-      {/* User's Active Post */}
-      {userPost?.activePost && (
-        <Card className="mb-6 border-primary/20 bg-primary/5">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Your Active Post</CardTitle>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDeletePost(userPost.activePost!.id)}
-              >
-                Delete
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <DuoPostCard
-              post={userPost.activePost}
-              onViewDetails={handleViewPost}
-              onDelete={handleDeletePost}
-              isOwnPost={true}
-            />
-          </CardContent>
-        </Card>
-      )}
-
       {/* User's Saved Draft */}
-      {userPost?.savedDraft && !userPost?.activePost && (
-        <Card className="mb-6 border-secondary/20 bg-secondary/5">
+      {userPost?.savedDraft && (
+        <Card className="mb-6 border-[#e6915b]/30 bg-[#1a1a1a]">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Your Saved Draft</CardTitle>
+              <CardTitle className="text-lg text-[#e6915b]">Your Saved Draft</CardTitle>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleEditDraft}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white"
                 >
                   <Edit className="h-3 w-3" />
                   Edit
                 </Button>
-                                 <Button
-                   size="sm"
-                   onClick={() => {
-                     if (userPost.savedDraft) {
-                       handleCreatePost({
-                         gameId: userPost.savedDraft.gameId,
-                         inGameName: userPost.savedDraft.inGameName,
-                         rank: userPost.savedDraft.rank,
-                         roles: userPost.savedDraft.roles,
-                         lookingFor: userPost.savedDraft.lookingFor,
-                         champions: userPost.savedDraft.champions,
-                         message: userPost.savedDraft.message,
-                         discord: userPost.savedDraft.discord,
-                         showDiscord: userPost.savedDraft.showDiscord,
-                       });
-                     }
-                   }}
-                   className="flex items-center gap-1"
-                 >
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (userPost.savedDraft) {
+                      handleCreatePost({
+                        gameId: userPost.savedDraft.gameId,
+                        inGameName: userPost.savedDraft.inGameName,
+                        rank: userPost.savedDraft.rank,
+                        roles: userPost.savedDraft.roles,
+                        lookingFor: userPost.savedDraft.lookingFor,
+                        champions: userPost.savedDraft.champions,
+                        message: userPost.savedDraft.message,
+                        discord: userPost.savedDraft.discord,
+                        showDiscord: userPost.savedDraft.showDiscord,
+                      });
+                    }
+                  }}
+                  className="flex items-center gap-1 bg-[#e6915b] hover:bg-[#d8824a] text-white"
+                >
                   <Plus className="h-3 w-3" />
                   Post Now
                 </Button>
@@ -211,60 +187,88 @@ export function DuoFinder() {
         </Card>
       )}
 
-      {/* Create Post Button */}
-      {!userPost?.activePost && (
-        <div className="mb-6">
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            {userPost?.savedDraft ? 'Create New Post' : 'Create Post'}
-          </Button>
-        </div>
-      )}
+      {/* Create Post Section - Always Visible */}
+      <div className="mb-6">
+        {!user ? (
+          // Login prompt for non-authenticated users
+          <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <div className="text-center mb-4">
+                <LogIn className="h-12 w-12 text-[#e6915b] mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-[#e6915b] mb-2">Login Required</h3>
+                <p className="text-gray-300 mb-6">
+                  You need to be logged in to create duo posts and connect with other players.
+                </p>
+                <div className="flex gap-3">
+                  <Button asChild className="bg-[#e6915b] hover:bg-[#d8824a] text-white">
+                    <a href="/login">Login</a>
+                  </Button>
+                  <Button variant="outline" asChild className="border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white">
+                    <a href="/register">Register</a>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          // Inline form for authenticated users
+          <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
+            <CardHeader>
+              <CardTitle className="text-lg text-[#e6915b]">
+                {userPost?.savedDraft ? 'Create New Post' : 'Create Duo Post'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DuoPostForm
+                games={games}
+                initialData={lastPostData || undefined}
+                onSubmit={handleCreatePost}
+                isLoading={isSubmitting}
+                mode="create"
+                selectedGameId={selectedGameId}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-      {/* Create/Edit Form */}
-      {(showCreateForm || showEditForm) && (
+      {/* Edit Draft Form */}
+      {showEditForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold">
-                {showEditForm ? 'Edit Draft' : 'Create Duo Post'}
+          <div className="bg-[#1a1a1a] rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-[#e6915b]/30">
+            <div className="flex items-center justify-between p-6 border-b border-[#e6915b]/30">
+              <h2 className="text-xl font-semibold text-[#e6915b]">
+                Edit Draft
               </h2>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setShowEditForm(false);
-                }}
+                onClick={() => setShowEditForm(false)}
+                className="text-gray-400 hover:text-[#e6915b] hover:bg-[#2a2a2a]"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="p-6">
-              <DuoPostForm
-                games={games}
-                initialData={showEditForm ? {
-                  gameId: userPost?.savedDraft?.gameId || 0,
-                  inGameName: userPost?.savedDraft?.inGameName || '',
-                  rank: userPost?.savedDraft?.rank || '',
-                  roles: userPost?.savedDraft?.roles || [],
-                  lookingFor: userPost?.savedDraft?.lookingFor || [],
-                  champions: userPost?.savedDraft?.champions || [],
-                  message: userPost?.savedDraft?.message || '',
-                  discord: userPost?.savedDraft?.discord || '',
-                  showDiscord: userPost?.savedDraft?.showDiscord ?? true,
-                } : undefined}
-                onSubmit={showEditForm ? handleUpdateDraft : handleCreatePost}
-                onCancel={() => {
-                  setShowCreateForm(false);
-                  setShowEditForm(false);
-                }}
-                isLoading={isSubmitting}
-                mode={showEditForm ? 'edit' : 'create'}
-              />
+                             <DuoPostForm
+                 games={games}
+                 initialData={userPost?.savedDraft ? {
+                   gameId: userPost.savedDraft.gameId,
+                   inGameName: userPost.savedDraft.inGameName,
+                   rank: userPost.savedDraft.rank,
+                   roles: userPost.savedDraft.roles,
+                   lookingFor: userPost.savedDraft.lookingFor,
+                   champions: userPost.savedDraft.champions,
+                   message: userPost.savedDraft.message,
+                   discord: userPost.savedDraft.discord,
+                   showDiscord: userPost.savedDraft.showDiscord,
+                 } : undefined}
+                 onSubmit={handleUpdateDraft}
+                 onCancel={() => setShowEditForm(false)}
+                 isLoading={isSubmitting}
+                 mode="edit"
+                 selectedGameId={selectedGameId}
+               />
             </div>
           </div>
         </div>
@@ -273,16 +277,16 @@ export function DuoFinder() {
       {/* Posts List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold text-[#e6915b]">
             Available Posts
             {postsLoading && (
-              <span className="text-sm font-normal text-muted-foreground ml-2">
+              <span className="text-sm font-normal text-gray-400 ml-2">
                 (Loading...)
               </span>
             )}
           </h2>
           {posts.length > 0 && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               {posts.length} post{posts.length !== 1 ? 's' : ''} found
             </p>
           )}
@@ -291,27 +295,29 @@ export function DuoFinder() {
         {postsLoading ? (
           <div className="flex items-center justify-center min-h-[200px]">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p>Loading posts...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#e6915b] mx-auto mb-4"></div>
+              <p className="text-gray-300">Loading posts...</p>
             </div>
           </div>
         ) : posts.length === 0 ? (
-          <Card>
+          <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground text-center mb-4">
+              <p className="text-gray-300 text-center mb-4">
                 No posts found for this game.
               </p>
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Be the first to post!
-              </Button>
+              {user && (
+                <Button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="flex items-center gap-2 bg-[#e6915b] hover:bg-[#d8824a] text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  Be the first to post!
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-3">
             {posts.map((post) => (
               <DuoPostCard
                 key={post.id}

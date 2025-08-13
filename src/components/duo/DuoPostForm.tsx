@@ -9,9 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +20,7 @@ interface DuoPostFormProps {
   onCancel?: () => void;
   isLoading?: boolean;
   mode?: 'create' | 'edit';
+  selectedGameId?: number;
 }
 
 export function DuoPostForm({
@@ -30,10 +29,12 @@ export function DuoPostForm({
   onSubmit,
   onCancel,
   isLoading = false,
-  mode = 'create'
+  mode = 'create',
+  selectedGameId
 }: DuoPostFormProps) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(
-    initialData ? games.find(g => g.id === initialData.gameId) || null : null
+    initialData ? games.find(g => g.id === initialData.gameId) || null : 
+    selectedGameId ? games.find(g => g.id === selectedGameId) || null : null
   );
 
   const {
@@ -46,7 +47,7 @@ export function DuoPostForm({
   } = useForm<CreatePostData>({
     resolver: zodResolver(createPostSchema),
     defaultValues: initialData || {
-      gameId: 0,
+      gameId: selectedGameId || 0,
       inGameName: '',
       rank: '',
       roles: [],
@@ -70,16 +71,14 @@ export function DuoPostForm({
     setSelectedGame(game || null);
   }, [watchedGameId, games]);
 
-  const handleGameChange = (gameId: string) => {
-    const game = games.find(g => g.id === parseInt(gameId));
-    setSelectedGame(game || null);
-    setValue('gameId', parseInt(gameId));
-    // Reset game-specific fields when game changes
-    setValue('roles', []);
-    setValue('lookingFor', []);
-    setValue('champions', []);
-    setValue('rank', '');
-  };
+  // Set gameId when selectedGameId prop changes
+  useEffect(() => {
+    if (selectedGameId && selectedGameId !== watchedGameId) {
+      setValue('gameId', selectedGameId);
+      const game = games.find(g => g.id === selectedGameId);
+      setSelectedGame(game || null);
+    }
+  }, [selectedGameId, setValue, watchedGameId, games]);
 
   const toggleRole = (role: string, field: 'roles' | 'lookingFor') => {
     const currentValues = watch(field);
@@ -105,161 +104,154 @@ export function DuoPostForm({
     try {
       await onSubmit(data);
       if (mode === 'create') {
-        reset();
-        setSelectedGame(null);
+        // Reset form but keep the selected game
+        reset({
+          gameId: selectedGameId || 0,
+          inGameName: '',
+          rank: '',
+          roles: [],
+          lookingFor: [],
+          champions: [],
+          message: '',
+          discord: '',
+          showDiscord: true,
+        });
       }
     } catch (error) {
       console.error('Form submission error:', error);
     }
   };
 
-  return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>
-          {mode === 'create' ? 'Create Duo Post' : 'Edit Duo Post'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-          {/* Game Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="game">Game *</Label>
-            <Select
-              value={watchedGameId.toString()}
-              onValueChange={handleGameChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a game" />
-              </SelectTrigger>
-              <SelectContent>
-                {games.map((game) => (
-                  <SelectItem key={game.id} value={game.id.toString()}>
-                    {game.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.gameId && (
-              <p className="text-sm text-destructive">{errors.gameId.message}</p>
-            )}
-          </div>
+  // Role icons mapping - using the 6 icons you uploaded in the correct order
+  const roleIcons = {
+    'Top': '/images/roles/top.jpg',
+    'Jungle': '/images/roles/jungle.jpg',
+    'Mid': '/images/roles/mid.jpg',
+    'ADC': '/images/roles/adc.jpg',
+    'Support': '/images/roles/support.jpg',
+    'Fill': '/images/roles/fill.jpg'
+  };
 
-          {/* In-game Name */}
+  // Define the order of roles as specified
+  const roleOrder = ['Top', 'Jungle', 'Mid', 'ADC', 'Support', 'Fill'];
+
+  return (
+    <div className="w-full">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+        {/* LINE 1: In-game Name | Rank | Discord Username */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="inGameName">In-game Name *</Label>
+            <Label htmlFor="inGameName" className="text-[#e6915b] text-sm">In-game Name *</Label>
             <Input
               id="inGameName"
               {...register('inGameName')}
-              placeholder="Your in-game username"
+              placeholder="Username#Tag"
+              className="bg-[#2a2a2a] border-[#e6915b]/30 text-[#e6915b] placeholder:text-gray-400 h-9 focus:border-[#e6915b] focus:ring-[#e6915b]/20"
             />
             {errors.inGameName && (
-              <p className="text-sm text-destructive">{errors.inGameName.message}</p>
+              <p className="text-sm text-red-400">{errors.inGameName.message}</p>
             )}
           </div>
 
-          {/* Rank */}
           {selectedGame && (
             <div className="space-y-2">
-              <Label htmlFor="rank">Rank *</Label>
+              <Label htmlFor="rank" className="text-[#e6915b] text-sm">Rank *</Label>
               <Select
                 value={watch('rank')}
                 onValueChange={(value) => setValue('rank', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-[#2a2a2a] border-[#e6915b]/30 text-[#e6915b] h-9 focus:border-[#e6915b] focus:ring-[#e6915b]/20">
                   <SelectValue placeholder="Select your rank" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#2a2a2a] border-[#e6915b]/30">
                   {selectedGame.ranks.map((rank) => (
-                    <SelectItem key={rank} value={rank}>
+                    <SelectItem key={rank} value={rank} className="text-[#e6915b] hover:bg-[#1a1a1a]">
                       {rank}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.rank && (
-                <p className="text-sm text-destructive">{errors.rank.message}</p>
+                <p className="text-sm text-red-400">{errors.rank.message}</p>
               )}
             </div>
           )}
 
-          {/* Roles */}
-          {selectedGame && (
+          <div className="space-y-2">
+            <Label htmlFor="discord" className="text-[#e6915b] text-sm">Discord Username *</Label>
+            <Input
+              id="discord"
+              {...register('discord')}
+              placeholder="username"
+              className="bg-[#2a2a2a] border-[#e6915b]/30 text-[#e6915b] placeholder:text-gray-400 h-9 focus:border-[#e6915b] focus:ring-[#e6915b]/20"
+            />
+            {errors.discord && (
+              <p className="text-sm text-red-400">{errors.discord.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* LINE 2: Roles you play | Main Champions | Roles looking for */}
+        {selectedGame && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Roles You Play */}
             <div className="space-y-2">
-              <Label>Roles You Play *</Label>
+              <Label className="text-[#e6915b] text-sm">Roles You Play *</Label>
               <div className="flex flex-wrap gap-2">
-                {selectedGame.roles.map((role) => (
-                  <Badge
+                {roleOrder.map((role) => (
+                  <div
                     key={role}
-                    variant={watchedRoles.includes(role) ? 'default' : 'outline'}
                     className={cn(
-                      'cursor-pointer transition-colors',
-                      watchedRoles.includes(role) && 'bg-primary text-primary-foreground'
+                      'cursor-pointer transition-all duration-200 p-2 rounded-lg',
+                      watchedRoles.includes(role) 
+                        ? 'bg-[#e6915b]/20 border border-[#e6915b]' 
+                        : 'bg-[#2a2a2a] border border-[#e6915b]/20 hover:bg-[#e6915b]/10'
                     )}
                     onClick={() => toggleRole(role, 'roles')}
                   >
-                    {role}
-                  </Badge>
+                    <img 
+                      src={roleIcons[role as keyof typeof roleIcons]} 
+                      alt={role}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  </div>
                 ))}
               </div>
               {errors.roles && (
-                <p className="text-sm text-destructive">{errors.roles.message}</p>
+                <p className="text-sm text-red-400">{errors.roles.message}</p>
               )}
             </div>
-          )}
 
-          {/* Looking For */}
-          {selectedGame && (
+            {/* Champions Dropdown */}
             <div className="space-y-2">
-              <Label>Looking For *</Label>
-              <div className="flex flex-wrap gap-2">
-                {selectedGame.roles.map((role) => (
-                  <Badge
-                    key={role}
-                    variant={watchedLookingFor.includes(role) ? 'default' : 'outline'}
-                    className={cn(
-                      'cursor-pointer transition-colors',
-                      watchedLookingFor.includes(role) && 'bg-primary text-primary-foreground'
-                    )}
-                    onClick={() => toggleRole(role, 'lookingFor')}
-                  >
-                    {role}
-                  </Badge>
-                ))}
-              </div>
-              {errors.lookingFor && (
-                <p className="text-sm text-destructive">{errors.lookingFor.message}</p>
-              )}
-            </div>
-          )}
-
-          {/* Champions */}
-          {selectedGame && (
-            <div className="space-y-2">
-              <Label>Main Champions (Max 3) *</Label>
-              <div className="flex flex-wrap gap-2">
-                {selectedGame.champions.map((champion) => (
-                  <Badge
-                    key={champion.id}
-                    variant={watchedChampions.includes(champion.name) ? 'default' : 'outline'}
-                    className={cn(
-                      'cursor-pointer transition-colors',
-                      watchedChampions.includes(champion.name) && 'bg-primary text-primary-foreground',
-                      watchedChampions.length >= 3 && !watchedChampions.includes(champion.name) && 'opacity-50 cursor-not-allowed'
-                    )}
-                    onClick={() => addChampion(champion.name)}
-                  >
-                    {champion.name}
-                  </Badge>
-                ))}
-              </div>
+              <Label className="text-[#e6915b] text-sm">Main Champions (Max 3) *</Label>
+              <Select
+                value=""
+                onValueChange={(value) => addChampion(value)}
+              >
+                <SelectTrigger className="bg-[#2a2a2a] border-[#e6915b]/30 text-[#e6915b] h-9 focus:border-[#e6915b] focus:ring-[#e6915b]/20">
+                  <SelectValue placeholder="Add a champion" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#2a2a2a] border-[#e6915b]/30">
+                  {selectedGame.champions.map((champion) => (
+                    <SelectItem 
+                      key={champion.id} 
+                      value={champion.name} 
+                      className="text-[#e6915b] hover:bg-[#1a1a1a]"
+                      disabled={watchedChampions.includes(champion.name) || watchedChampions.length >= 3}
+                    >
+                      {champion.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {watchedChampions.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {watchedChampions.map((champion) => (
-                    <Badge key={champion} variant="secondary" className="flex items-center gap-1">
+                    <Badge key={champion} variant="secondary" className="flex items-center gap-1 text-xs px-2 py-1 bg-[#2a2a2a] text-[#e6915b] border border-[#e6915b]/30">
                       {champion}
                       <X
-                        className="h-3 w-3 cursor-pointer"
+                        className="h-3 w-3 cursor-pointer hover:text-red-400"
                         onClick={() => removeChampion(champion)}
                       />
                     </Badge>
@@ -267,70 +259,80 @@ export function DuoPostForm({
                 </div>
               )}
               {errors.champions && (
-                <p className="text-sm text-destructive">{errors.champions.message}</p>
+                <p className="text-sm text-red-400">{errors.champions.message}</p>
               )}
             </div>
-          )}
 
-          {/* Message */}
-          <div className="space-y-2">
-            <Label htmlFor="message">Message (Optional)</Label>
+            {/* Looking For */}
+            <div className="space-y-2">
+              <Label className="text-[#e6915b] text-sm">Looking For *</Label>
+              <div className="flex flex-wrap gap-2">
+                {roleOrder.map((role) => (
+                  <div
+                    key={role}
+                    className={cn(
+                      'cursor-pointer transition-all duration-200 p-2 rounded-lg',
+                      watchedLookingFor.includes(role) 
+                        ? 'bg-[#e6915b]/20 border border-[#e6915b]' 
+                        : 'bg-[#2a2a2a] border border-[#e6915b]/20 hover:bg-[#e6915b]/10'
+                    )}
+                    onClick={() => toggleRole(role, 'lookingFor')}
+                  >
+                    <img 
+                      src={roleIcons[role as keyof typeof roleIcons]} 
+                      alt={role}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+              {errors.lookingFor && (
+                <p className="text-sm text-red-400">{errors.lookingFor.message}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* LINE 3: Message | Create Post Button */}
+        <div className="flex gap-4 items-end">
+          <div className="flex-1 space-y-2">
+            <Label htmlFor="message" className="text-[#e6915b] text-sm">Message (Optional)</Label>
             <Textarea
               id="message"
               {...register('message')}
               placeholder="Tell potential duo partners about yourself..."
-              rows={3}
+              rows={1}
+              className="bg-[#2a2a2a] border-[#e6915b]/30 text-[#e6915b] placeholder:text-gray-400 resize-none focus:border-[#e6915b] focus:ring-[#e6915b]/20"
             />
             {errors.message && (
-              <p className="text-sm text-destructive">{errors.message.message}</p>
+              <p className="text-sm text-red-400">{errors.message.message}</p>
             )}
           </div>
 
-          {/* Discord */}
-          <div className="space-y-2">
-            <Label htmlFor="discord">Discord Tag (Optional)</Label>
-            <Input
-              id="discord"
-              {...register('discord')}
-              placeholder="username#0000"
-            />
-            {errors.discord && (
-              <p className="text-sm text-destructive">{errors.discord.message}</p>
-            )}
-          </div>
+          <Button
+            type="submit"
+            disabled={!isValid || isLoading}
+            className="bg-[#e6915b] hover:bg-[#d8824a] text-white h-9 px-6"
+          >
+            {isLoading ? 'Saving...' : mode === 'create' ? 'Create Post' : 'Update Post'}
+          </Button>
+        </div>
 
-          {/* Show Discord */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="showDiscord"
-              checked={watch('showDiscord')}
-              onCheckedChange={(checked) => setValue('showDiscord', checked as boolean)}
-            />
-            <Label htmlFor="showDiscord">Show Discord tag on my post</Label>
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex gap-3 pt-4">
+        {/* Cancel button for edit mode */}
+        {onCancel && (
+          <div className="flex justify-end">
             <Button
-              type="submit"
-              disabled={!isValid || isLoading}
-              className="flex-1"
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+              className="border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white"
             >
-              {isLoading ? 'Saving...' : mode === 'create' ? 'Create Post' : 'Update Post'}
+              Cancel
             </Button>
-            {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-            )}
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        )}
+      </form>
+    </div>
   );
 }
