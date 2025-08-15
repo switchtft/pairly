@@ -203,19 +203,36 @@ async function main() {
 
   // Create agents for Valorant
   const valorantAgents = [
-    { name: 'Jett', iconUrl: null, gameId: 2 },
-    { name: 'Sova', iconUrl: null, gameId: 2 },
-    { name: 'Sage', iconUrl: null, gameId: 2 },
-    { name: 'Phoenix', iconUrl: null, gameId: 2 },
-    { name: 'Reyna', iconUrl: null, gameId: 2 },
-    { name: 'Omen', iconUrl: null, gameId: 2 },
     { name: 'Brimstone', iconUrl: null, gameId: 2 },
-    { name: 'Cypher', iconUrl: null, gameId: 2 },
-    { name: 'Breach', iconUrl: null, gameId: 2 },
+    { name: 'Phoenix', iconUrl: null, gameId: 2 },
+    { name: 'Sage', iconUrl: null, gameId: 2 },
+    { name: 'Sova', iconUrl: null, gameId: 2 },
     { name: 'Viper', iconUrl: null, gameId: 2 },
+    { name: 'Cypher', iconUrl: null, gameId: 2 },
+    { name: 'Reyna', iconUrl: null, gameId: 2 },
+    { name: 'Killjoy', iconUrl: null, gameId: 2 },
+    { name: 'Breach', iconUrl: null, gameId: 2 },
+    { name: 'Omen', iconUrl: null, gameId: 2 },
+    { name: 'Jett', iconUrl: null, gameId: 2 },
+    { name: 'Raze', iconUrl: null, gameId: 2 },
+    { name: 'Skye', iconUrl: null, gameId: 2 },
+    { name: 'Yoru', iconUrl: null, gameId: 2 },
+    { name: 'Astra', iconUrl: null, gameId: 2 },
+    { name: 'KAY/O', iconUrl: null, gameId: 2 },
+    { name: 'Chamber', iconUrl: null, gameId: 2 },
+    { name: 'Neon', iconUrl: null, gameId: 2 },
+    { name: 'Fade', iconUrl: null, gameId: 2 },
+    { name: 'Harbor', iconUrl: null, gameId: 2 },
+    { name: 'Gekko', iconUrl: null, gameId: 2 },
+    { name: 'Deadlock', iconUrl: null, gameId: 2 },
+    { name: 'Iso', iconUrl: null, gameId: 2 },
+    { name: 'Clove', iconUrl: null, gameId: 2 },
+    { name: 'Vyse', iconUrl: null, gameId: 2 },
+    { name: 'Tejo', iconUrl: null, gameId: 2 },
+    { name: 'Waylay', iconUrl: null, gameId: 2 },
   ];
 
-  // Insert champions with skipDuplicates to make it idempotent
+  // Insert champions using createMany with skipDuplicates (now safe with unique constraint)
   await prisma.champion.createMany({
     data: [...leagueChampions, ...valorantAgents],
     skipDuplicates: true,

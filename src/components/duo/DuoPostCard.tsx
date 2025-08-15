@@ -50,6 +50,7 @@ export function DuoPostCard({
 
   // Role icons mapping
   const roleIcons = {
+    // League of Legends roles
     'Top': '/images/roles/top.jpg',
     'Jungle': '/images/roles/jungle.jpg',
     'Jungler': '/images/roles/jungle.jpg', // Handle potential "Jungler" variant
@@ -57,6 +58,11 @@ export function DuoPostCard({
     'ADC': '/images/roles/adc.jpg',
     'Support': '/images/roles/support.jpg',
     'Fill': '/images/roles/fill.jpg',
+    // Valorant roles
+    'Duelist': '/images/roles/duelist.png',
+    'Initiator': '/images/roles/initiator.png',
+    'Controller': '/images/roles/controller.png',
+    'Sentinel': '/images/roles/sentinel.png',
     // Add lowercase variants in case the data comes in lowercase
     'top': '/images/roles/top.jpg',
     'jungle': '/images/roles/jungle.jpg',
@@ -64,7 +70,11 @@ export function DuoPostCard({
     'mid': '/images/roles/mid.jpg',
     'adc': '/images/roles/adc.jpg',
     'support': '/images/roles/support.jpg',
-    'fill': '/images/roles/fill.jpg'
+    'fill': '/images/roles/fill.jpg',
+    'duelist': '/images/roles/duelist.png',
+    'initiator': '/images/roles/initiator.png',
+    'controller': '/images/roles/controller.png',
+    'sentinel': '/images/roles/sentinel.png'
   };
 
   return (
@@ -91,11 +101,6 @@ export function DuoPostCard({
                      <h3 className="font-semibold text-[#e6915b] whitespace-nowrap">
                        {post.author?.username || 'Unknown User'}
                      </h3>
-                     {isOwnPost && (
-                       <Badge variant="secondary" className="text-xs bg-[#e6915b] text-white whitespace-nowrap">
-                         Your Post
-                       </Badge>
-                     )}
                      <span className="text-sm text-gray-400">•</span>
                      <span className="text-sm font-medium text-[#e6915b] whitespace-nowrap">{post.rank}</span>
                      <span className="text-sm text-gray-400">•</span>
@@ -107,7 +112,11 @@ export function DuoPostCard({
                      <span className="font-medium text-[#e6915b] whitespace-nowrap">{post.inGameName}</span>
                      
                      <span className="text-gray-400 ml-4 whitespace-nowrap">Discord:</span>
-                     <span className="font-mono text-[#e6915b] whitespace-nowrap">{post.discord}</span>
+                     <span className="font-mono text-[#e6915b] whitespace-nowrap">
+                       {post.discord && post.discord.length > 10 
+                         ? post.discord.substring(0, 10) + '...' 
+                         : post.discord}
+                     </span>
                      <Button
                        variant="ghost"
                        size="sm"
@@ -151,9 +160,11 @@ export function DuoPostCard({
                  {/* Orange Divider */}
                  <div className="w-px h-6 bg-[#e6915b]/50"></div>
 
-                 {/* Champions */}
+                 {/* Champions/Agents */}
                  <div className="flex items-center gap-2">
-                   <span className="text-xs text-gray-400">Champions</span>
+                   <span className="text-xs text-gray-400">
+                     {post.game?.slug === 'valorant' ? 'Agents' : 'Champions'}
+                   </span>
                    <div className="flex gap-1">
                      {post.champions.slice(0, 3).map((champion) => (
                        <Badge key={champion} variant="secondary" className="text-xs px-1 py-0 bg-[#2a2a2a] text-[#e6915b] border border-[#e6915b]/30">
@@ -221,8 +232,10 @@ export function DuoPostCard({
              {post.message && (
                <div className="mt-auto">
                  <div className="text-xs text-gray-300 bg-[#2a2a2a] p-2 rounded-md max-w-full overflow-hidden">
-                   <span className="text-gray-400">Message: </span>
-                   {post.message.length > 60 ? post.message.substring(0, 60) + '...' : post.message}
+                   <div className="truncate">
+                     <span className="text-gray-400">Message: </span>
+                     {post.message}
+                   </div>
                  </div>
                </div>
              )}

@@ -38,19 +38,25 @@ export function DuoFinder() {
     }
   }, [games, selectedGameId]);
 
-  // Load last post data from localStorage
+  // Load last post data from localStorage for the selected game
   useEffect(() => {
-    if (user) {
-      const saved = localStorage.getItem(`duo-last-post-${user.id}`);
-      if (saved) {
-        try {
-          setLastPostData(JSON.parse(saved));
-        } catch (error) {
-          console.error('Failed to parse last post data:', error);
+    if (user && selectedGameId) {
+      const game = games.find(g => g.id === selectedGameId);
+      if (game) {
+        const saved = localStorage.getItem(`duo-last-post-${user.id}-${game.slug}`);
+        if (saved) {
+          try {
+            setLastPostData(JSON.parse(saved));
+          } catch (error) {
+            console.error('Failed to parse last post data:', error);
+          }
+        } else {
+          // Clear last post data if no saved data for this game
+          setLastPostData(null);
         }
       }
     }
-  }, [user]);
+  }, [user, selectedGameId, games]);
 
   const handleGameSelect = (gameId: number) => {
     setSelectedGameId(gameId);
@@ -60,10 +66,13 @@ export function DuoFinder() {
     setIsSubmitting(true);
     try {
       await createPost(data);
-      // Save the post data for next time
+      // Save the post data for next time with game-specific key
       if (user) {
-        localStorage.setItem(`duo-last-post-${user.id}`, JSON.stringify(data));
-        setLastPostData(data);
+        const game = games.find(g => g.id === data.gameId);
+        if (game) {
+          localStorage.setItem(`duo-last-post-${user.id}-${game.slug}`, JSON.stringify(data));
+          setLastPostData(data);
+        }
       }
       refetchPosts();
       refetchUserPost(); // Refresh user's post data to hide "Create Post" section

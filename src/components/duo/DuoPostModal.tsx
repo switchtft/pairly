@@ -107,10 +107,10 @@ export function DuoPostModal({
               </div>
             </div>
 
-            {/* Champions */}
+            {/* Champions/Agents */}
             <div>
               <h3 className="font-semibold text-sm text-gray-400 mb-2">
-                Main Champions
+                {post.game?.slug === 'valorant' ? 'Main Agents' : 'Main Champions'}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {post.champions.map((champion) => (
