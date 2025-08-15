@@ -91,11 +91,6 @@ export function DuoPostCard({
                      <h3 className="font-semibold text-[#e6915b] whitespace-nowrap">
                        {post.author?.username || 'Unknown User'}
                      </h3>
-                     {isOwnPost && (
-                       <Badge variant="secondary" className="text-xs bg-[#e6915b] text-white whitespace-nowrap">
-                         Your Post
-                       </Badge>
-                     )}
                      <span className="text-sm text-gray-400">•</span>
                      <span className="text-sm font-medium text-[#e6915b] whitespace-nowrap">{post.rank}</span>
                      <span className="text-sm text-gray-400">•</span>
@@ -107,7 +102,11 @@ export function DuoPostCard({
                      <span className="font-medium text-[#e6915b] whitespace-nowrap">{post.inGameName}</span>
                      
                      <span className="text-gray-400 ml-4 whitespace-nowrap">Discord:</span>
-                     <span className="font-mono text-[#e6915b] whitespace-nowrap">{post.discord}</span>
+                     <span className="font-mono text-[#e6915b] whitespace-nowrap">
+                       {post.discord && post.discord.length > 10 
+                         ? post.discord.substring(0, 10) + '...' 
+                         : post.discord}
+                     </span>
                      <Button
                        variant="ghost"
                        size="sm"
@@ -221,8 +220,10 @@ export function DuoPostCard({
              {post.message && (
                <div className="mt-auto">
                  <div className="text-xs text-gray-300 bg-[#2a2a2a] p-2 rounded-md max-w-full overflow-hidden">
-                   <span className="text-gray-400">Message: </span>
-                   {post.message.length > 60 ? post.message.substring(0, 60) + '...' : post.message}
+                   <div className="truncate">
+                     <span className="text-gray-400">Message: </span>
+                     {post.message}
+                   </div>
                  </div>
                </div>
              )}

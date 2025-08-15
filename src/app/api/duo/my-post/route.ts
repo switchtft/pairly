@@ -47,6 +47,13 @@ export async function GET() {
             slug: true,
           },
         },
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
       },
     });
 
@@ -62,6 +69,13 @@ export async function GET() {
             id: true,
             name: true,
             slug: true,
+          },
+        },
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
           },
         },
       },
@@ -121,6 +135,13 @@ export async function POST(request: Request) {
             id: true,
             name: true,
             slug: true,
+          },
+        },
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
           },
         },
       },
@@ -186,6 +207,13 @@ export async function PUT(request: Request) {
             id: true,
             name: true,
             slug: true,
+          },
+        },
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
           },
         },
       },
