@@ -230,4 +230,6 @@ model Champion {
   iconUrl String?
   gameId  Int
   game    Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([name, gameId])
 }

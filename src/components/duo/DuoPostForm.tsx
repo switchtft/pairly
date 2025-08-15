@@ -64,6 +64,10 @@ export function DuoPostForm({
   const watchedLookingFor = watch('lookingFor');
   const watchedChampions = watch('champions');
   const watchedGameId = watch('gameId');
+  const watchedInGameName = watch('inGameName');
+  const watchedRank = watch('rank');
+  const watchedMessage = watch('message');
+  const watchedDiscord = watch('discord');
 
   // Update selected game when gameId changes
   useEffect(() => {
@@ -71,14 +75,126 @@ export function DuoPostForm({
     setSelectedGame(game || null);
   }, [watchedGameId, games]);
 
+  // Load initial form data for the current game when component mounts
+  useEffect(() => {
+    if (selectedGame && mode === 'create' && !initialData) {
+      const savedFormData = localStorage.getItem(`duo-form-draft-${selectedGame.slug}`);
+      if (savedFormData) {
+        try {
+          const parsedData = JSON.parse(savedFormData);
+          // Only load if the saved data is for the current game
+          if (parsedData.gameId === selectedGame.id) {
+            reset({
+              ...parsedData,
+              gameId: selectedGame.id, // Ensure we use the correct gameId
+            });
+          }
+        } catch (error) {
+          console.error('Failed to parse saved form data:', error);
+        }
+      }
+    }
+  }, [selectedGame, mode, initialData, reset]);
+
   // Set gameId when selectedGameId prop changes
   useEffect(() => {
     if (selectedGameId && selectedGameId !== watchedGameId) {
+      // Save current form data before switching games
+      if (selectedGame) {
+        const currentFormData = {
+          gameId: watchedGameId,
+          inGameName: watchedInGameName,
+          rank: watchedRank,
+          roles: watchedRoles,
+          lookingFor: watchedLookingFor,
+          champions: watchedChampions,
+          message: watchedMessage,
+          discord: watchedDiscord,
+          showDiscord: true,
+        };
+        localStorage.setItem(`duo-form-draft-${selectedGame.slug}`, JSON.stringify(currentFormData));
+      }
+
+      // Load form data for the new game
+      const newGame = games.find(g => g.id === selectedGameId);
+      if (newGame) {
+        const savedFormData = localStorage.getItem(`duo-form-draft-${newGame.slug}`);
+        if (savedFormData) {
+          try {
+            const parsedData = JSON.parse(savedFormData);
+            // Only load form data if it's for the same game
+            if (parsedData.gameId === selectedGameId) {
+              reset({
+                ...parsedData,
+                gameId: selectedGameId, // Ensure we use the correct gameId
+              });
+            } else {
+              // Reset to default values for new game
+              reset({
+                gameId: selectedGameId,
+                inGameName: '',
+                rank: '',
+                roles: [],
+                lookingFor: [],
+                champions: [],
+                message: '',
+                discord: '',
+                showDiscord: true,
+              });
+            }
+          } catch (error) {
+            console.error('Failed to parse saved form data:', error);
+            // Reset to default values on error
+            reset({
+              gameId: selectedGameId,
+              inGameName: '',
+              rank: '',
+              roles: [],
+              lookingFor: [],
+              champions: [],
+              message: '',
+              discord: '',
+              showDiscord: true,
+            });
+          }
+        } else {
+          // Reset to default values for new game
+          reset({
+            gameId: selectedGameId,
+            inGameName: '',
+            rank: '',
+            roles: [],
+            lookingFor: [],
+            champions: [],
+            message: '',
+            discord: '',
+            showDiscord: true,
+          });
+        }
+      }
+
       setValue('gameId', selectedGameId);
-      const game = games.find(g => g.id === selectedGameId);
-      setSelectedGame(game || null);
+      setSelectedGame(newGame || null);
     }
-  }, [selectedGameId, setValue, watchedGameId, games]);
+  }, [selectedGameId, setValue, watchedGameId, games, selectedGame, watchedInGameName, watchedRank, watchedRoles, watchedLookingFor, watchedChampions, watchedMessage, watchedDiscord, reset]);
+
+  // Auto-save form data as user types
+  useEffect(() => {
+    if (selectedGame && mode === 'create') {
+      const formData = {
+        gameId: watchedGameId,
+        inGameName: watchedInGameName,
+        rank: watchedRank,
+        roles: watchedRoles,
+        lookingFor: watchedLookingFor,
+        champions: watchedChampions,
+        message: watchedMessage,
+        discord: watchedDiscord,
+        showDiscord: true,
+      };
+      localStorage.setItem(`duo-form-draft-${selectedGame.slug}`, JSON.stringify(formData));
+    }
+  }, [selectedGame, mode, watchedGameId, watchedInGameName, watchedRank, watchedRoles, watchedLookingFor, watchedChampions, watchedMessage, watchedDiscord]);
 
   const toggleRole = (role: string, field: 'roles' | 'lookingFor') => {
     const currentValues = watch(field);
@@ -106,6 +222,11 @@ export function DuoPostForm({
     try {
       await onSubmit(data);
       if (mode === 'create') {
+        // Clear the form draft for this game after successful submission
+        if (selectedGame) {
+          localStorage.removeItem(`duo-form-draft-${selectedGame.slug}`);
+        }
+        
         // Reset form but keep the selected game
         reset({
           gameId: selectedGameId || 0,
@@ -124,18 +245,34 @@ export function DuoPostForm({
     }
   };
 
-  // Role icons mapping - using the 6 icons you uploaded in the correct order
+  // Role icons mapping - using the correct icons for each game
   const roleIcons = {
+    // League of Legends roles
     'Top': '/images/roles/top.jpg',
     'Jungle': '/images/roles/jungle.jpg',
     'Mid': '/images/roles/mid.jpg',
     'ADC': '/images/roles/adc.jpg',
     'Support': '/images/roles/support.jpg',
-    'Fill': '/images/roles/fill.jpg'
+    'Fill': '/images/roles/fill.jpg',
+    // Valorant roles
+    'Duelist': '/images/roles/duelist.png',
+    'Initiator': '/images/roles/initiator.png',
+    'Controller': '/images/roles/controller.png',
+    'Sentinel': '/images/roles/sentinel.png'
   };
 
-  // Define the order of roles as specified
-  const roleOrder = ['Top', 'Jungle', 'Mid', 'ADC', 'Support', 'Fill'];
+  // Define the order of roles for each game
+  const getRoleOrder = (gameSlug: string) => {
+    switch (gameSlug) {
+      case 'valorant':
+        return ['Duelist', 'Initiator', 'Controller', 'Sentinel'];
+      case 'league-of-legends':
+      default:
+        return ['Top', 'Jungle', 'Mid', 'ADC', 'Support', 'Fill'];
+    }
+  };
+
+  const roleOrder = getRoleOrder(selectedGame?.slug || 'league-of-legends');
 
   return (
     <div className="w-full">
@@ -231,15 +368,17 @@ export function DuoPostForm({
               )}
             </div>
 
-            {/* Champions Dropdown */}
+            {/* Champions/Agents Dropdown */}
             <div className="space-y-2">
-              <Label className="text-[#e6915b] text-sm">Main Champions (Max 3) *</Label>
+              <Label className="text-[#e6915b] text-sm">
+                {selectedGame?.slug === 'valorant' ? 'Main Agents' : 'Main Champions'} (Max 3) *
+              </Label>
               <Select
                 value=""
                 onValueChange={(value) => addChampion(value)}
               >
                 <SelectTrigger className="bg-[#2a2a2a] border-[#e6915b]/30 text-[#e6915b] h-9 focus:border-[#e6915b] focus:ring-[#e6915b]/20">
-                  <SelectValue placeholder="Add a champion" />
+                  <SelectValue placeholder={selectedGame?.slug === 'valorant' ? 'Add an agent' : 'Add a champion'} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#2a2a2a] border-[#e6915b]/30">
                   {selectedGame.champions.map((champion) => (
