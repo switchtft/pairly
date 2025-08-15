@@ -17,7 +17,7 @@ export function DuoFinder() {
   const { games, loading: gamesLoading } = useGames();
   const [selectedGameId, setSelectedGameId] = useState<number>(1); // Default to League of Legends
   const { posts, loading: postsLoading, refetch: refetchPosts } = usePosts(selectedGameId);
-  const { userPostData: userPost, loading: userPostLoading } = useUserPost();
+  const { userPostData: userPost, loading: userPostLoading, refetch: refetchUserPost } = useUserPost();
   const { createPost, updatePost, deletePost } = usePostActions();
   const { saveDraft, updateDraft } = useUserPost();
 
@@ -66,6 +66,7 @@ export function DuoFinder() {
         setLastPostData(data);
       }
       refetchPosts();
+      refetchUserPost(); // Refresh user's post data to hide "Create Post" section
     } catch (error) {
       console.error('Failed to create post:', error);
     } finally {
@@ -100,6 +101,7 @@ export function DuoFinder() {
     try {
       await deletePost(postId);
       refetchPosts();
+      refetchUserPost(); // Refresh user's post data to show "Create Post" button
     } catch (error) {
       console.error('Failed to delete post:', error);
     }
@@ -187,50 +189,73 @@ export function DuoFinder() {
         </Card>
       )}
 
-      {/* Create Post Section - Always Visible */}
-      <div className="mb-6">
-        {!user ? (
-          // Login prompt for non-authenticated users
-          <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <div className="text-center mb-4">
-                <LogIn className="h-12 w-12 text-[#e6915b] mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-[#e6915b] mb-2">Login Required</h3>
-                <p className="text-gray-300 mb-6">
-                  You need to be logged in to create duo posts and connect with other players.
-                </p>
-                <div className="flex gap-3">
-                  <Button asChild className="bg-[#e6915b] hover:bg-[#d8824a] text-white">
-                    <a href="/login">Login</a>
-                  </Button>
-                  <Button variant="outline" asChild className="border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white">
-                    <a href="/register">Register</a>
-                  </Button>
+      {/* User's Active Post */}
+      {userPost?.activePost && (
+        <Card className="mb-6 border-[#e6915b]/30 bg-[#1a1a1a]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-[#e6915b]">Your Active Post</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 p-3 bg-[#2a2a2a] rounded-lg border border-[#e6915b]/20">
+              <p className="text-sm text-gray-300">
+                <strong>Note:</strong> To edit this post, you must delete your current post, and then repost your message with the edits done.
+              </p>
+            </div>
+            <DuoPostCard
+              post={userPost.activePost}
+              onDelete={handleDeletePost}
+              isOwnPost={true}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create Post Section - Only show if user doesn't have an active post */}
+      {!userPost?.activePost && (
+        <div className="mb-6">
+          {!user ? (
+            // Login prompt for non-authenticated users
+            <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-center mb-4">
+                  <LogIn className="h-12 w-12 text-[#e6915b] mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-[#e6915b] mb-2">Login Required</h3>
+                  <p className="text-gray-300 mb-6">
+                    You need to be logged in to create duo posts and connect with other players.
+                  </p>
+                  <div className="flex gap-3">
+                    <Button asChild className="bg-[#e6915b] hover:bg-[#d8824a] text-white">
+                      <a href="/login">Login</a>
+                    </Button>
+                    <Button variant="outline" asChild className="border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white">
+                      <a href="/register">Register</a>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          // Inline form for authenticated users
-          <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
-            <CardHeader>
-              <CardTitle className="text-lg text-[#e6915b]">
-                {userPost?.savedDraft ? 'Create New Post' : 'Create Duo Post'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DuoPostForm
-                games={games}
-                initialData={lastPostData || undefined}
-                onSubmit={handleCreatePost}
-                isLoading={isSubmitting}
-                mode="create"
-                selectedGameId={selectedGameId}
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              </CardContent>
+            </Card>
+          ) : (
+            // Inline form for authenticated users
+            <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
+              <CardHeader>
+                <CardTitle className="text-lg text-[#e6915b]">
+                  {userPost?.savedDraft ? 'Create New Post' : 'Create Duo Post'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DuoPostForm
+                  games={games}
+                  initialData={lastPostData || undefined}
+                  onSubmit={handleCreatePost}
+                  isLoading={isSubmitting}
+                  mode="create"
+                  selectedGameId={selectedGameId}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Edit Draft Form */}
       {showEditForm && (

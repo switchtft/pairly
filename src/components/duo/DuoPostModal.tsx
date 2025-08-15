@@ -74,20 +74,14 @@ export function DuoPostModal({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-sm text-gray-400">
-                <Eye className="h-4 w-4" />
-                <span>{post.views}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-8 w-8 p-0 text-gray-400 hover:text-[#e6915b] hover:bg-[#2a2a2a]"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0 text-gray-400 hover:text-[#e6915b] hover:bg-[#2a2a2a]"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -148,7 +142,7 @@ export function DuoPostModal({
                   Message
                 </h3>
                                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
-                   <p className="text-sm leading-relaxed text-gray-300">&ldquo;{post.message}&rdquo;</p>
+                   <p className="text-sm leading-relaxed text-gray-300">{post.message}</p>
                  </div>
               </div>
             )}
@@ -177,7 +171,7 @@ export function DuoPostModal({
             <div className="flex gap-3 pt-4 border-t border-[#e6915b]/30">
               <Button
                 variant="outline"
-                className="flex items-center gap-2 border-[#e6915b] text-[#e6915b] hover:bg-[#e6915b] hover:text-white"
+                className="flex items-center gap-2 bg-[#e6915b] text-white border-[#e6915b] hover:bg-[#e6915b]/90 hover:text-white"
                 onClick={() => {
                   // You could implement a messaging system here
                   console.log('Message user:', post.author?.username);

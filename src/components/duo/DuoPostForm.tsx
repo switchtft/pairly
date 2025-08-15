@@ -84,7 +84,9 @@ export function DuoPostForm({
     const currentValues = watch(field);
     const newValues = currentValues.includes(role)
       ? currentValues.filter(r => r !== role)
-      : [...currentValues, role];
+      : currentValues.length < 2 
+        ? [...currentValues, role]
+        : currentValues; // Don't add if already at max
     setValue(field, newValues);
   };
 
@@ -198,24 +200,31 @@ export function DuoPostForm({
             <div className="space-y-2">
               <Label className="text-[#e6915b] text-sm">Roles You Play *</Label>
               <div className="flex flex-wrap gap-2">
-                {roleOrder.map((role) => (
-                  <div
-                    key={role}
-                    className={cn(
-                      'cursor-pointer transition-all duration-200 p-2 rounded-lg',
-                      watchedRoles.includes(role) 
-                        ? 'bg-[#e6915b]/20 border border-[#e6915b]' 
-                        : 'bg-[#2a2a2a] border border-[#e6915b]/20 hover:bg-[#e6915b]/10'
-                    )}
-                    onClick={() => toggleRole(role, 'roles')}
-                  >
-                    <img 
-                      src={roleIcons[role as keyof typeof roleIcons]} 
-                      alt={role}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  </div>
-                ))}
+                {roleOrder.map((role) => {
+                  const isSelected = watchedRoles.includes(role);
+                  const isDisabled = !isSelected && watchedRoles.length >= 2;
+                  
+                  return (
+                    <div
+                      key={role}
+                      className={cn(
+                        'transition-all duration-200 p-2 rounded-lg',
+                        isSelected
+                          ? 'cursor-pointer bg-[#e6915b]/20 border border-[#e6915b]' 
+                          : isDisabled
+                            ? 'cursor-not-allowed bg-[#1a1a1a] border border-[#333] opacity-50'
+                            : 'cursor-pointer bg-[#2a2a2a] border border-[#e6915b]/20 hover:bg-[#e6915b]/10'
+                      )}
+                      onClick={() => !isDisabled && toggleRole(role, 'roles')}
+                    >
+                      <img 
+                        src={roleIcons[role as keyof typeof roleIcons]} 
+                        alt={role}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    </div>
+                  );
+                })}
               </div>
               {errors.roles && (
                 <p className="text-sm text-red-400">{errors.roles.message}</p>
@@ -267,24 +276,31 @@ export function DuoPostForm({
             <div className="space-y-2">
               <Label className="text-[#e6915b] text-sm">Looking For *</Label>
               <div className="flex flex-wrap gap-2">
-                {roleOrder.map((role) => (
-                  <div
-                    key={role}
-                    className={cn(
-                      'cursor-pointer transition-all duration-200 p-2 rounded-lg',
-                      watchedLookingFor.includes(role) 
-                        ? 'bg-[#e6915b]/20 border border-[#e6915b]' 
-                        : 'bg-[#2a2a2a] border border-[#e6915b]/20 hover:bg-[#e6915b]/10'
-                    )}
-                    onClick={() => toggleRole(role, 'lookingFor')}
-                  >
-                    <img 
-                      src={roleIcons[role as keyof typeof roleIcons]} 
-                      alt={role}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  </div>
-                ))}
+                {roleOrder.map((role) => {
+                  const isSelected = watchedLookingFor.includes(role);
+                  const isDisabled = !isSelected && watchedLookingFor.length >= 2;
+                  
+                  return (
+                    <div
+                      key={role}
+                      className={cn(
+                        'transition-all duration-200 p-2 rounded-lg',
+                        isSelected
+                          ? 'cursor-pointer bg-[#e6915b]/20 border border-[#e6915b]' 
+                          : isDisabled
+                            ? 'cursor-not-allowed bg-[#1a1a1a] border border-[#333] opacity-50'
+                            : 'cursor-pointer bg-[#2a2a2a] border border-[#e6915b]/20 hover:bg-[#e6915b]/10'
+                      )}
+                      onClick={() => !isDisabled && toggleRole(role, 'lookingFor')}
+                    >
+                      <img 
+                        src={roleIcons[role as keyof typeof roleIcons]} 
+                        alt={role}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    </div>
+                  );
+                })}
               </div>
               {errors.lookingFor && (
                 <p className="text-sm text-red-400">{errors.lookingFor.message}</p>
