@@ -22,7 +22,10 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
+      "@/components/*": [
+        "./src/components/*",                      // Original components path
+        "./src/app/dashboard/components/*"     // Additional path for components in dashboard
+      ],
       "@/lib/*": ["./src/lib/*"]
     }
   },

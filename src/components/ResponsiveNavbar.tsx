@@ -1,16 +1,15 @@
-// src/components/ResponsiveNavbar.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Menu, 
-  X, 
-  User, 
-  Gamepad2, 
+import NewButton from '@/components/ui/newButton';
+import {
+  Menu,
+  X,
+  User,
+  Gamepad2,
   LogOut,
   Settings,
   Trophy,
@@ -47,18 +46,15 @@ export default function ResponsiveNavbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
-    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsOpen(false);
     setShowUserMenu(false);
   }, [pathname]);
 
-  // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -66,7 +62,6 @@ export default function ResponsiveNavbar() {
         setShowUserMenu(false);
       }
     };
-
     if (showUserMenu) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
@@ -93,12 +88,8 @@ export default function ResponsiveNavbar() {
   const navLinks = isAuthenticated ? authenticatedNavLinks : publicNavLinks;
 
   return (
-    <nav 
-      className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-[#0d0d0d]/95 backdrop-blur-sm py-3' 
-          : 'bg-[#0d0d0d]/80 py-4'
-      }`}
+    <nav
+      className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#1e1e27] py-3' : 'bg-[#0e0e11] py-4'}`}
       style={{ height: scrolled ? '70px' : '80px' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -110,19 +101,15 @@ export default function ResponsiveNavbar() {
               Pairly
             </Link>
           </div>
-          
+
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-1">
               {navLinks.map((link) => (
-                <Link 
+                <Link
                   key={link.name}
                   href={link.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors ${
-                    pathname === link.href
-                      ? 'bg-[#1a1a1a] text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]/50'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors ${pathname === link.href ? 'text-white' : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]/50'} font-montserrat-medium`}
                 >
                   <span className="mr-2">{link.icon}</span>
                   {link.name}
@@ -130,7 +117,7 @@ export default function ResponsiveNavbar() {
               ))}
             </div>
           </div>
-          
+
           {/* Desktop Auth Section */}
           <div className="hidden md:block">
             {isLoading ? (
@@ -143,8 +130,8 @@ export default function ResponsiveNavbar() {
                 >
                   <div className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center overflow-hidden">
                     {user.avatar ? (
-                      <img 
-                        src={user.avatar} 
+                      <img
+                        src={user.avatar}
                         alt={user.username}
                         className="w-full h-full object-cover"
                       />
@@ -158,7 +145,7 @@ export default function ResponsiveNavbar() {
                     <span className="text-white text-sm font-medium">{getDisplayName()}</span>
                     {user.verified && <Shield className="text-[#e6915b]" size={14} />}
                     {user.isPro && <Crown className="text-yellow-400" size={14} />}
-                                          <ChevronDown className="text-[#e6915b]" size={16} />
+                    <ChevronDown className="text-[#e6915b]" size={16} />
                   </div>
                 </button>
 
@@ -167,10 +154,10 @@ export default function ResponsiveNavbar() {
                   <div className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] shadow-lg py-2">
                     <div className="px-4 py-3 border-b border-[#2a2a2a]">
                       <p className="text-white font-medium">{getDisplayName()}</p>
-                                          <p className="text-[#e6915b] text-sm">@{user.username}</p>
-                    <p className="text-[#e6915b]/70 text-xs">{user.email}</p>
+                      <p className="text-[#e6915b] text-sm">@{user.username}</p>
+                      <p className="text-[#e6915b]/70 text-xs">{user.email}</p>
                     </div>
-                    
+
                     {(user.role === 'teammate' || user.role === 'administrator') && (
                       <Link
                         href="/dashboard"
@@ -180,7 +167,7 @@ export default function ResponsiveNavbar() {
                         Dashboard
                       </Link>
                     )}
-                    
+
                     <Link
                       href="/profile"
                       className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
@@ -188,7 +175,7 @@ export default function ResponsiveNavbar() {
                       <User size={16} className="mr-3" />
                       Profile
                     </Link>
-                    
+
                     <Link
                       href="/settings"
                       className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
@@ -196,27 +183,27 @@ export default function ResponsiveNavbar() {
                       <Settings size={16} className="mr-3" />
                       Settings
                     </Link>
-                    
-                                         {(user.role === 'teammate' || user.role === 'administrator') && (
-                       <Link
-                         href="/dashboard/teammate"
-                         className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
-                       >
-                         <Crown size={16} className="mr-3" />
-                         Mentor Dashboard
-                       </Link>
-                     )}
-                     
-                     {user.role === 'administrator' && (
-                       <Link
-                         href="/profile/administrator"
-                         className="flex items-center px-4 py-2 text-red-400 hover:text-red-300 hover:bg-[#2a2a2a] transition-colors"
-                       >
-                         <Shield size={16} className="mr-3" />
-                         Admin Dashboard
-                       </Link>
-                     )}
-                    
+
+                    {(user.role === 'teammate' || user.role === 'administrator') && (
+                      <Link
+                        href="/dashboard/teammate"
+                        className="flex items-center px-4 py-2 text-[#e6915b] hover:text-white hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Crown size={16} className="mr-3" />
+                        Mentor Dashboard
+                      </Link>
+                    )}
+
+                    {user.role === 'administrator' && (
+                      <Link
+                        href="/profile/administrator"
+                        className="flex items-center px-4 py-2 text-red-400 hover:text-red-300 hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <Shield size={16} className="mr-3" />
+                        Admin Dashboard
+                      </Link>
+                    )}
+
                     {!user.isPro && (
                       <Link
                         href="/become-teammate"
@@ -226,7 +213,7 @@ export default function ResponsiveNavbar() {
                         Become Mentor
                       </Link>
                     )}
-                    
+
                     <div className="border-t border-[#2a2a2a] mt-2 pt-2">
                       <button
                         onClick={handleLogout}
@@ -241,27 +228,29 @@ export default function ResponsiveNavbar() {
               </div>
             ) : (
               <div className="ml-4 flex items-center md:ml-6 space-x-3">
-                <Button 
-                  className="bg-transparent border border-[#d4a574] text-[#d4a574] hover:bg-[#d4a574]/10 text-sm py-1.5 px-4"
-                  asChild
+                <NewButton
+                  className="font-semibold rounded font-montserrat-medium uppercase tracking-wide flex items-center gap-2"
+                  variant="secondary"
                 >
-                  <Link href="/login">
+                  <Link href="/login" className="flex items-center">
                     <User size={16} className="mr-2" />
                     Sign In
                   </Link>
-                </Button>
-                <Button 
-                  className="bg-gradient-to-r from-[#e6915b] to-[#e6915b] hover:from-[#d18251] hover:to-[#d18251] text-sm py-1.5 px-4"
-                  asChild
+                </NewButton>
+
+                <NewButton
+                  className="font-semibold rounded font-montserrat-medium uppercase tracking-wide flex items-center gap-2"
+                  variant="primary_2"
                 >
-                  <Link href="/register">
+                  <Link href="/register" className="flex items-center">
+                    <User size={16} className="mr-2" />
                     Sign Up
                   </Link>
-                </Button>
+                </NewButton>
               </div>
             )}
           </div>
-          
+
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
@@ -274,95 +263,21 @@ export default function ResponsiveNavbar() {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile menu */}
       {isOpen && (
         <div className="md:hidden bg-[#0d0d0d] border-t border-[#2a2a2a]">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navLinks.map((link) => (
-              <Link 
+              <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium ${
-                  pathname === link.href
-                                      ? 'bg-[#1a1a1a] text-white'
-                  : 'text-[#e6915b] hover:text-white hover:bg-[#1a1a1a]/50'
-                }`}
+                className={`flex items-center px-4 py-3 rounded-lg text-base font-medium ${pathname === link.href ? 'bg-[#1a1a1a] text-white' : 'text-[#e6915b] hover:text-white hover:bg-[#1a1a1a]/50'}`}
               >
                 <span className="mr-3">{link.icon}</span>
                 {link.name}
               </Link>
             ))}
-            
-            <div className="pt-4 border-t border-[#2a2a2a] px-3 space-y-3">
-              {isAuthenticated && user ? (
-                <>
-                  <div className="flex items-center space-x-3 px-4 py-3 bg-[#1a1a1a] rounded-lg">
-                    <div className="w-10 h-10 rounded-full bg-[#2a2a2a] flex items-center justify-center overflow-hidden">
-                      {user.avatar ? (
-                        <img 
-                          src={user.avatar} 
-                          alt={user.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-[#e6915b] font-bold">
-                          {user.username.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{getDisplayName()}</p>
-                      <p className="text-gray-400 text-sm">@{user.username}</p>
-                    </div>
-                  </div>
-                  
-                  <Link
-                    href="/profile"
-                    className="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-[#1a1a1a]/50"
-                  >
-                    <User size={16} className="mr-3" />
-                    Profile
-                  </Link>
-                  
-                  <Link
-                    href="/settings"
-                    className="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-[#1a1a1a]/50"
-                  >
-                    <Settings size={16} className="mr-3" />
-                    Settings
-                  </Link>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-[#1a1a1a]/50 w-full"
-                  >
-                    <LogOut size={16} className="mr-3" />
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    className="w-full bg-transparent border border-[#d4a574] text-[#d4a574] hover:bg-[#d4a574]/10"
-                    asChild
-                  >
-                    <Link href="/login">
-                      <User size={16} className="mr-2" />
-                      Sign In
-                    </Link>
-                  </Button>
-                  <Button 
-                    className="w-full bg-gradient-to-r from-[#e6915b] to-[#e6915b] hover:from-[#d18251] hover:to-[#d18251]"
-                    asChild
-                  >
-                    <Link href="/register">
-                      Sign Up
-                    </Link>
-                  </Button>
-                </>
-              )}
-            </div>
           </div>
         </div>
       )}

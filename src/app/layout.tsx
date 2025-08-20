@@ -30,12 +30,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased bg-[#0d0d0d] text-white min-h-screen flex flex-col">
+      {/* Hydration issue fix */}
+      <body className="antialiased text-white min-h-screen flex flex-col bg-[#0e0e11]">
         <AuthProvider>
           <ResponsiveNavbar />
           <main className="flex-grow pt-24 pb-8">
