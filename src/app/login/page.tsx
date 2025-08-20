@@ -1,4 +1,3 @@
-// src/app/login/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,24 +12,43 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const { errors, isSubmitting, handleLogin } = useAuthForm();
 
+  // Zapobiegaj hydration mismatch
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isLoading && isAuthenticated) {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, mounted]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await handleLogin(email, password);
     
-    // If login successful, redirect will happen via useEffect
+    console.log('Form Submitted');
+    console.log('Received email:', email);
+    console.log('Received password:', password);
+
+    if (!email || !password) {
+      console.error('Email and password are required');
+      return;
+    }
+
+    try {
+      await handleLogin(email, password);
+    } catch (err) {
+      console.error('Login failed:', err);
+    }
   };
 
-  if (isLoading) {
+  // Pokazuj loading tylko po zamontowaniu
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#e6915b]"></div>
@@ -73,11 +91,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-11 border transition-all focus:outline-none focus:ring-2 ${
-                    errors.email 
-                      ? 'border-red-500 focus:ring-red-500/20' 
-                      : 'border-[#333] focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0]'
-                  }`}
+                  className={`w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-11 border transition-all focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-[#333] focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0]'}`}
                   placeholder="Enter your email"
                   disabled={isSubmitting}
                 />
@@ -99,11 +113,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-11 pr-11 border transition-all focus:outline-none focus:ring-2 ${
-                    errors.password 
-                      ? 'border-red-500 focus:ring-red-500/20' 
-                      : 'border-[#333] focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0]'
-                  }`}
+                  className={`w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-11 pr-11 border transition-all focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-[#333] focus:ring-[#6b8ab0]/20 focus:border-[#6b8ab0]'}`}
                   placeholder="Enter your password"
                   disabled={isSubmitting}
                 />
@@ -154,7 +164,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-[#2a2a2a]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-                              <span className="px-2 bg-[#1a1a1a] text-[#e6915b]">Don&apos;t have an account?</span>
+              <span className="px-2 bg-[#1a1a1a] text-[#e6915b]">Don&apos;t have an account?</span>
             </div>
           </div>
 

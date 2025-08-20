@@ -71,7 +71,6 @@ export default function ResponsiveNavbar() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -96,9 +95,15 @@ export default function ResponsiveNavbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-[#e6915b] to-[#d4a574] bg-clip-text text-transparent flex items-center">
-              <Gamepad2 size={24} className="mr-2" />
-              Pairly
+            <Link href="/" className="flex items-center">
+              <img
+                src="/images/pairly_logo.png"
+                alt="Pairly Logo"
+                className="w-24 h-24 mr-2" // Adjust the size as needed
+              />
+              <span className="text-2xl font-montserrat-medium font-semibold bg-gradient-to-r from-[#e6915b] to-[#d4a574] bg-clip-text text-transparent">
+                Pairly
+              </span>
             </Link>
           </div>
 
