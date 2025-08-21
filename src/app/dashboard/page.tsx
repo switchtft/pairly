@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import ProtectedPage from '@/components/ProtectedPage'; // Importujemy komponent chroniący
 import OnlineStatus from '@/components/OnlineStatus';
 import IncomingOrders from '@/components/IncomingOrders';
 import WeeklyStats from '@/components/WeeklyStats';
 import DashboardHeader from '@/components/DashboardHeader';
 import Sidebar from '@/components/Sidebar';
 
-export default function DashboardPage() {
-  const { user, isLoading, isAuthenticated } = useAuth();
+const DashboardContent = () => {
+  const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isOnline, setIsOnline] = useState(false);
@@ -21,30 +22,34 @@ export default function DashboardPage() {
     winRate: 0,
     leaderboardPosition: 0
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-      return;
+    // ProtectedPage zajął się już sprawdzeniem, czy użytkownik jest zalogowany.
+    // Tutaj obsługujemy tylko logikę specyficzną dla ról.
+    if (user) {
+      if (user.role === 'customer') {
+        router.push('/profile/customer');
+        return;
+      }
+      
+      if (user.role === 'teammate' || user.role === 'administrator') {
+        fetchDashboardData();
+      }
     }
-
-    if (user && user.role === 'customer') {
-      router.push('/profile/customer');
-      return;
-    }
-
-    if (user && (user.role === 'teammate' || user.role === 'administrator')) {
-      fetchDashboardData();
-    }
-  }, [user, isLoading, isAuthenticated, router]);
+  }, [user, router]);
 
   const fetchDashboardData = async () => {
-    // Fetching dashboard data logic...
+    // Tutaj umieść logikę pobierania danych z API dla dashboardu.
+    // Na przykład:
+    // const response = await fetch('/api/dashboard/stats');
+    // const data = await response.json();
+    // setWeeklyStats(data.stats);
+    // setIncomingOrders(data.orders);
   };
 
   const handleToggleOnline = () => {
-    // Logic for toggling online/offline...
+    // Tutaj umieść logikę do zmiany statusu online/offline i wysłania jej do API.
+    setIsOnline(prev => !prev);
   };
 
   return (
@@ -61,10 +66,19 @@ export default function DashboardPage() {
                 <WeeklyStats {...weeklyStats} />
               </div>
             )}
-            {/* Similar for other tabs like 'order-history', 'quest', 'teammate-rules' */}
+            {/* Tutaj możesz dodać widoki dla innych zakładek, np. 'order-history' */}
           </div>
         </div>
       </div>
     </div>
+  );
+};
+
+// Główny eksport strony, która jest chroniona
+export default function DashboardPage() {
+  return (
+    <ProtectedPage>
+      <DashboardContent />
+    </ProtectedPage>
   );
 }

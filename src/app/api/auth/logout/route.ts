@@ -1,57 +1,41 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 import prisma from '@/lib/prisma';
+import { verifyAuth } from '@/lib/auth'; // Import the reusable auth helper
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    console.log('Logout request received');
-
+    // Use the auth helper to securely get the user ID
+    const authResult = await verifyAuth(request);
+    
+    // FIX: Added 'await' before cookies() to resolve the error
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
-    if (!token) {
-      return NextResponse.json({ message: 'No token found, logout failed' }, { status: 400 });
-    }
-
-    try {
-      // Decode token to get user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
-
-      // Try to delete the session from the database
-      try {
-        await prisma.authSession.deleteMany({
+    if (authResult.user && token) {
+      const { userId } = authResult.user;
+      // Perform cleanup tasks in parallel for better performance
+      await Promise.all([
+        // Delete the specific session token from the database
+        prisma.authSession.deleteMany({
           where: { token: token }
-        });
-        console.log('Session deleted from database');
-      } catch (sessionError) {
-        console.warn('Session deletion failed (table might not exist):', sessionError);
-        // Continue even if session deletion fails
-      }
-
-      // Update user online status and last seen
-      try {
-        await prisma.user.update({
-          where: { id: decoded.userId },
-          data: { 
+        }),
+        // Update the user's status to offline
+        prisma.user.update({
+          where: { id: userId },
+          data: {
             isOnline: false,
             lastSeen: new Date()
           }
-        });
-        console.log('User status updated to offline');
-      } catch (updateError) {
-        console.warn('User status update failed:', updateError);
-        // Continue even if user update fails
-      }
-    } catch (jwtError) {
-      console.warn('Token verification failed during logout:', jwtError);
-      // Continue with logout even if token is invalid
+        })
+      ]).catch(dbError => {
+        // Log any errors but don't block the logout process
+        console.warn('Error during logout database cleanup:', dbError);
+      });
     }
 
-    // Create a response to confirm logout
+    // Always ensure the cookie is cleared, even if the user was not authenticated
     const response = NextResponse.json({ message: 'Logged out successfully' });
-
-    // Clear the token cookie
     response.cookies.set('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -60,15 +44,12 @@ export async function POST() {
       path: '/',
     });
 
-    console.log('Logout successful');
     return response;
 
   } catch (error) {
-    console.error('Logout error:', error);
-    
-    // Even if there's an error, clear the cookie and return success
-    const response = NextResponse.json({ message: 'Logged out successfully' });
-    
+    console.error('Unexpected logout error:', error);
+    // In case of a critical error, still attempt to clear the cookie
+    const response = NextResponse.json({ message: 'Logout completed despite an error' });
     response.cookies.set('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -76,7 +57,6 @@ export async function POST() {
       maxAge: 0,
       path: '/',
     });
-
-    return response; // Respond with success even if there was an error
+    return response;
   }
 }

@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import ResponsiveNavbar from '@/components/ResponsiveNavbar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
+import { LayoutProvider } from '@/app/contexts/LayoutContext';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
@@ -16,12 +17,12 @@ export default function ClientProviders({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ResponsiveNavbar />
-        <main className="flex-grow pt-24 pb-8">{children}</main>
-        <Footer />
-        <ScrollToTop />
-      </AuthProvider>
+      <LayoutProvider>
+        <AuthProvider>
+          <main className="flex-grow pt-24 pb-8">{children}</main>
+          <ScrollToTop />
+        </AuthProvider>
+      </LayoutProvider>
     </QueryClientProvider>
   );
 }

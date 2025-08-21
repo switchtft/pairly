@@ -8,41 +8,56 @@ datasource db {
 }
 
 model User {
-  email                    String                  @unique
-  username                 String                  @unique
-  password                 String
-  firstName                String?
-  lastName                 String?
-  avatar                   String?
-  rank                     String?
-  role                     String?
-  game                     String?
-  isPro                    Boolean                 @default(false)
-  isOnline                 Boolean                 @default(false)
-  lastSeen                 DateTime                @default(now())
-  verified                 Boolean                 @default(false)
-  bio                      String?
-  discord                  String?
-  steam                    String?
-  timezone                 String?
-  createdAt                DateTime                @default(now())
-  id                       Int                     @id @default(autoincrement())
-  languages                String[]
+  email        String    @unique
+  username     String    @unique
+  password     String
+  firstName    String?
+  lastName     String?
+  avatar       String?
+  rank         String?
+  role         String?
+  game         String?
+  isPro        Boolean   @default(false)
+  isOnline     Boolean   @default(false)
+  lastSeen     DateTime  @default(now())
+  verified     Boolean   @default(false)
+  bio          String?
+  discord      String?
+  steam        String?
+  timezone     String?
+  createdAt    DateTime  @default(now())
+  id           Int       @id @default(autoincrement())
+  languages    String[]
+
+  accountLocked Boolean   @default(false)
+  lockUntil     DateTime?
+
   sentMessages             ChatMessage[]           @relation("MessageSender")
-  payments                 Payment[]
+  payments                 Payment[]               @relation("UserPayments")
   reviewsReceived          Review[]                @relation("ReviewsReceived")
   reviewsGiven             Review[]                @relation("ReviewsGiven")
   clientSessions           Session[]               @relation("ClientSessions")
   proSessions              Session[]               @relation("ProTeammateSessions")
-  authSessions             AuthSession[]
-  queueEntries             QueueEntry[]
-  tournamentParticipations TournamentParticipant[]
+  authSessions             AuthSession[]           @relation("AuthSessions")
+  queueEntries             QueueEntry[]            @relation("QueueEntries")
+  tournamentParticipations TournamentParticipant[] @relation("TournamentParticipants")
+  duoPosts                 DuoPost[]               @relation("DuoPosts")
+  csrfTokens               CSRFToken[]             @relation("UserCSRFToken")
+
   // Favourite and block relationships
-  favourites               UserFavourite[]         @relation("UserFavourites")
-  favouritedBy             UserFavourite[]         @relation("FavouritedByUser")
-  blockedUsers             UserBlock[]             @relation("UserBlocks")
-  blockedBy                UserBlock[]             @relation("BlockedByUser")
-  duoPosts                 DuoPost[]
+  favourites   UserFavourite[] @relation("UserFavourites")
+  favouritedBy UserFavourite[] @relation("FavouritedByUser")
+  blockedUsers UserBlock[]     @relation("UserBlocks")
+  blockedBy    UserBlock[]     @relation("BlockedByUser")
+}
+
+model CSRFToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation("UserCSRFToken", fields: [userId], references: [id]) // Relation to User model
 }
 
 model AuthSession {
@@ -51,9 +66,7 @@ model AuthSession {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("auth_sessions")
+  user      User     @relation("AuthSessions", fields: [userId], references: [id], onDelete: Cascade) // Reverse relation to User
 }
 
 model Session {
@@ -69,8 +82,8 @@ model Session {
   clientId      Int
   proTeammateId Int?
   chatMessages  ChatMessage[] @relation("SessionMessages")
-  payments      Payment[]
-  reviews       Review[]
+  payments      Payment[]     @relation("SessionPayments")
+  reviews       Review[]      @relation("SessionReviews")
   client        User          @relation("ClientSessions", fields: [clientId], references: [id])
   proTeammate   User?         @relation("ProTeammateSessions", fields: [proTeammateId], references: [id])
 }
@@ -86,7 +99,7 @@ model Review {
   reviewedId Int
   reviewed   User     @relation("ReviewsReceived", fields: [reviewedId], references: [id])
   reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
-  session    Session  @relation(fields: [sessionId], references: [id])
+  session    Session  @relation("SessionReviews", fields: [sessionId], references: [id]) // Reverse relation to Session
 }
 
 model Payment {
@@ -97,8 +110,8 @@ model Payment {
   sessionId Int?
   id        Int      @id @default(autoincrement())
   userId    Int
-  session   Session? @relation(fields: [sessionId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  session   Session? @relation("SessionPayments", fields: [sessionId], references: [id]) // Reverse relation to Session
+  user      User     @relation("UserPayments", fields: [userId], references: [id]) // Reverse relation to User
 }
 
 model ChatMessage {
@@ -111,48 +124,6 @@ model ChatMessage {
   session   Session  @relation("SessionMessages", fields: [sessionId], references: [id])
 }
 
-model Package {
-  id          Int      @id @default(autoincrement())
-  title       String   @unique
-  price       String
-  description String
-  features    String[]
-  isFeatured  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-}
-
-model Tournament {
-  id              String                  @id @default(cuid())
-  name            String
-  game            String
-  prize           Float
-  entryFee        Float
-  maxParticipants Int
-  status          String
-  startDate       DateTime
-  endDate         DateTime?
-  region          String
-  description     String?
-  rules           String?
-  createdAt       DateTime                @default(now())
-  participants    TournamentParticipant[]
-
-  @@map("tournaments")
-}
-
-model TournamentParticipant {
-  id           String     @id @default(cuid())
-  tournamentId String
-  userId       Int
-  teamName     String?
-  joinedAt     DateTime   @default(now())
-  tournament   Tournament @relation(fields: [tournamentId], references: [id])
-  user         User       @relation(fields: [userId], references: [id])
-
-  @@unique([tournamentId, userId])
-  @@map("tournament_participants")
-}
-
 model QueueEntry {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -163,54 +134,28 @@ model QueueEntry {
   status    String   @default("waiting")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("queue_entries")
-}
-
-model UserFavourite {
-  id           Int      @id @default(autoincrement())
-  userId       Int      // User who is favouriting
-  favouriteId  Int      // User who is being favourited
-  createdAt    DateTime @default(now())
-  user         User     @relation("UserFavourites", fields: [userId], references: [id], onDelete: Cascade)
-  favourite    User     @relation("FavouritedByUser", fields: [favouriteId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, favouriteId])
-  @@map("user_favourites")
-}
-
-model UserBlock {
-  id        Int      @id @default(autoincrement())
-  userId    Int      // User who is blocking
-  blockedId Int      // User who is being blocked
-  createdAt DateTime @default(now())
-  user      User     @relation("UserBlocks", fields: [userId], references: [id], onDelete: Cascade)
-  blocked   User     @relation("BlockedByUser", fields: [blockedId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, blockedId])
-  @@map("user_blocks")
+  user      User     @relation("QueueEntries", fields: [userId], references: [id], onDelete: Cascade) // Reverse relation to User
 }
 
 model DuoPost {
-  id          Int      @id @default(autoincrement())
-  authorId    Int
-  gameId      Int
-  inGameName  String
-  rank        String
-  roles       String[]
-  lookingFor  String[]
-  champions   String[]
-  message     String?
-  discord     String?
-  showDiscord Boolean  @default(true)
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isActive    Boolean  @default(true)
-  views       Int      @default(0)
+  id           Int      @id @default(autoincrement())
+  authorId     Int
+  gameId       Int
+  inGameName   String
+  rank         String
+  roles        String[]
+  lookingFor   String[]
+  champions    String[]
+  message      String?
+  discord      String?
+  showDiscord  Boolean  @default(true)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isActive     Boolean  @default(true)
+  views        Int      @default(0)
 
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author User @relation("DuoPosts", fields: [authorId], references: [id], onDelete: Cascade) // Reverse relation to User
   game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 }
 
@@ -232,4 +177,61 @@ model Champion {
   game    Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@unique([name, gameId])
+}
+
+model Tournament {
+  id              String                  @id @default(cuid())
+  name            String
+  game            String
+  prize           Float
+  entryFee        Float
+  maxParticipants Int
+  status          String
+  startDate       DateTime
+  endDate         DateTime?
+  region          String
+  description     String?
+  rules           String?
+  createdAt       DateTime                @default(now())
+  participants    TournamentParticipant[] @relation("TournamentParticipants")
+}
+
+model TournamentParticipant {
+  id           String     @id @default(cuid())
+  tournamentId String
+  userId       Int
+  teamName     String?
+  joinedAt     DateTime   @default(now())
+  tournament   Tournament @relation("TournamentParticipants", fields: [tournamentId], references: [id]) // Reverse relation to Tournament
+  user         User       @relation("TournamentParticipants", fields: [userId], references: [id]) // Reverse relation to User
+
+  @@unique([tournamentId, userId])
+}
+
+model UserFavourite {
+  id          Int      @id @default(autoincrement())
+  userId      Int // User who is favouriting
+  favouriteId Int // User who is being favourited
+  createdAt   DateTime @default(now())
+  user        User     @relation("UserFavourites", fields: [userId], references: [id], onDelete: Cascade) // Reverse relation to User
+  favourite   User     @relation("FavouritedByUser", fields: [favouriteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, favouriteId])
+}
+
+model RateLimit {
+  identifier String   @id
+  count      Int
+  expiresAt  DateTime
+}
+
+model UserBlock {
+  id        Int      @id @default(autoincrement())
+  userId    Int // User who is blocking
+  blockedId Int // User who is being blocked
+  createdAt DateTime @default(now())
+  user      User     @relation("UserBlocks", fields: [userId], references: [id], onDelete: Cascade) // Reverse relation to User
+  blocked   User     @relation("BlockedByUser", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blockedId])
 }

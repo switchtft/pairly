@@ -1,9 +1,8 @@
-// src/app/api/auth/profile/route.ts
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import csrfTokenHandler from '@/lib/csrfToken'; // Import the CSRF handler
+import { verifyAuth } from '@/lib/auth';   // Import the new reusable auth helper
 
 const updateProfileSchema = z.object({
   firstName: z.string().optional(),
@@ -17,73 +16,45 @@ const updateProfileSchema = z.object({
   steam: z.string().optional(),
   timezone: z.string().optional(),
   languages: z.array(z.string()).optional(),
-  avatar: z.string().optional(), // Allow any string for avatar (URL or base64)
+  avatar: z.string().optional(),
 });
 
-// GET profile
-export async function GET() {
+// Define a reusable Prisma select object to avoid repeating the same fields.
+const userProfileSelect = {
+  id: true, email: true, username: true, firstName: true, lastName: true, avatar: true,
+  bio: true, game: true, role: true, rank: true, isPro: true, verified: true,
+  discord: true, steam: true, timezone: true, languages: true, createdAt: true,
+  lastSeen: true, isOnline: true,
+};
+
+// GET profile and a new CSRF token
+export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // 1. Authenticate the user using the shared helper function.
+    const authResult = await verifyAuth(request);
+    if (!authResult.user) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+    const { userId } = authResult.user;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
-
+    // 2. Fetch user data from the database.
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        bio: true,
-        game: true,
-        role: true,
-        rank: true,
-        isPro: true,
-        verified: true,
-        discord: true,
-        steam: true,
-        timezone: true,
-        languages: true,
-        createdAt: true,
-        lastSeen: true,
-        isOnline: true,
-      }
+      where: { id: userId },
+      select: userProfileSelect, // Use the reusable select object.
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get user stats
+    // 3. Generate a new, single-use CSRF token for the client.
+    const csrfToken = await csrfTokenHandler.generate(userId);
+
+    // 4. Fetch additional user statistics.
     const [totalSessions, totalReviews, averageRating] = await Promise.all([
-      prisma.session.count({
-        where: {
-          OR: [
-            { clientId: user.id },
-            { proTeammateId: user.id }
-          ]
-        }
-      }),
-      prisma.review.count({
-        where: { reviewedId: user.id }
-      }),
-      prisma.review.aggregate({
-        where: { reviewedId: user.id },
-        _avg: { rating: true }
-      })
+      prisma.session.count({ where: { OR: [{ clientId: user.id }, { proTeammateId: user.id }] } }),
+      prisma.review.count({ where: { reviewedId: user.id } }),
+      prisma.review.aggregate({ where: { reviewedId: user.id }, _avg: { rating: true } })
     ]);
 
     const userWithStats = {
@@ -95,80 +66,59 @@ export async function GET() {
       }
     };
 
-    return NextResponse.json({ user: userWithStats });
+    // 5. Return the combined user data and the CSRF token.
+    return NextResponse.json({ user: userWithStats, csrfToken });
 
   } catch (error) {
     console.error('Profile fetch error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// PUT update profile
-export async function PUT(request: Request) {
+// PUT update profile with CSRF verification
+export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    // 1. Authenticate the user.
+    const authResult = await verifyAuth(request);
+    if (!authResult.user) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { userId } = authResult.user;
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // 2. Verify the CSRF token from the request headers.
+    const tokenFromClient = request.headers.get('X-CSRF-Token');
+    if (!tokenFromClient) {
+      return NextResponse.json({ error: 'CSRF token missing from headers' }, { status: 403 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
+    const isTokenValid = await csrfTokenHandler.verify(tokenFromClient, userId);
+    if (!isTokenValid) {
+      return NextResponse.json({ error: 'Invalid or expired CSRF token' }, { status: 403 });
+    }
+
+    // 3. If authentication and CSRF checks pass, proceed to update.
     const body = await request.json();
     const validatedData = updateProfileSchema.parse(body);
 
-    // Check if username is being changed and if it's already taken
     if (validatedData.username) {
       const existingUser = await prisma.user.findFirst({
-        where: {
-          username: validatedData.username,
-          id: { not: decoded.userId }
-        }
+        where: { username: validatedData.username, id: { not: userId } }
       });
 
       if (existingUser) {
-        return NextResponse.json(
-          { error: 'Username already taken' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
       }
     }
 
-    // Update user
     const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
+      where: { id: userId },
       data: validatedData,
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        bio: true,
-        game: true,
-        role: true,
-        rank: true,
-        isPro: true,
-        verified: true,
-        discord: true,
-        steam: true,
-        timezone: true,
-        languages: true,
-        createdAt: true,
-        lastSeen: true,
-      }
+      select: userProfileSelect, // Use the reusable select object.
     });
 
-    return NextResponse.json({ 
-      message: 'Profile updated successfully', 
-      user: updatedUser 
+    return NextResponse.json({
+      message: 'Profile updated successfully',
+      user: updatedUser
     });
 
   } catch (error) {

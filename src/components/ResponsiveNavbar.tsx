@@ -88,7 +88,7 @@ export default function ResponsiveNavbar() {
 
   return (
     <nav
-      className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#1e1e27] py-3' : 'bg-[#0e0e11] py-4'}`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#1e1e27] py-3' : 'bg-[#0e0e11] py-4'}`}
       style={{ height: scrolled ? '70px' : '80px' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

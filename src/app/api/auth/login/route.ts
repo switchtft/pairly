@@ -1,9 +1,9 @@
-// src/app/api/auth/login/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import rateLimiter from '@/lib/rateLimiter';
+import { generateToken, TokenPayload } from '@/lib/auth'; // Import the shared token generator
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -21,171 +21,132 @@ async function checkDatabaseConnection() {
   }
 }
 
-export async function POST(request: Request) {
+// Account lockout mechanism
+async function lockAccount(email: string) {
+  await prisma.user.update({
+    where: { email },
+    data: {
+      accountLocked: true,
+      lockUntil: new Date(Date.now() + 30 * 60 * 1000), // Lock for 30 minutes
+    },
+  });
+}
+
+export async function POST(request: NextRequest) {
+  // --- Rate Limiting ---
+  const ip = (request.headers.get('x-forwarded-for') ?? '127.0.0.1').split(',')[0].trim();
+  const { isAllowed, remaining, resetTime } = await rateLimiter.check(ip);
+
+  const headers = new Headers();
+  headers.set('X-RateLimit-Limit', String(100));
+  headers.set('X-RateLimit-Remaining', String(remaining));
+  headers.set('X-RateLimit-Reset', String(Math.ceil(resetTime.getTime() / 1000)));
+
+  if (!isAllowed) {
+    const retryAfter = Math.ceil((resetTime.getTime() - Date.now()) / 1000);
+    headers.set('Retry-After', String(retryAfter));
+    return new NextResponse(JSON.stringify({ error: 'Too many requests from this IP, please try again later.' }), {
+      status: 429,
+      headers,
+    });
+  }
+  // --- End Rate Limiting ---
+
   try {
     const body = await request.json();
-    console.log('Login attempt for email:', body.email); // Debug log
-    
     const { email, password } = loginSchema.parse(body);
 
-    // Check database connection first
     const isDbConnected = await checkDatabaseConnection();
     if (!isDbConnected) {
-      console.error('Database connection failed');
       return NextResponse.json(
         { error: 'Database temporarily unavailable. Please try again.' },
-        { status: 503 }
+        { status: 503, headers }
       );
     }
 
-    console.log('Database connection OK, searching for user...');
+    const foundUser = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        password: true,
+        isPro: true,
+        verified: true,
+        accountLocked: true,
+        lockUntil: true,
+      }
+    });
 
-    // Find user with error handling
-    let user;
-    try {
-      user = await prisma.user.findUnique({
-        where: { email },
-        select: {
-          id: true,
-          email: true,
-          username: true,
-          password: true,
-          firstName: true,
-          lastName: true,
-          avatar: true,
-          game: true,
-          role: true,
-          rank: true,
-          isPro: true,
-          verified: true,
-        }
-      });
-      console.log('User query completed, user found:', !!user);
-    } catch (dbError) {
-      console.error('Database query failed:', dbError);
+    if (!foundUser) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401, headers });
+    }
+
+    if (foundUser.accountLocked && foundUser.lockUntil && new Date(foundUser.lockUntil) > new Date()) {
       return NextResponse.json(
-        { error: 'Database query failed. Please try again.' },
-        { status: 503 }
+        { error: 'Account locked. Please try again later.' },
+        { status: 403, headers }
       );
     }
 
-    if (!user) {
-      console.log('User not found for email:', email);
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Verify password
-    console.log('Verifying password...');
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, foundUser.password);
     if (!isPasswordValid) {
-      console.log('Invalid password for user:', email);
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      await lockAccount(email);
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401, headers });
     }
 
-    console.log('Password valid, generating token...');
+    // --- ADAPTATION: Use the shared token generator ---
+    const tokenPayload: TokenPayload = {
+      userId: foundUser.id,
+      email: foundUser.email,
+      username: foundUser.username,
+    };
+    const token = generateToken(tokenPayload);
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '7d' }
-    );
+    await Promise.all([
+      prisma.authSession.create({
+        data: {
+          userId: foundUser.id,
+          token,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day, matching the token
+        }
+      }),
+      prisma.user.update({
+        where: { id: foundUser.id },
+        data: { lastSeen: new Date(), accountLocked: false, lockUntil: null },
+      })
+    ]).catch(dbError => {
+      console.warn('Session creation or user update failed:', dbError);
+    });
 
-    console.log('Token generated, updating database...');
-
-    // Try to create session and update user
-    try {
-      // Create session in database (if authSession table exists)
-      try {
-        await prisma.authSession.create({
-          data: {
-            userId: user.id,
-            token,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-          }
-        });
-        console.log('Session created successfully');
-      } catch (sessionError) {
-        console.warn('Session creation failed (table might not exist):', sessionError);
-        // Continue without session creation if table doesn't exist
-      }
-
-      // Update last seen and online status
-      try {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { 
-            lastSeen: new Date(),
-            // Only update isOnline if the column exists
-          }
-        });
-        console.log('User updated successfully');
-      } catch (updateError) {
-        console.warn('User update failed:', updateError);
-        // Continue even if update fails
-      }
-    } catch (error) {
-      console.warn('Database updates failed, but continuing with login:', error);
-      // Don't fail the login if database updates fail
-    }
-
-    // Remove password from response
-    const { password: _password, ...userWithoutPassword } = user;
-
-    console.log('Login successful for user:', user.email);
+    const { password: _password, ...userWithoutPassword } = foundUser;
 
     const response = NextResponse.json({
       message: 'Login successful',
       user: userWithoutPassword,
       token
-    });
+    }, { headers });
 
-    // Set HTTP-only cookie
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 24 * 60 * 60, // 1 day, matching the token
     });
 
     return response;
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Validation failed:', error.errors);
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },
-        { status: 400 }
+        { status: 400, headers }
       );
     }
-
-    // Check if it's a database connection error
-    if (error instanceof Error) {
-      const errorMessage = error.message.toLowerCase();
-      if (
-        errorMessage.includes('connection') ||
-        errorMessage.includes('database') ||
-        errorMessage.includes('prisma') ||
-        errorMessage.includes('postgres')
-      ) {
-        console.error('Database connection error:', error);
-        return NextResponse.json(
-          { error: 'Database connection issue. Please check if your database is running and try again.' },
-          { status: 503 }
-        );
-      }
-    }
-
     console.error('Unexpected login error:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred. Please try again.' },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }
