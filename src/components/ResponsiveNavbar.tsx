@@ -71,6 +71,7 @@ export default function ResponsiveNavbar() {
   const handleLogout = async () => {
     try {
       await logout();
+      router.push('/'); // Przekierowanie na stronę główną po wylogowaniu
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -154,7 +155,6 @@ export default function ResponsiveNavbar() {
                   </div>
                 </button>
 
-                {/* User Dropdown Menu */}
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] shadow-lg py-2">
                     <div className="px-4 py-3 border-b border-[#2a2a2a]">

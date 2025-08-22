@@ -12,19 +12,18 @@ const CSRF_TOKEN_EXPIRATION_MINUTES = 15;
 class CSRFTokenHandler {
   /**
    * Generates a new, secure CSRF token and stores its record in the database.
-   * @param userId - The ID of the user for whom the token is being generated.
+   * NOTE: This version does NOT require a userId, as per your new schema.
    * @returns The generated CSRF token string.
    */
-  public async generate(userId: number): Promise<string> {
+  public async generate(): Promise<string> {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + CSRF_TOKEN_EXPIRATION_MINUTES * 60 * 1000);
 
     // This creates a new record in your `CSRFToken` table,
-    // filling the `userId`, `token`, and `expiresAt` fields.
+    // filling the `token` and `expiresAt` fields.
     // The `id` and `createdAt` fields are handled automatically by the database.
     await prisma.cSRFToken.create({
       data: {
-        userId,
         token,
         expiresAt,
       },
@@ -35,32 +34,27 @@ class CSRFTokenHandler {
 
   /**
    * Verifies a CSRF token from a request.
-   * A valid token must exist, belong to the correct user, and not be expired.
+   * A valid token must exist and not be expired.
    * The token is DELETED after verification to ensure it is single-use and prevent replay attacks.
+   * NOTE: This version does NOT verify against a userId, as per your new schema.
    * @param token - The CSRF token string from the request header or body.
-   * @param userId - The ID of the user making the request.
    * @returns `true` if the token is valid, `false` otherwise.
    */
-  public async verify(token: string, userId: number): Promise<boolean> {
+  public async verify(token: string): Promise<boolean> {
     try {
-      // 1. Find the token in the `CSRFToken` table that matches both the token string and the user's ID.
+      // 1. Find the token in the `CSRFToken` table.
       const storedToken = await prisma.cSRFToken.findFirst({
-        where: {
-          token,
-          userId,
-        },
+        where: { token },
       });
 
-      // If token doesn't exist for this user, it's invalid.
+      // If token doesn't exist, it's invalid.
       if (!storedToken) {
         return false;
       }
 
       // 2. IMPORTANT: Delete the token using its unique `id` to prevent it from being used again.
       await prisma.cSRFToken.delete({
-        where: {
-          id: storedToken.id,
-        },
+        where: { id: storedToken.id },
       });
 
       // 3. Check if the now-deleted token was expired by comparing its `expiresAt` field.
@@ -80,10 +74,9 @@ class CSRFTokenHandler {
 
   /**
    * An example middleware function to protect an API route.
-   * It expects the token in the 'X-CSRF-Token' header and the user's ID from a session.
-   * NOTE: How you get the userId will depend on your authentication setup (e.g., from a JWT).
+   * It expects the token in the 'X-CSRF-Token' header or body.
    */
-  public async middleware(request: NextRequest, userId: number) {
+  public async middleware(request: NextRequest) {
     // This middleware should only run for state-changing methods (POST, PUT, DELETE, etc.)
     if (request.method === 'GET' || request.method === 'HEAD' || request.method === 'OPTIONS') {
         return NextResponse.next();
@@ -95,7 +88,7 @@ class CSRFTokenHandler {
       return NextResponse.json({ error: 'CSRF token missing from headers' }, { status: 403 });
     }
 
-    const isValid = await this.verify(tokenFromClient, userId);
+    const isValid = await this.verify(tokenFromClient);
 
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid or expired CSRF token' }, { status: 403 });

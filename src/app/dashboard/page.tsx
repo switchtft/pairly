@@ -9,6 +9,7 @@ import IncomingOrders from '@/components/IncomingOrders';
 import WeeklyStats from '@/components/WeeklyStats';
 import DashboardHeader from '@/components/DashboardHeader';
 import Sidebar from '@/components/Sidebar';
+import ResponsiveNavbar from '@/components/ResponsiveNavbar';
 
 const DashboardContent = () => {
   const { user } = useAuth();
@@ -55,6 +56,7 @@ const DashboardContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <ResponsiveNavbar />
         <DashboardHeader />
         <div className="flex gap-8">
           <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />

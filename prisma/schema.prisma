@@ -42,8 +42,7 @@ model User {
   queueEntries             QueueEntry[]            @relation("QueueEntries")
   tournamentParticipations TournamentParticipant[] @relation("TournamentParticipants")
   duoPosts                 DuoPost[]               @relation("DuoPosts")
-  csrfTokens               CSRFToken[]             @relation("UserCSRFToken")
-
+  
   // Favourite and block relationships
   favourites   UserFavourite[] @relation("UserFavourites")
   favouritedBy UserFavourite[] @relation("FavouritedByUser")
@@ -53,11 +52,9 @@ model User {
 
 model CSRFToken {
   id        Int      @id @default(autoincrement())
-  userId    Int
   token     String
   createdAt DateTime @default(now())
   expiresAt DateTime
-  user      User     @relation("UserCSRFToken", fields: [userId], references: [id]) // Relation to User model
 }
 
 model AuthSession {

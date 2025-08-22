@@ -1,17 +1,20 @@
+// @/app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth } from '@/lib/auth'; // Import the reusable auth helper
+import { verifyAuth } from '@/lib/auth';
+import { ApiError, errorHandler } from '@/lib/errors'; // Importujemy nasz system błędów
 
 export async function GET(request: NextRequest) {
   try {
-    // 1. Use the single auth helper to verify the user's session.
+    // Weryfikacja autentyczności użytkownika
     const authResult = await verifyAuth(request);
     if (!authResult.user) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      // POPRAWKA: Dodano domyślny komunikat błędu, jeśli authResult.error jest undefined
+      throw new ApiError(authResult.status || 401, authResult.error || 'Authentication failed.');
     }
     const { userId } = authResult.user;
 
-    // 2. Get user from the database.
+    // Pobranie danych użytkownika
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -37,29 +40,22 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      throw new ApiError(404, 'User associated with this session was not found.');
     }
 
-    // 3. Update last seen status (non-critical).
-    // This is wrapped in a promise that we don't await, so it doesn't block the response.
+    // Aktualizacja ostatniej aktywności w tle (fire-and-forget)
     prisma.user.update({
       where: { id: user.id },
-      data: {
-        lastSeen: new Date(),
-      }
+      data: { lastSeen: new Date() }
     }).catch(updateError => {
-      // Log the error but don't fail the request.
-      console.warn('Failed to update last seen for user:', user.id, updateError);
+      // Logujemy błąd, ale nie przerywamy żądania, bo nie jest to krytyczne
+      console.warn(`Non-critical error: Failed to update last seen for user: ${user.id}`, updateError);
     });
 
     return NextResponse.json({ user });
 
   } catch (error) {
-    // This will catch any unexpected errors, like a database connection failure.
-    console.error('Error in /api/auth/me:', error);
-    return NextResponse.json(
-      { error: 'An internal server error occurred.' },
-      { status: 500 }
-    );
+    // Wszystkie błędy są teraz obsługiwane przez nasz centralny handler
+    return errorHandler(error);
   }
 }

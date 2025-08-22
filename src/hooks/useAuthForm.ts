@@ -1,3 +1,5 @@
+'use client';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,7 +42,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
  * z użyciem React Hook Form i Zod.
  */
 export function useAuthForm() {
-  const { login, register } = useAuth();
+  const { login, register, csrfToken } = useAuth(); // Pobranie csrfToken z kontekstu
   const router = useRouter();
 
   // --- Formularz Logowania ---
@@ -54,7 +56,8 @@ export function useAuthForm() {
 
   const handleLogin = loginForm.handleSubmit(async (data) => {
     try {
-      await login(data);
+      // Dodanie csrfToken do danych logowania
+      await login({ ...data, csrfToken });
       router.push('/dashboard'); // Przekierowanie po sukcesie
     } catch (error: any) {
       loginForm.setError('root.serverError', {
@@ -77,9 +80,9 @@ export function useAuthForm() {
 
   const handleRegister = registerForm.handleSubmit(async (data) => {
     try {
-      // Usuwamy pole `confirmPassword`, które nie jest potrzebne w API
+      // Usunięcie pola `confirmPassword` i dodanie `csrfToken`
       const { confirmPassword, ...apiData } = data;
-      await register(apiData);
+      await register({ ...apiData, csrfToken });
       router.push('/dashboard'); // Przekierowanie po sukcesie
     } catch (error: any) {
       registerForm.setError('root.serverError', {

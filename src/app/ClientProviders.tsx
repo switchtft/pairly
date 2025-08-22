@@ -1,13 +1,13 @@
+// @/app/providers.tsx
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
-import ResponsiveNavbar from '@/components/ResponsiveNavbar';
-import Footer from '@/components/Footer';
-import ScrollToTop from '@/components/ScrollToTop';
 import { LayoutProvider } from '@/app/contexts/LayoutContext';
+import { NotificationProvider } from '@/contexts/NotificationContext'; // <-- Dodany import
+import React from 'react';
 
-// Create a QueryClient instance
+// Inicjalizujemy klienta raz, poza komponentem
 const queryClient = new QueryClient();
 
 export default function ClientProviders({ 
@@ -16,11 +16,13 @@ export default function ClientProviders({
   children: React.ReactNode 
 }) {
   return (
+    // Każdy kolejny provider "opakowuje" poprzedniego
     <QueryClientProvider client={queryClient}>
       <LayoutProvider>
         <AuthProvider>
-          <main className="flex-grow pt-24 pb-8">{children}</main>
-          <ScrollToTop />
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
         </AuthProvider>
       </LayoutProvider>
     </QueryClientProvider>

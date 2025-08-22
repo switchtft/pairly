@@ -394,6 +394,53 @@
   color: transparent;
   animation: gradientShift 8s ease infinite;
 }
+/* Kontener główny powiadomienia */
+.Toastify__toast {
+  background-color: rgba(26, 26, 26, 0.8) !important; /* Półprzezroczyste tło */
+  backdrop-filter: blur(10px) !important; /* Efekt rozmycia "szkła" */
+  border: 1px solid rgba(51, 51, 51, 0.8) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+  animation: slideInFromRight 0.4s ease-out forwards;
+}
+
+/* Usuwamy domyślne tło, aby nasze style działały */
+.Toastify__toast-theme--dark {
+  background: transparent !important;
+}
+
+/* Usuwamy domyślne paddingi - nasz komponent ma własne */
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 16px !important;
+}
+
+/* Pasek postępu */
+.Toastify__progress-bar {
+  height: 3px !important;
+  border-radius: 0 0 0 12px !important;
+}
+
+/* Kolory paska postępu dla różnych typów powiadomień */
+.Toastify__progress-bar--success {
+  background: linear-gradient(to right, #22c55e, #16a34a) !important;
+}
+.Toastify__progress-bar--error {
+  background: linear-gradient(to right, #ef4444, #dc2626) !important;
+}
+.Toastify__progress-bar--info {
+  background: linear-gradient(to right, #3b82f6, #2563eb) !important;
+}
+
+/* Przycisk zamykania */
+.Toastify__close-button {
+  color: #a1a1aa !important; /* Kolor zinc-400 */
+  opacity: 0.8;
+}
+.Toastify__close-button:hover {
+  color: #ffffff !important;
+  opacity: 1;
+}
 
 @keyframes float {
   0% {

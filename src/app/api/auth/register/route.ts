@@ -1,104 +1,96 @@
+// @/app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { generateToken, TokenPayload } from '@/lib/auth'; // Import the shared token generator
+import { generateToken, TokenPayload } from '@/lib/auth';
+import csrfTokenHandler from '@/lib/csrfToken';
+import { ApiError, errorHandler } from '@/lib/errors'; // Importujemy nasz system błędów
 
 const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  username: z.string().min(3, 'Username must be at least 3 characters').max(20, 'Username must be less than 20 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Please enter a valid email address.'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters.')
+    .max(20, 'Username must be less than 20 characters.')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores.'),
+  password: z.string().min(6, 'Password must be at least 6 characters.'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   game: z.string().optional(),
   role: z.string().optional(),
+  // csrfToken jest teraz pobierany z nagłówka, nie z body
 });
 
 export async function POST(request: NextRequest) {
   try {
+    // Weryfikacja tokenu CSRF z nagłówka
+    const csrfToken = request.headers.get('X-CSRF-Token');
+    if (!csrfToken || !(await csrfTokenHandler.verify(csrfToken))) {
+      throw new ApiError(403, 'Your session has expired. Please refresh the page and try again.');
+    }
+
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 
-    // Check if user already exists
     const existingUser = await prisma.user.findFirst({
-      where: {
+      where: { 
         OR: [
-          { email: validatedData.email },
+          { email: validatedData.email }, 
           { username: validatedData.username }
-        ]
+        ] 
       }
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email or username already exists' },
-        { status: 409 } // 409 Conflict is more appropriate here
-      );
+      // Sprawdzamy, które pole jest zduplikowane i zwracamy konkretny błąd
+      if (existingUser.email === validatedData.email) {
+        throw new ApiError(409, 'An account with this email address already exists.');
+      }
+      if (existingUser.username === validatedData.username) {
+        throw new ApiError(409, 'This username is already taken. Please choose another.');
+      }
     }
-
-    // Hash password
+    
     const hashedPassword = await bcrypt.hash(validatedData.password, 12);
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        ...validatedData,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        // Select other fields you want to return
-      }
-    });
+    const { user, token } = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: { ...validatedData, password: hashedPassword },
+        select: { id: true, email: true, username: true }
+      });
 
-    // Use the shared token generator
-    const tokenPayload: TokenPayload = {
-      userId: user.id,
-      email: user.email,
-      username: user.username,
-    };
-    const token = generateToken(tokenPayload);
+      const tokenPayload: TokenPayload = { userId: newUser.id, email: newUser.email, username: newUser.username };
+      const generatedToken = generateToken(tokenPayload);
 
-    // Create session in the database
-    await prisma.authSession.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-      }
-    }).catch(sessionError => {
-        console.warn('Session creation failed:', sessionError);
+      await tx.authSession.create({
+        data: {
+          userId: newUser.id,
+          token: generatedToken,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+        }
+      });
+
+      return { user: newUser, token: generatedToken };
     });
 
     const response = NextResponse.json({
-      message: 'User created successfully',
+      success: true,
+      message: 'Account created successfully! Redirecting...',
       user,
-      token
     }, { status: 201 });
 
-    // Set HTTP-only cookie
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60, // 1 day
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60,
+      path: '/',
     });
 
     return response;
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-    console.error('Unexpected registration error:', error);
-    return NextResponse.json(
-      { error: 'An unexpected error occurred.' },
-      { status: 500 }
-    );
+    // Wszystkie błędy (ApiError, ZodError) są teraz obsługiwane przez centralny handler
+    return errorHandler(error);
   }
 }

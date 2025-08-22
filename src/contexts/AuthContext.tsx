@@ -4,7 +4,7 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // --- Interfaces ---
-interface User {
+export interface User {
   id: number;
   email: string;
   username: string;
@@ -29,11 +29,12 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: { email: string; password: string }) => Promise<any>;
-  register: (userData: RegisterData) => Promise<any>;
+  login: (credentials: { email: string; password: string; csrfToken: string | null }) => Promise<any>;
+  register: (userData: RegisterData & { csrfToken: string | null }) => Promise<any>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<any>;
   refetchUser: () => void;
+  csrfToken: string | null;
 }
 
 interface RegisterData {
@@ -45,6 +46,12 @@ interface RegisterData {
   game?: string;
   role?: string;
 }
+
+// --- React Query Setup ---
+const queryKeys = {
+  user: ['user'] as const,
+  csrfToken: ['csrfToken'] as const,
+};
 
 // --- API Helper Functions ---
 const apiCall = async (url: string, options: RequestInit = {}) => {
@@ -61,7 +68,10 @@ const apiCall = async (url: string, options: RequestInit = {}) => {
   const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
-    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    // Przekazujemy całe 'data' dalej, aby mieć dostęp do 'newCsrfToken'
+    const error: any = new Error(data.message || `HTTP error! status: ${response.status}`);
+    error.data = data; // Dołączamy całą odpowiedź do obiektu błędu
+    throw error;
   }
   return data;
 };
@@ -70,20 +80,21 @@ const fetchUser = async (): Promise<User | null> => {
   try {
     const data = await apiCall('/api/auth/me');
     return data.user || null;
-  } catch (error) {
-    // It's normal for this to fail if the user is not logged in.
-    return null;
+  } catch (error: any) {
+    if (error.message.includes('401')) {
+      return null;
+    }
+    throw error;
   }
 };
 
-// --- React Query Setup ---
-const queryKeys = {
-  user: ['user'] as const,
+const fetchCsrfToken = async () => {
+    const data = await apiCall('/api/auth/csrf-token');
+    return data.token;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create a client
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const queryClient = new QueryClient();
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -94,51 +105,96 @@ export function AppProviders({ children }: { children: ReactNode }) {
     )
 }
 
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
-  // useQuery is the single source of truth for user data.
   const { data: user, isLoading, refetch } = useQuery({
     queryKey: queryKeys.user,
     queryFn: fetchUser,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: true,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
   });
 
-  // Derived state is simpler and more direct.
+  const { data: csrfToken } = useQuery({
+    queryKey: queryKeys.csrfToken,
+    queryFn: fetchCsrfToken,
+    staleTime: 1000 * 60 * 15,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => error.message?.includes('401') ? false : true,
+  });
+
   const isAuthenticated = !!user;
 
   // --- Mutations ---
 
   const loginMutation = useMutation({
-    mutationFn: (credentials: { email: string; password: string }) =>
+    mutationFn: (credentials: { email: string; password: string; csrfToken: string | null }) =>
       apiCall('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+        headers: {
+          'X-CSRF-Token': credentials.csrfToken,
+        },
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.user, data.user);
+    onSuccess: async (data) => {
+      if (data?.user || data?.id) {
+          queryClient.setQueryData(queryKeys.user, data.user || data);
+      }
+      await queryClient.invalidateQueries({ queryKey: queryKeys.user });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
+    },
+    onError: (error: any) => {
+      if (error.data?.newCsrfToken) {
+        queryClient.setQueryData(queryKeys.csrfToken, error.data.newCsrfToken);
+      } else {
+        queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
+      }
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: (userData: RegisterData) =>
+    mutationFn: (userData: RegisterData & { csrfToken: string | null }) =>
       apiCall('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData),
+        headers: {
+          'X-CSRF-Token': userData.csrfToken
+        }
       }),
-    onSuccess: (data) => {
-      // After successful registration, log the user in by setting the user data.
-      queryClient.setQueryData(queryKeys.user, data.user);
+    onSuccess: async (data) => {
+      if (data?.user || data?.id) {
+          queryClient.setQueryData(queryKeys.user, data.user || data);
+      }
+      await queryClient.invalidateQueries({ queryKey: queryKeys.user });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
+    },
+    onError: (error: any) => {
+      if (error.data?.newCsrfToken) {
+        queryClient.setQueryData(queryKeys.csrfToken, error.data.newCsrfToken);
+      } else {
+        queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
+      }
     },
   });
 
   const logoutMutation = useMutation({
-    mutationFn: () => apiCall('/api/auth/logout', { method: 'POST' }),
-    onSuccess: () => {
-      // On successful logout, clear the user data from the cache.
+    mutationFn: (csrfTokenValue: string | null) => {
+      if (!csrfTokenValue) {
+        throw new Error('CSRF token is missing.');
+      }
+      return apiCall('/api/auth/logout', { 
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': csrfTokenValue,
+        },
+      });
+    },
+    onSuccess: async () => {
       queryClient.setQueryData(queryKeys.user, null);
+      await queryClient.refetchQueries({ queryKey: queryKeys.csrfToken });
     },
   });
 
@@ -157,11 +213,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: user ?? null,
     isLoading,
     isAuthenticated,
-    login: loginMutation.mutateAsync,
-    register: registerMutation.mutateAsync,
-    logout: logoutMutation.mutateAsync,
+    login: (credentials) => loginMutation.mutateAsync({ ...credentials, csrfToken }),
+    register: (userData) => registerMutation.mutateAsync({ ...userData, csrfToken }),
+    logout: () => logoutMutation.mutateAsync(csrfToken),
     updateUser: updateUserMutation.mutateAsync,
     refetchUser: refetch,
+    csrfToken: csrfToken ?? null,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
