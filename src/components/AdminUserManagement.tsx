@@ -147,7 +147,7 @@ export default function AdminUserManagement() {
       case 'administrator':
         return <Crown className="text-red-400" size={16} />;
       case 'teammate':
-        return <Shield className="text-blue-400" size={16} />;
+        return <Shield className="text-[#e6915b]" size={16} />;
       default:
         return <User className="text-gray-400" size={16} />;
     }
@@ -158,7 +158,7 @@ export default function AdminUserManagement() {
       case 'administrator':
         return 'text-red-400 bg-red-400/10';
       case 'teammate':
-        return 'text-blue-400 bg-blue-400/10';
+        return 'text-[#e6915b] bg-[#e6915b]/10';
       default:
         return 'text-gray-400 bg-gray-400/10';
     }
@@ -395,7 +395,7 @@ export default function AdminUserManagement() {
                         <Button
                           size="sm"
                           onClick={() => handleUpdateUser(user.id, { isPro: true })}
-                          className={`${user.isPro ? 'bg-blue-600' : 'bg-gray-600'} hover:bg-blue-700 text-white`}
+                          className={`${user.isPro ? 'bg-[#e6915b]' : 'bg-gray-600'} hover:bg-[#d18251] text-white`}
                         >
                           <Shield size={14} />
                         </Button>

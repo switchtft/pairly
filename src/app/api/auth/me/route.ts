@@ -1,27 +1,22 @@
-// src/app/api/auth/me/route.ts
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+// @/app/api/auth/me/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { verifyAuth } from '@/lib/auth';
+import { ApiError, errorHandler } from '@/lib/errors'; // Importujemy nasz system błędów
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // Weryfikacja autentyczności użytkownika
+    const authResult = await verifyAuth(request);
+    if (!authResult.user) {
+      // POPRAWKA: Dodano domyślny komunikat błędu, jeśli authResult.error jest undefined
+      throw new ApiError(authResult.status || 401, authResult.error || 'Authentication failed.');
     }
+    const { userId } = authResult.user;
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: number };
-
-    // Get user from database
+    // Pobranie danych użytkownika
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -45,19 +40,22 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      throw new ApiError(404, 'User associated with this session was not found.');
     }
+
+    // Aktualizacja ostatniej aktywności w tle (fire-and-forget)
+    prisma.user.update({
+      where: { id: user.id },
+      data: { lastSeen: new Date() }
+    }).catch(updateError => {
+      // Logujemy błąd, ale nie przerywamy żądania, bo nie jest to krytyczne
+      console.warn(`Non-critical error: Failed to update last seen for user: ${user.id}`, updateError);
+    });
 
     return NextResponse.json({ user });
 
   } catch (error) {
-    console.error('Auth verification error:', error);
-    return NextResponse.json(
-      { error: 'Invalid token' },
-      { status: 401 }
-    );
+    // Wszystkie błędy są teraz obsługiwane przez nasz centralny handler
+    return errorHandler(error);
   }
-} 
+}

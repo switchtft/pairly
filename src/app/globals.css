@@ -41,6 +41,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+
 }
 
 :root {
@@ -51,18 +53,18 @@
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
+  --primary: #e6915b;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --secondary-foreground: #e6915b;
   --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: oklch(0.552 0.016 285.938);
   --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
+  --accent-foreground: #e6915b;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  --ring: #e6915b;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -70,12 +72,44 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
+  --sidebar-primary: #e6915b;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-accent-foreground: #e6915b;
   --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --sidebar-ring: #e6915b;
+
+  /* Additional variables for consistency */
+  --background-dark: #0f0f0f;
+  --card-background: #1a1a1a;
+  --input-background: #2a2a2a;
+  --border-dark: #333;
+  --primary-hover: #d18251;
+  --background-darker: #0e0e11;
+
+  /* ===== Montserrat font mapping ===== */
+  --font-montserrat-thin: "Montserrat", sans-serif;
+  --font-montserrat-thin-italic: "Montserrat", sans-serif;
+  --font-montserrat-extralight: "Montserrat", sans-serif;
+  --font-montserrat-extralight-italic: "Montserrat", sans-serif;
+  --font-montserrat-light: "Montserrat", sans-serif;
+  --font-montserrat-light-italic: "Montserrat", sans-serif;
+  --font-montserrat-regular: "Montserrat", sans-serif;
+  --font-montserrat-italic: "Montserrat", sans-serif;
+  --font-montserrat-medium: "Montserrat", sans-serif;
+  --font-montserrat-medium-italic: "Montserrat", sans-serif;
+  --font-montserrat-semibold: "Montserrat", sans-serif;
+  --font-montserrat-semibold-italic: "Montserrat", sans-serif;
+  --font-montserrat-bold: "Montserrat", sans-serif;
+  --font-montserrat-bold-italic: "Montserrat", sans-serif;
+  --font-montserrat-extrabold: "Montserrat", sans-serif;
+  --font-montserrat-extrabold-italic: "Montserrat", sans-serif;
+  --font-montserrat-black: "Montserrat", sans-serif;
+  --font-montserrat-black-italic: "Montserrat", sans-serif;
+  --font-fugazone: "Fugaz One", cursive;
+
+  --font-geist-sans: "Montserrat", sans-serif;
+  --font-sans: var(--font-geist-sans);
 }
 
 .dark {
@@ -85,7 +119,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
+  --primary: #e6915b;
   --primary-foreground: oklch(0.21 0.006 285.885);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
@@ -96,7 +130,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --ring: #e6915b;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -104,28 +138,416 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: #e6915b;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.274 0.006 286.033);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --sidebar-ring: #e6915b;
+
+  /* Additional variables for consistency */
+  --background-dark: #0f0f0f;
+  --card-background: #1a1a1a;
+  --input-background: #2a2a2a;
+  --border-dark: #333;
+  --primary-hover: #d18251;
+  --background-darker: #0e0e11;
+}
+
+
+@utility font-montserrat-thin {
+  font-family: var(--font-montserrat-thin);
+  font-weight: 100;
+}
+
+@utility font-montserrat-extralight {
+  font-family: var(--font-montserrat-extralight);
+  font-weight: 200;
+}
+
+@utility font-montserrat-light {
+  font-family: var(--font-montserrat-light);
+  font-weight: 300;
+}
+
+@utility font-montserrat-regular {
+  font-family: var(--font-montserrat-regular);
+  font-weight: 400;
+}
+
+@utility font-montserrat-medium {
+  font-family: var(--font-montserrat-medium);
+  font-weight: 500;
+}
+
+@utility font-montserrat-semibold {
+  font-family: var(--font-montserrat-semibold);
+  font-weight: 600;
+}
+
+@utility font-montserrat-bold {
+  font-family: var(--font-montserrat-bold);
+  font-weight: 700;
+}
+
+@utility font-montserrat-extrabold {
+  font-family: var(--font-montserrat-extrabold);
+  font-weight: 800;
+}
+
+@utility font-montserrat-black {
+  font-family: var(--font-montserrat-black);
+  font-weight: 900;
+}
+
+/* (opcjonalnie) wersje italic – jeśli chcesz mieć osobne klasy */
+@utility font-montserrat-medium-italic {
+  font-family: var(--font-montserrat-medium-italic);
+  font-weight: 500;
+  font-style: italic;
+}
+
+@utility font-montserrat-bold-italic {
+  font-family: var(--font-montserrat-bold-italic);
+  font-weight: 700;
+  font-style: italic;
+}
+
+@utility font-fugazone {
+  font-family: var(--font-fugazone);
+  font-weight: 400;
+}
+
+/* Utility classes for consistent page layouts */
+.page-container {
+  background-color: var(--background-dark);
+  min-height: 100vh;
+  padding-top: 8rem;
+  padding-bottom: 8rem;
+}
+
+.page-title {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.card-container {
+  background-color: var(--card-background);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border-dark);
+}
+
+.card-header {
+  padding: 1.5rem;
+  background-color: var(--input-background);
+}
+
+.input-field {
+  width: 100%;
+  background-color: var(--input-background);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-dark);
+  outline: none;
+}
+
+.input-field:focus {
+  ring: 2px;
+  ring-color: var(--primary);
+}
+
+.primary-button {
+  background-color: var(--primary);
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.primary-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.outline-button {
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  background-color: transparent;
+  transition: all 0.2s;
+}
+
+.outline-button:hover {
+  background-color: rgb(230 145 91 / 0.1);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
+.bg-gradient-shimmer {
+  background-image: linear-gradient(270deg, #d4f2fe -2.89%, #ccf6f1, #d2f6dc, #e5f1c5, #ffe7b7 43.79%, color(xyz 0.774 0.749 0.617), #f9ced5 96.7%);
+}
+
 /* Hide scrollbar for horizontal scrolling */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
+  display: none;
+  /* Safari and Chrome */
+}
+
+/* ===== Montserrat font family ===== */
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Thin.ttf") format("truetype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-ThinItalic.ttf") format("truetype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-ExtraLight.ttf") format("truetype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-ExtraLightItalic.ttf") format("truetype");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-LightItalic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-MediumItalic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-SemiBoldItalic.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-ExtraBoldItalic.ttf") format("truetype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./fonts/Montserrat-BlackItalic.ttf") format("truetype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fugaz One";
+  src: url("./fonts/FugazOne-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.gsap-gradient-text {
+  background: linear-gradient(270deg,
+      #e6915b,
+      #d4a574,
+      #e6915b);
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradientShift 8s ease infinite;
+}
+/* Kontener główny powiadomienia */
+.Toastify__toast {
+  background-color: rgba(26, 26, 26, 0.8) !important; /* Półprzezroczyste tło */
+  backdrop-filter: blur(10px) !important; /* Efekt rozmycia "szkła" */
+  border: 1px solid rgba(51, 51, 51, 0.8) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+  animation: slideInFromRight 0.4s ease-out forwards;
+}
+
+/* Usuwamy domyślne tło, aby nasze style działały */
+.Toastify__toast-theme--dark {
+  background: transparent !important;
+}
+
+/* Usuwamy domyślne paddingi - nasz komponent ma własne */
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 16px !important;
+}
+
+/* Pasek postępu */
+.Toastify__progress-bar {
+  height: 3px !important;
+  border-radius: 0 0 0 12px !important;
+}
+
+/* Kolory paska postępu dla różnych typów powiadomień */
+.Toastify__progress-bar--success {
+  background: linear-gradient(to right, #22c55e, #16a34a) !important;
+}
+.Toastify__progress-bar--error {
+  background: linear-gradient(to right, #ef4444, #dc2626) !important;
+}
+.Toastify__progress-bar--info {
+  background: linear-gradient(to right, #e6915b, #d18251) !important;
+}
+
+/* Przycisk zamykania */
+.Toastify__close-button {
+  color: #a1a1aa !important; /* Kolor zinc-400 */
+  opacity: 0.8;
+}
+.Toastify__close-button:hover {
+  color: #ffffff !important;
+  opacity: 1;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }

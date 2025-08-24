@@ -1,111 +1,100 @@
-// src/app/api/auth/login/route.ts
-import { NextResponse } from 'next/server';
+// @/app/api/auth/login/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import rateLimiter from '@/lib/rateLimiter';
+import { generateToken, TokenPayload } from '@/lib/auth';
+import csrfTokenHandler from '@/lib/csrfToken';
+import { ApiError, errorHandler } from '@/lib/errors';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
+  timezone: z.string().optional(),
 });
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { email, password } = loginSchema.parse(body);
 
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        password: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        game: true,
-        role: true,
-        rank: true,
-        isPro: true,
-        verified: true,
-      }
-    });
+export async function POST(request: NextRequest) {
+  try {
+    const ip = (request.headers.get('x-forwarded-for') ?? '127.0.0.1').split(',')[0].trim();
+    
+    // Rate Limiting
+    const { isAllowed } = await rateLimiter.check(ip);
+    if (!isAllowed) {
+      throw new ApiError(429, 'Too many requests. Please wait a moment before trying again.');
+    }
+
+    // CSRF Token Verification
+    const csrfToken = request.headers.get('X-CSRF-Token');
+    if (!csrfToken || !(await csrfTokenHandler.verify(csrfToken))) {
+      // Bardziej przyjazny komunikat dla użytkownika
+      throw new ApiError(403, 'Your session has expired. Please refresh the page and try again.');
+    }
+
+    // Input Validation
+    const body = await request.json();
+    const { email, password, timezone } = loginSchema.parse(body);
+
+    // User Authentication
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      // Celowo ogólny komunikat dla bezpieczeństwa
+      throw new ApiError(401, 'The email or password you entered is incorrect. Please check your credentials.');
+    }
+    
+    if (user.accountLocked && user.lockUntil && new Date(user.lockUntil) > new Date()) {
+      // Bardziej precyzyjny komunikat o blokadzie
+      const minutesLeft = Math.ceil((new Date(user.lockUntil).getTime() - Date.now()) / (1000 * 60));
+      throw new ApiError(403, `This account is temporarily locked. Please try again in about ${minutesLeft} minutes.`);
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      // await handleFailedLogin(email);
+      // Ten sam ogólny komunikat, aby nie zdradzać, czy problemem jest hasło czy email
+      throw new ApiError(401, 'The email or password you entered is incorrect. Please check your credentials.');
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '7d' }
-    );
+    // Generowanie tokenu i transakcja (bez zmian)
+    const tokenPayload: TokenPayload = { userId: user.id, email: user.email, username: user.username };
+    const token = generateToken(tokenPayload);
 
-    // Create session in database
-    await prisma.authSession.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      }
-    });
+    const [, updatedUser] = await prisma.$transaction([
+        prisma.authSession.create({
+            data: { userId: user.id, token, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) }
+        }),
+        prisma.user.update({
+            where: { id: user.id },
+            data: {
+                lastSeen: new Date(),
+                accountLocked: false,
+                lockUntil: null,
+                timezone: user.timezone ?? timezone,
+            }
+        })
+    ]);
 
-    // Update last seen and online status
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { 
-        lastSeen: new Date(),
-        isOnline: true 
-      }
-    });
-
-    // Remove password from response
-    const { password: _password, ...userWithoutPassword } = user;
+    const { password: _unusedPassword, ...userToReturn } = updatedUser;
 
     const response = NextResponse.json({
+      success: true,
       message: 'Login successful',
-      user: userWithoutPassword,
-      token
+      user: userToReturn,
     });
 
-    // Set HTTP-only cookie
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60,
+      path: '/',
     });
-
+    
     return response;
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return errorHandler(error);
   }
-} 
+}

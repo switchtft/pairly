@@ -1,111 +1,104 @@
-import { useState } from 'react';
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
-interface FormErrors {
-  [key: string]: string;
-}
+// --- Schematy Walidacji (Zod) ---
 
+// Schemat dla formularza logowania
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+// Schemat dla formularza rejestracji
+const registerSchema = z.object({
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username must be less than 20 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
+  // Opcjonalne pola
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  game: z.string().optional(),
+  role: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"], // Ścieżka, gdzie pojawi się błąd
+});
+
+// Typy wywnioskowane ze schematów
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+/**
+ * Zoptymalizowany hook do obsługi formularzy logowania i rejestracji
+ * z użyciem React Hook Form i Zod.
+ */
 export function useAuthForm() {
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, register } = useAuth();
+  const { login, register, csrfToken } = useAuth(); // Pobranie csrfToken z kontekstu
+  const router = useRouter();
 
-  const validateEmail = (email: string): string | null => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) return 'Email is required';
-    if (!emailRegex.test(email)) return 'Please enter a valid email';
-    return null;
-  };
+  // --- Formularz Logowania ---
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const validatePassword = (password: string): string | null => {
-    if (!password) return 'Password is required';
-    if (password.length < 6) return 'Password must be at least 6 characters';
-    return null;
-  };
-
-  const validateUsername = (username: string): string | null => {
-    if (!username) return 'Username is required';
-    if (username.length < 3) return 'Username must be at least 3 characters';
-    if (username.length > 20) return 'Username must be less than 20 characters';
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) return 'Username can only contain letters, numbers, and underscores';
-    return null;
-  };
-
-  const handleLogin = async (email: string, password: string) => {
-    setIsSubmitting(true);
-    setErrors({});
-
-    // Validate inputs
-    const emailError = validateEmail(email);
-    const passwordError = validatePassword(password);
-
-    if (emailError || passwordError) {
-      setErrors({
-        ...(emailError && { email: emailError }),
-        ...(passwordError && { password: passwordError }),
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
+  const handleLogin = loginForm.handleSubmit(async (data) => {
     try {
-      await login(email, password);
-    } catch (error) {
-      setErrors({ general: error instanceof Error ? error.message : 'Login failed' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleRegister = async (userData: {
-    email: string;
-    username: string;
-    password: string;
-    confirmPassword: string;
-    firstName?: string;
-    lastName?: string;
-    game?: string;
-    role?: string;
-  }) => {
-    setIsSubmitting(true);
-    setErrors({});
-
-    // Validate inputs
-    const emailError = validateEmail(userData.email);
-    const usernameError = validateUsername(userData.username);
-    const passwordError = validatePassword(userData.password);
-    
-    let confirmPasswordError = null;
-    if (userData.password !== userData.confirmPassword) {
-      confirmPasswordError = 'Passwords do not match';
-    }
-
-    if (emailError || usernameError || passwordError || confirmPasswordError) {
-      setErrors({
-        ...(emailError && { email: emailError }),
-        ...(usernameError && { username: usernameError }),
-        ...(passwordError && { password: passwordError }),
-        ...(confirmPasswordError && { confirmPassword: confirmPasswordError }),
+      // Dodanie csrfToken do danych logowania
+      await login({ ...data, csrfToken });
+      router.push('/dashboard'); // Przekierowanie po sukcesie
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed. Please check your credentials.';
+      loginForm.setError('root.serverError', {
+        type: 'manual',
+        message: errorMessage,
       });
-      setIsSubmitting(false);
-      return;
     }
+  });
 
+  // --- Formularz Rejestracji ---
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const handleRegister = registerForm.handleSubmit(async (data) => {
     try {
-      const { confirmPassword: _confirmPassword, ...registerData } = userData;
-      await register(registerData);
-    } catch (error) {
-      setErrors({ general: error instanceof Error ? error.message : 'Registration failed' });
-    } finally {
-      setIsSubmitting(false);
+      // Usunięcie pola `confirmPassword` i dodanie `csrfToken`
+      const { confirmPassword: _unused, ...apiData } = data;
+      await register({ ...apiData, csrfToken });
+      router.push('/dashboard'); // Przekierowanie po sukcesie
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      registerForm.setError('root.serverError', {
+        type: 'manual',
+        message: errorMessage,
+      });
     }
-  };
+  });
 
   return {
-    errors,
-    isSubmitting,
+    // Zwracamy instancje formularzy, które zawierają wszystko: stan, błędy, metody - kamszotlol
+    loginForm,
     handleLogin,
+    registerForm,
     handleRegister,
-    setErrors,
   };
-} 
+}

@@ -32,9 +32,9 @@ const TOURNAMENTS: Tournament[] = [
 ];
 
 const GAMES = [
-  { id: 'league', name: 'League of Legends', imageUrl: '/images/games/league-icon.png' },
-  { id: 'valorant', name: 'Valorant', imageUrl: '/images/games/valorant-icon.png' },
-  { id: 'csgo', name: 'CS:GO 2', imageUrl: '/images/games/csgo-icon.png' },
+  { id: 'league', name: 'League of Legends', imageUrl: '/images/games/league.jpg' },
+  { id: 'valorant', name: 'Valorant', imageUrl: '/images/games/valorant.jpg' },
+  { id: 'csgo', name: 'CS:GO 2', imageUrl: '/images/games/csgo.jpg' },
 ];
 
 const REGIONS = ['All', 'North America', 'Europe', 'Asia', 'Global'];
@@ -133,11 +133,11 @@ export default function TournamentsPage() {
     }).format(amount);
   };
 
-  return (
-    <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+    return (
+    <div className="page-container">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
+                      <h1 className="page-title md:text-5xl">
             Competitive Tournaments
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
@@ -155,17 +155,17 @@ export default function TournamentsPage() {
         </div>
         
         {/* Filter Bar */}
-        <div className="bg-[#1a1a1a] rounded-xl p-6 mb-8 border border-[#2a2a2a]">
+        <div className="card-container p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex-1 w-full">
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search tournaments..."
-                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-3 pl-10 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                                 <input
+                   type="text"
+                   placeholder="Search tournaments..."
+                                      className="input-field px-4 py-3 pl-10 focus:ring-2 focus:ring-primary"
+                   value={searchQuery}
+                   onChange={(e) => setSearchQuery(e.target.value)}
+                 />
                 <svg 
                   className="absolute left-3 top-3.5 text-gray-400 h-5 w-5" 
                   fill="none" 
@@ -183,10 +183,10 @@ export default function TournamentsPage() {
             </div>
             
             <div className="flex gap-3">
-              <Button 
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="bg-[#2a2a2a] hover:bg-[#333] px-4 py-2 rounded-lg flex items-center gap-2"
-              >
+                             <Button 
+                 onClick={() => setIsFilterOpen(!isFilterOpen)}
+                 className="bg-input-background hover:bg-border-dark px-4 py-2 rounded-lg flex items-center gap-2"
+               >
                 <svg 
                   className="h-5 w-5 text-gray-300" 
                   fill="none" 
@@ -203,12 +203,12 @@ export default function TournamentsPage() {
                 Filters
               </Button>
               
-              <Button 
-                onClick={resetFilters}
-                className="bg-[#2a2a2a] hover:bg-[#333] px-4 py-2 rounded-lg"
-              >
-                Reset
-              </Button>
+                             <Button 
+                 onClick={resetFilters}
+                 className="bg-input-background hover:bg-border-dark px-4 py-2 rounded-lg"
+               >
+                 Reset
+               </Button>
             </div>
           </div>
           
@@ -217,32 +217,32 @@ export default function TournamentsPage() {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Min Prize</label>
-                <input
-                  type="number"
-                  placeholder="$0"
-                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
-                  value={prizeFilter}
-                  onChange={(e) => setPrizeFilter(e.target.value ? Number(e.target.value) : '')}
-                />
+                                 <input
+                   type="number"
+                   placeholder="$0"
+                   className="input-field px-4 py-2 focus:ring-2 focus:ring-primary"
+                   value={prizeFilter}
+                   onChange={(e) => setPrizeFilter(e.target.value ? Number(e.target.value) : '')}
+                 />
               </div>
               
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Starting After</label>
-                <input
-                  type="date"
-                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                />
+                                 <input
+                   type="date"
+                   className="input-field px-4 py-2 focus:ring-2 focus:ring-primary"
+                   value={dateFilter}
+                   onChange={(e) => setDateFilter(e.target.value)}
+                 />
               </div>
               
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Region</label>
-                <select
-                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
-                  value={regionFilter}
-                  onChange={(e) => setRegionFilter(e.target.value)}
-                >
+                                 <select
+                   className="input-field px-4 py-2 focus:ring-2 focus:ring-primary"
+                   value={regionFilter}
+                   onChange={(e) => setRegionFilter(e.target.value)}
+                 >
                   {REGIONS.map(region => (
                     <option key={region} value={region}>{region}</option>
                   ))}
@@ -251,11 +251,11 @@ export default function TournamentsPage() {
               
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Status</label>
-                <select
-                  className="w-full bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
+                                 <select
+                   className="input-field px-4 py-2 focus:ring-2 focus:ring-primary"
+                   value={statusFilter}
+                   onChange={(e) => setStatusFilter(e.target.value)}
+                 >
                   {STATUSES.map(status => (
                     <option key={status} value={status}>{status}</option>
                   ))}
@@ -265,19 +265,19 @@ export default function TournamentsPage() {
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Sort By</label>
                 <div className="flex gap-2">
-                  <select
-                    className="flex-1 bg-[#2a2a2a] rounded-lg px-4 py-2 border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#6b8ab0]"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
+                                     <select
+                     className="flex-1 input-field px-4 py-2 focus:ring-2 focus:ring-primary"
+                     value={sortBy}
+                     onChange={(e) => setSortBy(e.target.value)}
+                   >
                     <option value="date">Date</option>
                     <option value="prize">Prize</option>
                     <option value="participants">Participants</option>
                   </select>
-                  <button
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="bg-[#2a2a2a] hover:bg-[#333] px-3 rounded-lg border border-[#333]"
-                  >
+                                     <button
+                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                     className="bg-input-background hover:bg-border-dark px-3 rounded-lg border border-border-dark"
+                   >
                     {sortOrder === 'asc' ? '↑' : '↓'}
                   </button>
                 </div>
@@ -295,16 +295,16 @@ export default function TournamentsPage() {
             const formattedEntryFee = formatCurrency(tournament.entryFee);
             
             return (
-              <div 
-                key={tournament.id} 
-                className={`bg-[#1a1a1a] rounded-xl overflow-hidden border transition-all ${
-                  tournament.status === 'ongoing' 
-                    ? 'border-green-500/30 hover:border-green-500' 
-                    : tournament.status === 'completed'
-                      ? 'border-gray-500/30 hover:border-gray-500'
-                      : 'border-[#2a2a2a] hover:border-[#e6915b]'
-                }`}
-              >
+                             <div 
+                 key={tournament.id} 
+                 className={`card-container transition-all ${
+                   tournament.status === 'ongoing' 
+                     ? 'border-green-500/30 hover:border-green-500' 
+                     : tournament.status === 'completed'
+                       ? 'border-gray-500/30 hover:border-gray-500'
+                       : 'border-border-dark hover:border-primary'
+                 }`}
+               >
                 <div className="p-6 pb-4 flex justify-between items-start">
                   <div className="flex items-center gap-4">
                     {game && (
@@ -329,32 +329,32 @@ export default function TournamentsPage() {
                     </div>
                   </div>
                   
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    tournament.status === 'ongoing' 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : tournament.status === 'completed'
-                        ? 'bg-gray-500/20 text-gray-400'
-                        : 'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
-                  </span>
+                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                     tournament.status === 'ongoing' 
+                       ? 'bg-green-500/20 text-green-400' 
+                       : tournament.status === 'completed'
+                         ? 'bg-gray-500/20 text-gray-400'
+                         : 'bg-primary/20 text-primary'
+                   }`}>
+                     {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                   </span>
                 </div>
                 
                 <div className="p-6 pt-0 grid grid-cols-3 gap-4">
-                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm">Prize Pool</p>
-                    <p className="text-xl font-bold text-[#e6915b]">{formattedPrize}</p>
-                  </div>
+                                   <div className="bg-input-background p-4 rounded-lg">
+                   <p className="text-gray-400 text-sm">Prize Pool</p>
+                   <p className="text-xl font-bold text-primary">{formattedPrize}</p>
+                 </div>
                   
-                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm">Start Date</p>
-                    <p className="text-xl font-bold">{formattedDate}</p>
-                  </div>
-                  
-                  <div className="bg-[#2a2a2a] p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm">Entry Fee</p>
-                    <p className="text-xl font-bold">{formattedEntryFee}</p>
-                  </div>
+                                     <div className="bg-input-background p-4 rounded-lg">
+                     <p className="text-gray-400 text-sm">Start Date</p>
+                     <p className="text-xl font-bold">{formattedDate}</p>
+                   </div>
+                   
+                   <div className="bg-input-background p-4 rounded-lg">
+                     <p className="text-gray-400 text-sm">Entry Fee</p>
+                     <p className="text-xl font-bold">{formattedEntryFee}</p>
+                   </div>
                 </div>
                 
                 <div className="p-6 pt-0 flex justify-between items-center">
@@ -375,18 +375,18 @@ export default function TournamentsPage() {
                     <span>{tournament.participants} teams</span>
                   </div>
                   
-                  <Button className="bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e] px-6 py-3">
-                    {tournament.status === 'completed' ? 'View Results' : tournament.status === 'ongoing' ? 'Join Now' : 'Register'}
-                  </Button>
+                                                                           <Button className="primary-button px-6 py-3">
+                     {tournament.status === 'completed' ? 'View Results' : tournament.status === 'ongoing' ? 'Join Now' : 'Register'}
+                   </Button>
                 </div>
               </div>
             );
           })}
         </div>
         
-        {/* Empty State */}
-        {sortedTournaments.length === 0 && (
-          <div className="text-center py-20 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] mt-6">
+                 {/* Empty State */}
+         {sortedTournaments.length === 0 && (
+           <div className="text-center py-20 card-container mt-6">
             <div className="bg-gray-800 w-24 h-24 rounded-full mx-auto flex items-center justify-center mb-6">
               <svg 
                 className="h-12 w-12 text-gray-400" 
@@ -406,40 +406,40 @@ export default function TournamentsPage() {
             <p className="text-gray-400 mb-6 max-w-md mx-auto">
               Try adjusting your filters or search term to find what you&apos;re looking for.
             </p>
-            <Button 
-              onClick={resetFilters}
-              className="bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] px-8 py-3"
-            >
-              Reset Filters
-            </Button>
+                                                   <Button 
+                onClick={resetFilters}
+                className="primary-button px-8 py-3"
+              >
+               Reset Filters
+             </Button>
           </div>
         )}
         
-        {/* Stats Bar */}
-        <div className="mt-12 bg-[#1a1a1a] rounded-xl p-6 border border-[#2a2a2a]">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-4">
-              <div className="text-4xl font-bold text-[#e6915b] mb-2">
-                {formatCurrency(TOURNAMENTS.reduce((sum, t) => sum + t.prize, 0))}
+                 {/* Stats Bar */}
+         <div className="mt-12 card-container p-6">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="text-center p-4">
+               <div className="text-4xl font-bold text-primary mb-2">
+                 {formatCurrency(TOURNAMENTS.reduce((sum, t) => sum + t.prize, 0))}
+               </div>
+               <p className="text-gray-400">Total Prize Money</p>
+             </div>
+             
+                          <div className="text-center p-4">
+                <div className="text-4xl font-bold text-primary mb-2">
+                  {TOURNAMENTS.reduce((sum, t) => sum + t.participants, 0)}
+                </div>
+                <p className="text-gray-400">Total Participants</p>
               </div>
-              <p className="text-gray-400">Total Prize Money</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="text-4xl font-bold text-[#6b8ab0] mb-2">
-                {TOURNAMENTS.reduce((sum, t) => sum + t.participants, 0)}
+             
+                          <div className="text-center p-4">
+                <div className="text-4xl font-bold text-primary mb-2">
+                  {TOURNAMENTS.length}
+                </div>
+                <p className="text-gray-400">Total Tournaments</p>
               </div>
-              <p className="text-gray-400">Total Participants</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="text-4xl font-bold text-[#8a675e] mb-2">
-                {TOURNAMENTS.length}
-              </div>
-              <p className="text-gray-400">Total Tournaments</p>
-            </div>
-          </div>
-        </div>
+           </div>
+         </div>
       </div>
     </div>
   );

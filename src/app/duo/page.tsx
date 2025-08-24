@@ -4,5 +4,9 @@
 import { DuoFinder } from '@/components/duo/DuoFinder';
 
 export default function DuoPage() {
-  return <DuoFinder />;
+  return (
+    <div className="pt-20">
+      <DuoFinder />
+    </div>
+  );
 }

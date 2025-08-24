@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120">
+  <style>
+    @font-face {
+      font-family: 'Clash Display';
+      src: url('https://fontshare.com/fonts/clash-display') format('woff2');
+    }
+    text {
+      font-family: 'Clash Display', sans-serif;
+      font-size: 100px;
+      font-weight: 200;
+      fill: #D1D5DB; /* Neutral-300 */
+      stroke: #D1D5DB;
+      stroke-width: 2;
+    }
+  </style>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
+    PAIRLY
+  </text>
+</svg>

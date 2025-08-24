@@ -1,6 +1,9 @@
-// src/hooks/useDuo.ts
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import {
+  useQuery,
+  useMutation,
+  useInfiniteQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   fetchGames,
   fetchPosts,
@@ -13,275 +16,198 @@ import {
   updateDraft,
   type Game,
   type DuoPost,
-  type PaginatedPosts,
-  type UserPostData,
   type CreatePostData,
+  type UserPostData,
 } from '@/lib/duo';
 
-// Hook for managing games data
+// Query keys for consistency and easy cache management
+const queryKeys = {
+  games: ['games'] as const,
+  posts: (filters: { gameId?: number }) => ['posts', filters] as const,
+  post: (id: number) => ['post', id] as const,
+  userPost: ['userPost'] as const,
+};
+
+/**
+ * Hook to fetch the list of games.
+ * Calls the `fetchGames` function from `duo.ts`.
+ */
 export function useGames() {
-  const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadGames = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const gamesData = await fetchGames();
-      setGames(gamesData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load games');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadGames();
-  }, [loadGames]);
-
-  return { games, loading, error, refetch: loadGames };
+  return useQuery<Game[], Error>({
+    queryKey: queryKeys.games,
+    queryFn: fetchGames,
+    staleTime: 1000 * 60 * 5, // Data is considered fresh for 5 minutes
+  });
 }
 
-// Hook for managing posts with pagination
+/**
+ * Hook to fetch posts with infinite scrolling (pagination).
+ * Calls the `fetchPosts` function from `duo.ts` for each page.
+ */
 export function usePosts(gameId?: number) {
-  const [posts, setPosts] = useState<DuoPost[]>([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    pages: 0,
+  return useInfiniteQuery({
+    queryKey: queryKeys.posts({ gameId }),
+    queryFn: ({ pageParam = 1 }) => fetchPosts({ gameId, page: pageParam, limit: 20 }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.pages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined; // No more pages
+    },
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPosts = useCallback(async (page = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchPosts({ gameId, page, limit: 20 });
-      setPosts(data.posts);
-      setPagination(data.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load posts');
-    } finally {
-      setLoading(false);
-    }
-  }, [gameId]);
-
-  const loadMore = useCallback(() => {
-    if (pagination.page < pagination.pages) {
-      loadPosts(pagination.page + 1);
-    }
-  }, [pagination.page, pagination.pages, loadPosts]);
-
-  useEffect(() => {
-    loadPosts(1);
-  }, [loadPosts]);
-
-  return {
-    posts,
-    pagination,
-    loading,
-    error,
-    refetch: () => loadPosts(1),
-    loadMore,
-  };
 }
 
-// Hook for managing individual post
-export function usePost(id: number) {
-  const [post, setPost] = useState<DuoPost | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPost = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const postData = await fetchPost(id);
-      setPost(postData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load post');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      loadPost();
-    }
-  }, [id, loadPost]);
-
-  return { post, loading, error, refetch: loadPost };
+/**
+ * Hook to fetch a single post.
+ * Calls the `fetchPost` function from `duo.ts`.
+ */
+export function usePost(id?: number) {
+  return useQuery<DuoPost, Error>({
+    queryKey: queryKeys.post(id!),
+    queryFn: () => fetchPost(id!),
+    enabled: !!id, // The query will only execute if `id` is not `undefined`
+  });
 }
 
-// Hook for managing user's own post and draft
+/**
+ * A comprehensive hook for managing a logged-in user's post and draft.
+ */
 export function useUserPost() {
-  const { user } = useAuth();
-  const [userPostData, setUserPostData] = useState<UserPostData>({
-    activePost: null,
-    savedDraft: null,
+  const queryClient = useQueryClient();
+
+  // Calls `fetchUserPost` from `duo.ts`
+  const { data, isLoading, error, refetch } = useQuery<UserPostData, Error>({
+    queryKey: queryKeys.userPost,
+    queryFn: fetchUserPost,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadUserPost = useCallback(async () => {
-    if (!user) {
-      setUserPostData({ activePost: null, savedDraft: null });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchUserPost();
-      setUserPostData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load user post');
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const createUserPost = useCallback(async (data: CreatePostData) => {
-    try {
-      const newPost = await createPost(data);
-      setUserPostData(prev => ({
-        ...prev,
+  // Calls `createPost` from `duo.ts`
+  const createPostMutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: (newPost) => {
+      queryClient.setQueryData(queryKeys.userPost, (oldData: UserPostData | undefined) => ({
+        ...oldData,
         activePost: newPost,
+        savedDraft: null,
       }));
-      return newPost;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts({}), refetchType: 'inactive' });
+    },
+  });
 
-  const updateUserPost = useCallback(async (id: number, data: CreatePostData) => {
-    try {
-      const updatedPost = await updatePost(id, data);
-      setUserPostData(prev => ({
-        ...prev,
-        activePost: updatedPost,
+  // Calls `updatePost` from `duo.ts`
+  const updatePostMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CreatePostData }) => updatePost(id, data),
+    onMutate: async (updatedPost) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.userPost });
+      const previousUserPost = queryClient.getQueryData<UserPostData>(queryKeys.userPost);
+      queryClient.setQueryData(queryKeys.userPost, (old) => ({
+        ...old,
+        activePost: { ...old?.activePost, ...updatedPost.data, id: updatedPost.id } as DuoPost,
       }));
-      return updatedPost;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
+      return { previousUserPost };
+    },
+    onError: (err, newPost, context) => {
+      queryClient.setQueryData(queryKeys.userPost, context?.previousUserPost);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userPost });
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts({}), refetchType: 'inactive' });
+    },
+  });
 
-  const deleteUserPost = useCallback(async (id: number) => {
-    try {
-      await deletePost(id);
-      setUserPostData(prev => ({
-        ...prev,
+  // Calls `deletePost` from `duo.ts`
+  const deletePostMutation = useMutation({
+    mutationFn: deletePost,
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.userPost, (old: UserPostData | undefined) => ({
+        ...old,
         activePost: null,
       }));
-    } catch (err) {
-      throw err;
-    }
-  }, []);
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts({}), refetchType: 'inactive' });
+    },
+  });
 
-  const saveUserDraft = useCallback(async (data: CreatePostData) => {
-    try {
-      const draft = await saveDraft(data);
-      setUserPostData(prev => ({
-        ...prev,
+  // Calls `saveDraft` from `duo.ts`
+  const saveDraftMutation = useMutation({
+    mutationFn: saveDraft,
+    onSuccess: (draft) => {
+      queryClient.setQueryData(queryKeys.userPost, (old: UserPostData | undefined) => ({
+        ...old,
         savedDraft: draft,
       }));
-      return draft;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
+    },
+  });
 
-  const updateUserDraft = useCallback(async (data: CreatePostData) => {
-    try {
-      const draft = await updateDraft(data);
-      setUserPostData(prev => ({
-        ...prev,
+  // Calls `updateDraft` from `duo.ts`
+  const updateDraftMutation = useMutation({
+    mutationFn: updateDraft,
+    onSuccess: (draft) => {
+      queryClient.setQueryData(queryKeys.userPost, (old: UserPostData | undefined) => ({
+        ...old,
         savedDraft: draft,
       }));
-      return draft;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
-
-  useEffect(() => {
-    loadUserPost();
-  }, [loadUserPost]);
+    },
+  });
 
   return {
-    userPostData,
-    loading,
+    userPostData: data,
+    isLoading,
     error,
-    refetch: loadUserPost,
-    createPost: createUserPost,
-    updatePost: updateUserPost,
-    deletePost: deleteUserPost,
-    saveDraft: saveUserDraft,
-    updateDraft: updateUserDraft,
+    refetch,
+    createPost: createPostMutation.mutateAsync,
+    updatePost: updatePostMutation.mutateAsync,
+    deletePost: deletePostMutation.mutateAsync,
+    saveDraft: saveDraftMutation.mutateAsync,
+    updateDraft: updateDraftMutation.mutateAsync,
+    isMutating:
+      createPostMutation.isPending ||
+      updatePostMutation.isPending ||
+      deletePostMutation.isPending ||
+      saveDraftMutation.isPending ||
+      updateDraftMutation.isPending,
   };
 }
 
-// Hook for post actions (create, update, delete)
+/**
+ * Hook for managing post actions, independent of `useUserPost`.
+ */
 export function usePostActions() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const createPostAction = useCallback(async (data: CreatePostData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const post = await createPost(data);
-      return post;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create post';
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const createPostMutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts({}) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userPost });
+    },
+  });
 
-  const updatePostAction = useCallback(async (id: number, data: CreatePostData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const post = await updatePost(id, data);
-      return post;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update post';
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const updatePostMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CreatePostData }) => updatePost(id, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts({}) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userPost });
+      queryClient.invalidateQueries({ queryKey: queryKeys.post(variables.id) });
+    },
+  });
 
-  const deletePostAction = useCallback(async (id: number) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await deletePost(id);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete post';
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const deletePostMutation = useMutation({
+    mutationFn: deletePost,
+    onSuccess: (_data, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts({}) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userPost });
+      queryClient.removeQueries({ queryKey: queryKeys.post(deletedId) });
+    },
+  });
 
   return {
-    loading,
-    error,
-    createPost: createPostAction,
-    updatePost: updatePostAction,
-    deletePost: deletePostAction,
+    createPost: createPostMutation.mutateAsync,
+    updatePost: updatePostMutation.mutateAsync,
+    deletePost: deletePostMutation.mutateAsync,
+    isCreating: createPostMutation.isPending,
+    isUpdating: updatePostMutation.isPending,
+    isDeleting: deletePostMutation.isPending,
+    error: createPostMutation.error || updatePostMutation.error || deletePostMutation.error,
   };
 }

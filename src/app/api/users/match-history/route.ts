@@ -61,10 +61,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform sessions into match history format
-    const matchHistory = sessions.map(session => {
+    const matchHistory = sessions.map((session) => {
       const isClient = session.clientId === decoded.userId;
       const teammate = isClient ? session.proTeammate : session.client;
-      const client = isClient ? session.client : session.proTeammate;
+      const _client = isClient ? session.client : session.proTeammate;
       
       // Determine result based on reviews or session status
       let result: 'win' | 'loss' | 'draw' = 'draw';

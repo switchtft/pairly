@@ -20,27 +20,30 @@ export default function Home() {
             priority
             sizes="100vw"
           />
-          {/* Color overlay to unify with text */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d]/70 via-[#0d0d0d]/30 to-[#0d0d0d]/90" />
+          
+{/* Dark theme overlay */}
+<div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/80 via-[#141414]/60 to-[#000000]/90" />
+
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-2xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e6915b] to-[#a8724c]">
-            Play <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4a574] to-[#b8860b]">for free</span> with amazing mentors! :D
-          </h2>
-          <p className="text-lg text-[#e0d6d1] max-w-xl mx-auto mb-8 drop-shadow-lg">
-            Find your perfect duo partner for ranked games, get coaching from top players, join free Inhouses, or compete in tournaments!
-          </p>
-          <a href="#games">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-[#e6915b] to-[#a8724c] hover:from-[#d8824a] hover:to-[#976040] shadow-lg"
-            >
-              See What We Offer <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </a>
-        </div>
+<div className="relative z-10 max-w-6xl mx-auto px-4">
+<h2 className="text-5xl md:text-7xl font-fugazone uppercase mb-6 leading-tight text-[#e6915b]">
+  play for free with the amazing mentors!
+</h2>
+  <p className="text-2xl font-montserrat-thin text-white mx-auto mb-8 drop-shadow-lg">
+    Find your perfect duo partner for ranked games, get coaching from top players, join free Inhouses, or compete in tournaments!
+  </p>
+
+  <a href="#games">
+    <Button 
+      size="lg" 
+      className="bg-[#e6915b] hover:bg-[#d18251] text-white shadow-lg"
+    >
+      See What We Offer <ArrowRight className="ml-2 w-5 h-5" />
+    </Button>
+  </a>
+</div>
+
       </section>
 
       {/* Game Selection Section */}
@@ -99,10 +102,10 @@ export default function Home() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-r from-[#e6915b] to-[#a8724c] text-center text-white">
+      <section className="py-20 bg-[#e6915b] text-center text-white">
         <h3 className="text-3xl font-semibold mb-6">Ready to play for free?</h3>
         <p className="text-lg mb-8 opacity-90">Join thousands of gamers in our duo matching, coaching, and free Inhouses!</p>
-        <Button size="lg" variant="secondary" className="bg-white text-[#a8724c] hover:bg-gray-100">
+        <Button size="lg" variant="secondary" className="bg-white text-[#e6915b] hover:bg-gray-100">
           Start Playing Free
         </Button>
       </section>
