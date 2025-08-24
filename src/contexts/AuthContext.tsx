@@ -146,9 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await queryClient.invalidateQueries({ queryKey: queryKeys.user });
       await queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
     },
-    onError: (error: any) => {
-      if (error.data?.newCsrfToken) {
-        queryClient.setQueryData(queryKeys.csrfToken, error.data.newCsrfToken);
+    onError: (error: unknown) => {
+      if (error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'newCsrfToken' in error.data) {
+        queryClient.setQueryData(queryKeys.csrfToken, (error.data as { newCsrfToken: string }).newCsrfToken);
       } else {
         queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
       }
@@ -171,9 +171,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await queryClient.invalidateQueries({ queryKey: queryKeys.user });
       await queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
     },
-    onError: (error: any) => {
-      if (error.data?.newCsrfToken) {
-        queryClient.setQueryData(queryKeys.csrfToken, error.data.newCsrfToken);
+    onError: (error: unknown) => {
+      if (error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'newCsrfToken' in error.data) {
+        queryClient.setQueryData(queryKeys.csrfToken, (error.data as { newCsrfToken: string }).newCsrfToken);
       } else {
         queryClient.invalidateQueries({ queryKey: queryKeys.csrfToken });
       }
