@@ -22,7 +22,7 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
 
-const SocialLoginButton = ({ icon, text, bgColor, textColor, onClick }) => (
+const SocialLoginButton = ({ icon, text, bgColor, textColor, onClick }: { icon: React.ReactNode; text: string; bgColor: string; textColor: string; onClick: () => void }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center justify-center py-2.5 px-4 rounded-lg font-semibold transition-transform transform hover:scale-105 ${bgColor} ${textColor}`}
@@ -65,17 +65,18 @@ export default function LoginPage() {
       // The redirect will ONLY happen after 'login' completes successfully
       router.push('/dashboard'); 
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login failed:', err);
       // 4. Powiadomienie o błędzie
-      notify(err.message || 'An unexpected error occurred.', 'error');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      notify(errorMessage, 'error');
     }
   };
 
   if (!mounted || (isLoading && !isSubmitting)) {
     return (
-      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+          <div className="min-h-screen bg-background-darker flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
   }
@@ -84,8 +85,8 @@ export default function LoginPage() {
   const logoPath = '/images/pairly_logo.png';
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white font-sans flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#1a1a1a] border-2 border-[#333] rounded-3xl relative overflow-hidden">
+    <div className="min-h-screen bg-background-darker text-white font-sans flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-card-background border-2 border-border-dark rounded-3xl relative overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src={astronautPath}
@@ -130,7 +131,7 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   {...register('email')}
-                  className={`w-full bg-zinc-800/80 backdrop-blur-sm rounded-lg px-3 py-2 border transition-all focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500/50' : 'border-zinc-700 focus:ring-blue-500/50 focus:border-blue-500'}`}
+                  className={`w-full bg-zinc-800/80 backdrop-blur-sm rounded-lg px-3 py-2 border transition-all focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-500/50' : 'border-zinc-700 focus:ring-primary/50 focus:border-primary'}`}
                   placeholder="you@example.com"
                   disabled={isSubmitting}
                 />
@@ -144,7 +145,7 @@ export default function LoginPage() {
                   </label>
                   <Link 
                     href="/forgot-password" 
-                    className="text-sm text-blue-500 font-semibold hover:text-blue-400 transition-colors duration-200 font-montserrat-medium"
+                    className="text-sm text-primary font-semibold hover:text-primary-hover transition-colors duration-200 font-montserrat-medium"
                   >
                     Forgot Password?
                   </Link>
@@ -154,7 +155,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     {...register('password')}
-                    className={`w-full bg-zinc-800/80 backdrop-blur-sm rounded-lg px-3 py-2 pr-10 border transition-all focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500/50' : 'border-zinc-700 focus:ring-blue-500/50 focus:border-blue-500'}`}
+                    className={`w-full bg-zinc-800/80 backdrop-blur-sm rounded-lg px-3 py-2 pr-10 border transition-all focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-500/50' : 'border-zinc-700 focus:ring-primary/50 focus:border-primary'}`}
                     placeholder="••••••••"
                     disabled={isSubmitting}
                   />
@@ -175,7 +176,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-montserrat-medium"
+                className="w-full primary-button font-bold py-2.5 px-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm font-montserrat-medium"
               >
                 {isSubmitting ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -189,10 +190,10 @@ export default function LoginPage() {
             </form>
             
             <div className="text-center text-xs text-zinc-400 mt-6 font-montserrat-medium font-semibold">
-              <span>Don't have an account? </span>
+              <span>Don&apos;t have an account? </span>
               <Link 
                 href="/register" 
-                className="text-sm text-blue-500 font-semibold hover:text-blue-400 transition-colors duration-200 font-medium"
+                className="text-sm text-primary font-semibold hover:text-primary-hover transition-colors duration-200 font-medium"
               >
                 Sign up
               </Link>

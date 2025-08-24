@@ -11,15 +11,15 @@ import { capybaraFacts } from '@/app/utils/capybaraFacts';
 // ============================================================================
 const StyleClasses = {
   overlay: "fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md transition-opacity duration-300 font-sans",
-  card: "w-full max-w-md m-4 text-center rounded-xl border-2 border-amber-400/20 bg-gradient-to-br from-zinc-950 to-black p-8 shadow-2xl shadow-amber-500/10",
+  card: "w-full max-w-md m-4 text-center rounded-xl border-2 border-[#e6915b]/20 bg-gradient-to-br from-zinc-950 to-black p-8 shadow-2xl shadow-[#e6915b]/10",
   logo: "w-24 h-auto mx-auto mb-6 animate-pulse",
   title: "font-montserrat-semibold text-xl text-gray-50 mb-4 tracking-wide",
-  progressContainer: "w-full bg-black/30 rounded-full h-2.5 mt-4 mb-2 overflow-hidden border border-amber-400/20",
-  progressBar: "h-full rounded-full bg-amber-400 transition-all duration-500 ease-out shadow-[0_0_10px_theme(colors.amber.400)]",
-  progressText: "font-montserrat-medium text-sm text-amber-400 tracking-wider",
+  progressContainer: "w-full bg-black/30 rounded-full h-2.5 mt-4 mb-2 overflow-hidden border border-[#e6915b]/20",
+  progressBar: "h-full rounded-full bg-[#e6915b] transition-all duration-500 ease-out shadow-[0_0_10px_#e6915b]",
+  progressText: "font-montserrat-medium text-sm text-[#e6915b] tracking-wider",
   userDetails: {
-    container: "animate-in fade-in slide-in-from-bottom-4 duration-500 border-t border-amber-400/20 pt-6",
-    avatar: "w-24 h-24 mx-auto rounded-full border-2 border-amber-400 mb-4 shadow-lg shadow-amber-400/20 animate-float",
+    container: "animate-in fade-in slide-in-from-bottom-4 duration-500 border-t border-[#e6915b]/20 pt-6",
+    avatar: "w-24 h-24 mx-auto rounded-full border-2 border-[#e6915b] mb-4 shadow-lg shadow-[#e6915b]/20 animate-float",
     welcomeText: "font-montserrat-medium text-lg text-gray-400",
     displayName: "font-fugazone text-4xl gsap-gradient-text",
     statsGrid: "mt-6 grid grid-cols-2 gap-3 text-left",
@@ -27,14 +27,14 @@ const StyleClasses = {
   },
   statItem: {
     container: "flex items-center space-x-3 rounded-lg bg-black/20 p-3 text-left transition-colors hover:bg-black/40",
-    iconWrapper: "flex-shrink-0 text-amber-400",
+    iconWrapper: "flex-shrink-0 text-[#e6915b]",
     icon: "w-5 h-5",
     label: "text-xs text-gray-400",
     value: "font-montserrat-semibold text-sm text-gray-50",
   },
   capybaraFact: {
-    container: "animate-in fade-in duration-500 border-t border-amber-400/20 mt-6 pt-6",
-    title: "font-montserrat-semibold text-sm text-amber-400 mb-2 tracking-wide",
+    container: "animate-in fade-in duration-500 border-t border-[#e6915b]/20 mt-6 pt-6",
+    title: "font-montserrat-semibold text-sm text-[#e6915b] mb-2 tracking-wide",
     text: "font-montserrat-medium text-sm text-gray-400",
   },
 };
@@ -73,7 +73,7 @@ const StatItem = ({ icon, label, value, valueClassName }: {
 const UserDetailsView = ({ user, displayName, avatar }: { 
   user: User;
   displayName: string;
-  avatar: { src: string; fallback: string } | null;
+  avatar: { src: string; initials: string } | null;
 }) => (
   <div className={StyleClasses.userDetails.container}>
     {avatar && (

@@ -1,6 +1,6 @@
 // components/OnlineStatus.tsx
 import { Button } from '@/components/ui/button';
-import { Wifi, WifiOff, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
 
 interface OnlineStatusProps {
   isOnline: boolean;

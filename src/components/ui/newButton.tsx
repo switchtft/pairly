@@ -12,18 +12,18 @@ const FONT_CLASSES = {
 const VARIANTS = {
   primary:
     "inline-flex items-center justify-center gap-2 px-6 py-3 text-sm uppercase font-montserrat-medium rounded-full  " +
-    "bg-[#6366f1] text-white shadow-lg transition duration-200 ease-out " +
-    "hover:shadow-[0_0_12px_2px_rgba(78,90,222,0.7)] hover:bg-transparent active:scale-95",
+    "bg-primary text-white shadow-lg transition duration-200 ease-out " +
+    "hover:shadow-[0_0_12px_2px_rgba(230,145,91,0.7)] hover:bg-primary-hover active:scale-95",
 
   secondary:
     "inline-flex items-center justify-center gap-2 px-6 py-3 text-sm uppercase font-montserrat-medium rounded-full " +
-    "bg-[#191441] text-white shadow-[0_0_12px_2px_rgba(100,108,255,0.5)] transition duration-200 ease-out " +
-    "hover:shadow-[0_0_16px_4px_rgba(100,108,255,0.7)] hover:bg-transparent active:scale-95",
+    "bg-card-background text-white border-2 border-primary transition duration-200 ease-out " +
+    "hover:bg-primary hover:text-white active:scale-95",
 
   primary_2:
     "inline-flex items-center justify-center gap-2 px-6 py-3 text-sm uppercase font-montserrat-medium rounded-md  " +
-    "bg-[#6366f1] text-white shadow-lg transition duration-200 ease-out " +
-    "hover:shadow-[0_0_12px_2px_rgba(78,90,222,0.7)] hover:bg-transparent active:scale-95",
+    "bg-primary text-white shadow-lg transition duration-200 ease-out " +
+    "hover:shadow-[0_0_12px_2px_rgba(230,145,91,0.7)] hover:bg-primary-hover active:scale-95",
 
   tertiary:
     "inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-montserrat-medium rounded-none " +
@@ -62,7 +62,7 @@ const VARIANTS = {
 
   flatglow:
     "inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-none " +
-    "bg-gradient-to-r from-[#6366f1] to-[#7c3aed] text-white shadow transition duration-200 ease-out " +
+    "bg-gradient-to-r from-primary to-primary-hover text-white shadow transition duration-200 ease-out " +
     "hover:opacity-90 active:scale-95",
 
   pulseglowclean:
@@ -79,7 +79,18 @@ const SIZES = {
 
 const RAW_VARIANTS = new Set(["pulseglowclean", "flatglow"]);
 
-const NewButton = forwardRef(function NewButton(
+type NewButtonProps = {
+  href?: string;
+  variant?: keyof typeof VARIANTS;
+  size?: keyof typeof SIZES;
+  font?: keyof typeof FONT_CLASSES;
+  children: React.ReactNode;
+  className?: string;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
+} & React.ButtonHTMLAttributes<HTMLButtonElement> & React.AnchorHTMLAttributes<HTMLAnchorElement>;
+
+const NewButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, NewButtonProps>(function NewButton(
   {
     href,
     variant = "primary",
@@ -105,7 +116,7 @@ const NewButton = forwardRef(function NewButton(
     return (
       <Link
         href={href}
-        ref={ref}
+        ref={ref as React.Ref<HTMLAnchorElement>}
         className={classes}
         {...(disabled && { "aria-disabled": true, tabIndex: -1 })}
         {...props}
@@ -117,7 +128,7 @@ const NewButton = forwardRef(function NewButton(
 
   return (
     <button
-      ref={ref}
+      ref={ref as React.Ref<HTMLButtonElement>}
       className={classes}
       disabled={disabled}
       type={type || "button"}

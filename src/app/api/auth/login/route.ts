@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         })
     ]);
 
-    const { password: _, ...userToReturn } = updatedUser;
+    const { password: _unusedPassword, ...userToReturn } = updatedUser;
 
     const response = NextResponse.json({
       success: true,

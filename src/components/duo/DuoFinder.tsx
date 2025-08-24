@@ -14,10 +14,11 @@ import { DuoPost, CreatePostData } from '@/lib/duo';
 
 export function DuoFinder() {
   const { user } = useAuth();
-  const { games, loading: gamesLoading } = useGames();
+  const { data: games, isLoading: gamesLoading } = useGames();
   const [selectedGameId, setSelectedGameId] = useState<number>(1); // Default to League of Legends
-  const { posts, loading: postsLoading, refetch: refetchPosts } = usePosts(selectedGameId);
-  const { userPostData: userPost, loading: userPostLoading, refetch: refetchUserPost } = useUserPost();
+  const { data: postsData, isLoading: postsLoading, refetch: refetchPosts } = usePosts(selectedGameId);
+  const posts = postsData?.pages?.flatMap(page => page.posts) || [];
+  const { userPostData: userPost, isLoading: userPostLoading, refetch: refetchUserPost } = useUserPost();
   const { createPost, updatePost, deletePost } = usePostActions();
   const { saveDraft, updateDraft } = useUserPost();
 
@@ -30,7 +31,7 @@ export function DuoFinder() {
 
   // Set default game to League of Legends when games load
   useEffect(() => {
-    if (games.length > 0 && selectedGameId === 1) {
+    if (games && games.length > 0 && selectedGameId === 1) {
       const leagueGame = games.find(g => g.slug === 'league-of-legends');
       if (leagueGame) {
         setSelectedGameId(leagueGame.id);
@@ -40,7 +41,7 @@ export function DuoFinder() {
 
   // Load last post data from localStorage for the selected game
   useEffect(() => {
-    if (user && selectedGameId) {
+    if (user && selectedGameId && games) {
       const game = games.find(g => g.id === selectedGameId);
       if (game) {
         const saved = localStorage.getItem(`duo-last-post-${user.id}-${game.slug}`);
@@ -67,7 +68,7 @@ export function DuoFinder() {
     try {
       await createPost(data);
       // Save the post data for next time with game-specific key
-      if (user) {
+      if (user && games) {
         const game = games.find(g => g.id === data.gameId);
         if (game) {
           localStorage.setItem(`duo-last-post-${user.id}-${game.slug}`, JSON.stringify(data));
@@ -130,6 +131,20 @@ export function DuoFinder() {
     );
   }
 
+  // Show loading state if games are still loading
+  if (gamesLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#e6915b] mx-auto mb-4"></div>
+            <p className="text-gray-300">Loading games...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="mb-8">
@@ -141,7 +156,7 @@ export function DuoFinder() {
 
       {/* Game Selector */}
       <GameSelector
-        games={games}
+        games={games || []}
         selectedGameId={selectedGameId}
         onGameSelect={handleGameSelect}
         showPostCounts={true}
@@ -253,7 +268,7 @@ export function DuoFinder() {
               </CardHeader>
               <CardContent>
                 <DuoPostForm
-                  games={games}
+                  games={games || []}
                   initialData={lastPostData || undefined}
                   onSubmit={handleCreatePost}
                   isLoading={isSubmitting}
@@ -285,7 +300,7 @@ export function DuoFinder() {
             </div>
             <div className="p-6">
                              <DuoPostForm
-                 games={games}
+                 games={games || []}
                  initialData={userPost?.savedDraft ? {
                    gameId: userPost.savedDraft.gameId,
                    inGameName: userPost.savedDraft.inGameName,
@@ -319,7 +334,7 @@ export function DuoFinder() {
               </span>
             )}
           </h2>
-          {posts.length > 0 && (
+          {posts && posts.length > 0 && (
             <p className="text-sm text-gray-400">
               {posts.length} post{posts.length !== 1 ? 's' : ''} found
             </p>
@@ -333,7 +348,7 @@ export function DuoFinder() {
               <p className="text-gray-300">Loading posts...</p>
             </div>
           </div>
-        ) : posts.length === 0 ? (
+        ) : posts && posts.length === 0 ? (
           <Card className="border-[#e6915b]/30 bg-[#1a1a1a]">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-gray-300 text-center mb-4">
@@ -352,7 +367,7 @@ export function DuoFinder() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {posts.map((post) => (
+            {posts && posts.map((post) => (
               <DuoPostCard
                 key={post.id}
                 post={post}

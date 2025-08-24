@@ -98,7 +98,7 @@ export default function TeammateProfilePage() {
         steam: teammateData.socials.steam || '',
         twitter: teammateData.socials.twitter || '',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching mentor profile:', error);
     } finally {
       setIsLoadingProfile(false);
@@ -165,7 +165,7 @@ export default function TeammateProfilePage() {
       }
       
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to update profile:', error);
       alert('Failed to update profile. Please try again.');
     } finally {
@@ -207,7 +207,7 @@ export default function TeammateProfilePage() {
       };
       
       reader.readAsDataURL(file);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Avatar upload failed:', error);
       alert('Avatar upload failed. Please try again.');
     }

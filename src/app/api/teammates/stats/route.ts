@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    const [weeklySessions, weeklyReviews, totalSessions] = await Promise.all([
+    const [weeklySessions, weeklyReviews] = await Promise.all([
       // Get sessions from last week
       prisma.session.findMany({
         where: {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         where: { reviewedId: decoded.userId },
         select: { rating: true }
       }),
-      // Get total sessions for leaderboard calculation
+      // Get total sessions for leaderboard calculation (unused for now)
       prisma.session.count({
         where: {
           proTeammateId: decoded.userId,

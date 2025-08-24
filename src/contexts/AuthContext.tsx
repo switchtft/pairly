@@ -29,10 +29,10 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: { email: string; password: string; csrfToken: string | null }) => Promise<any>;
-  register: (userData: RegisterData & { csrfToken: string | null }) => Promise<any>;
+  login: (credentials: { email: string; password: string; csrfToken: string | null }) => Promise<void>;
+  register: (userData: RegisterData & { csrfToken: string | null }) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<User>) => Promise<any>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
   refetchUser: () => void;
   csrfToken: string | null;
 }
@@ -69,7 +69,7 @@ const apiCall = async (url: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     // Przekazujemy całe 'data' dalej, aby mieć dostęp do 'newCsrfToken'
-    const error: any = new Error(data.message || `HTTP error! status: ${response.status}`);
+    const error = new Error(data.message || `HTTP error! status: ${response.status}`) as Error & { data: unknown };
     error.data = data; // Dołączamy całą odpowiedź do obiektu błędu
     throw error;
   }
@@ -80,8 +80,8 @@ const fetchUser = async (): Promise<User | null> => {
   try {
     const data = await apiCall('/api/auth/me');
     return data.user || null;
-  } catch (error: any) {
-    if (error.message.includes('401')) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message.includes('401')) {
       return null;
     }
     throw error;
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 1000 * 60 * 15,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    retry: (failureCount, error: any) => error.message?.includes('401') ? false : true,
+    retry: (failureCount, error: unknown) => error instanceof Error && error.message?.includes('401') ? false : true,
   });
 
   const isAuthenticated = !!user;
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         body: JSON.stringify({ email: credentials.email, password: credentials.password }),
         headers: {
-          'X-CSRF-Token': credentials.csrfToken,
+          'X-CSRF-Token': credentials.csrfToken || '',
         },
       }),
     onSuccess: async (data) => {
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         body: JSON.stringify(userData),
         headers: {
-          'X-CSRF-Token': userData.csrfToken
+          'X-CSRF-Token': userData.csrfToken || ''
         }
       }),
     onSuccess: async (data) => {

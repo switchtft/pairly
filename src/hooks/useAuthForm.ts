@@ -59,10 +59,11 @@ export function useAuthForm() {
       // Dodanie csrfToken do danych logowania
       await login({ ...data, csrfToken });
       router.push('/dashboard'); // Przekierowanie po sukcesie
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed. Please check your credentials.';
       loginForm.setError('root.serverError', {
         type: 'manual',
-        message: error.message || 'Login failed. Please check your credentials.',
+        message: errorMessage,
       });
     }
   });
@@ -81,13 +82,14 @@ export function useAuthForm() {
   const handleRegister = registerForm.handleSubmit(async (data) => {
     try {
       // Usunięcie pola `confirmPassword` i dodanie `csrfToken`
-      const { confirmPassword, ...apiData } = data;
+      const { confirmPassword: _unused, ...apiData } = data;
       await register({ ...apiData, csrfToken });
       router.push('/dashboard'); // Przekierowanie po sukcesie
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
       registerForm.setError('root.serverError', {
         type: 'manual',
-        message: error.message || 'Registration failed. Please try again.',
+        message: errorMessage,
       });
     }
   });

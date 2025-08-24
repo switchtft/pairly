@@ -19,7 +19,7 @@ const WeeklyStats = ({ totalPayment, orders, winRate, leaderboardPosition }: Wee
         <p className="text-gray-400 text-sm">Orders</p>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-blue-400">{winRate}%</p>
+        <p className="text-2xl font-bold text-[#e6915b]">{winRate}%</p>
         <p className="text-gray-400 text-sm">Win Rate</p>
       </div>
       <div className="text-center">

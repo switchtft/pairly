@@ -69,10 +69,10 @@ export default function CoachingPage() {
   ];
 
   return (
-    <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+    <div className="page-container">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
+          <h1 className="page-title md:text-5xl">
             Level Up Your Game with Expert Coaching
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
@@ -90,11 +90,11 @@ export default function CoachingPage() {
         </div>
         
         {/* Coaches List */}
-        <div className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#2a2a2a]">
-          <div className="p-6 bg-[#2a2a2a]">
+        <div className="card-container">
+          <div className="card-header">
             <h2 className="text-2xl font-bold flex items-center">
               Available Coaches
-              <span className="ml-4 text-sm font-normal bg-[#6b8ab0] text-black px-3 py-1 rounded-full">
+              <span className="ml-4 text-sm font-normal bg-primary text-white px-3 py-1 rounded-full">
                 {coaches.length} Professionals Available
               </span>
             </h2>
@@ -105,14 +105,14 @@ export default function CoachingPage() {
               {coaches.map(coach => (
                 <div 
                   key={coach.id} 
-                  className="bg-[#1f1f1f] rounded-lg border border-[#333] hover:border-[#e6915b] transition-all"
+                  className="bg-card-background rounded-lg border border-border-dark hover:border-primary transition-all"
                 >
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="font-bold text-xl">{coach.name}</h3>
                         <div className="flex items-center mt-1">
-                          <span className="text-[#e6915b] font-medium">{coach.rank}</span>
+                          <span className="text-primary font-medium">{coach.rank}</span>
                           <span className="mx-2 text-gray-600">|</span>
                           <span className="text-yellow-500">
                             {coach.rating.toFixed(1)} ★ ({coach.sessions} sessions)
@@ -133,7 +133,7 @@ export default function CoachingPage() {
                         {coach.specialties.map(specialty => (
                           <span 
                             key={specialty} 
-                            className="bg-gradient-to-r from-[#6b8ab0]/30 to-[#8a675e]/30 px-3 py-1 rounded-full text-sm border border-[#6b8ab0]/50"
+                            className="bg-primary/20 px-3 py-1 rounded-full text-sm border border-primary text-primary"
                           >
                             {specialty}
                           </span>
@@ -142,10 +142,10 @@ export default function CoachingPage() {
                     </div>
                     
                     <div className="flex space-x-3">
-                      <Button className="flex-1 bg-gradient-to-r from-[#6b8ab0] to-[#8a675e] hover:from-[#5a79a0] hover:to-[#79564e]">
+                      <Button className="flex-1 primary-button">
                         Book Session
                       </Button>
-                      <Button variant="outline" className="flex-1 border-[#6b8ab0] text-[#6b8ab0] hover:bg-[#6b8ab0]/10">
+                      <Button variant="outline" className="flex-1 outline-button">
                         View Profile
                       </Button>
                     </div>

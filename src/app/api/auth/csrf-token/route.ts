@@ -1,8 +1,8 @@
 // app/api/auth/csrf-token/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import csrfTokenHandler from '@/lib/csrfToken';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const token = await csrfTokenHandler.generate();
     return NextResponse.json({ token });

@@ -138,7 +138,7 @@ export function getRankColor(rank?: string | null): string {
     'silver': 'text-gray-400',
     'gold': 'text-yellow-500',
     'platinum': 'text-teal-400',
-    'diamond': 'text-blue-400',
+    'diamond': 'text-[#e6915b]',
     // High Tiers
     'ascendant': 'text-green-400',
     'master': 'text-purple-500',

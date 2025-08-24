@@ -16,8 +16,8 @@ const DashboardContent = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isOnline, setIsOnline] = useState(false);
-  const [incomingOrders, setIncomingOrders] = useState([]);
-  const [weeklyStats, setWeeklyStats] = useState({
+  const [incomingOrders] = useState([]);
+  const [weeklyStats] = useState({
     totalPayment: 0,
     orders: 0,
     winRate: 0,

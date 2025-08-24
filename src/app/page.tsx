@@ -4,14 +4,10 @@ import Image from "next/image";
 import GameSelector from "@/components/GameSelector";
 import FeatureCard from "@/components/FeatureCard";
 import TestimonialCard from "@/components/TestimonialCard";
-import ScrollFloatingText from "@/components/animations/ScrollFloatingText";
-import Navbar from "@/components/Navbar";
-import ResponsiveNavbar from "@/components/ResponsiveNavbar";
 
 export default function Home() {
   return (
     <>
-    <ResponsiveNavbar/>
       {/* Hero Section */}
       <section className="relative py-24 px-6 md:px-0 min-h-[70vh] flex items-center justify-center text-center">
         {/* Background with top alignment */}
@@ -31,11 +27,8 @@ export default function Home() {
         </div>
 
 <div className="relative z-10 max-w-6xl mx-auto px-4">
-<h2 className="text-5xl md:text-7xl font-fugazone uppercase mb-6 leading-tight">
-  <ScrollFloatingText>
-    play for free with the amazing mentors!  
-
-  </ScrollFloatingText>
+<h2 className="text-5xl md:text-7xl font-fugazone uppercase mb-6 leading-tight text-[#e6915b]">
+  play for free with the amazing mentors!
 </h2>
   <p className="text-2xl font-montserrat-thin text-white mx-auto mb-8 drop-shadow-lg">
     Find your perfect duo partner for ranked games, get coaching from top players, join free Inhouses, or compete in tournaments!
@@ -44,7 +37,7 @@ export default function Home() {
   <a href="#games">
     <Button 
       size="lg" 
-      className="bg-gradient-to-r from-[#e6915b] to-[#a8724c] hover:from-[#d8824a] hover:to-[#976040] shadow-lg"
+      className="bg-[#e6915b] hover:bg-[#d18251] text-white shadow-lg"
     >
       See What We Offer <ArrowRight className="ml-2 w-5 h-5" />
     </Button>
@@ -109,10 +102,10 @@ export default function Home() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-r from-[#e6915b] to-[#a8724c] text-center text-white">
+      <section className="py-20 bg-[#e6915b] text-center text-white">
         <h3 className="text-3xl font-semibold mb-6">Ready to play for free?</h3>
         <p className="text-lg mb-8 opacity-90">Join thousands of gamers in our duo matching, coaching, and free Inhouses!</p>
-        <Button size="lg" variant="secondary" className="bg-white text-[#a8724c] hover:bg-gray-100">
+        <Button size="lg" variant="secondary" className="bg-white text-[#e6915b] hover:bg-gray-100">
           Start Playing Free
         </Button>
       </section>

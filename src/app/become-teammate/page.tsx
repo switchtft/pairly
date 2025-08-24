@@ -51,7 +51,7 @@ export default function BecomeTeammatePage() {
 
   if (!user) {
     return (
-      <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+      <div className="page-container pt-20">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center py-12">
             <Shield className="mx-auto h-12 w-12 text-red-500 mb-4" />
@@ -65,7 +65,7 @@ export default function BecomeTeammatePage() {
 
   if (submitted) {
     return (
-      <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+      <div className="page-container pt-20">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center py-12">
             <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
@@ -75,7 +75,7 @@ export default function BecomeTeammatePage() {
             </p>
             <Button 
               onClick={() => window.location.href = '/dashboard'}
-              className="bg-[#e6915b] hover:bg-[#d8824a] text-white"
+              className="primary-button"
             >
               Go to Dashboard
             </Button>
@@ -86,14 +86,14 @@ export default function BecomeTeammatePage() {
   }
 
   return (
-    <div className="bg-[#0f0f0f] min-h-screen pt-20 pb-32">
+    <div className="page-container pt-20">
       <div className="max-w-4xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e6915b] to-[#6b8ab0] bg-clip-text text-transparent mb-4">
+          <h1 className="page-title md:text-5xl">
             Become a Mentor
           </h1>
-          <p className="text-[#e6915b]/80 max-w-2xl mx-auto text-lg">
+          <p className="text-primary/80 max-w-2xl mx-auto text-lg">
             Join our elite team of professional gamers and earn money doing what you love
           </p>
         </div>
@@ -101,13 +101,13 @@ export default function BecomeTeammatePage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Benefits */}
           <div className="lg:col-span-1">
-            <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-6 sticky top-24">
-              <h2 className="text-2xl font-bold text-[#e6915b] mb-6">Why Join?</h2>
+            <div className="card-container p-6 sticky top-24">
+              <h2 className="text-2xl font-bold text-primary mb-6">Why Join?</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-3">
-                  <div className="bg-[#e6915b]/20 p-2 rounded-lg">
-                    <Star className="h-5 w-5 text-[#e6915b]" />
+                  <div className="bg-primary/20 p-2 rounded-lg">
+                    <Star className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-white mb-1">Earn Money</h3>
@@ -142,8 +142,8 @@ export default function BecomeTeammatePage() {
                 </div>
 
                 <div className="flex items-start space-x-3">
-                  <div className="bg-[#e6915b]/20 p-2 rounded-lg">
-                    <Clock className="h-5 w-5 text-[#e6915b]" />
+                  <div className="bg-primary/20 p-2 rounded-lg">
+                    <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-white mb-1">Quick Payments</h3>

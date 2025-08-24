@@ -88,20 +88,20 @@ export default function ResponsiveNavbar() {
   const navLinks = isAuthenticated ? authenticatedNavLinks : publicNavLinks;
 
   return (
-    <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#1e1e27] py-3' : 'bg-[#0e0e11] py-4'}`}
-      style={{ height: scrolled ? '70px' : '80px' }}
-    >
+            <nav
+          className={`fixed top-0 left-0 w-full z-[9999] transition-all duration-300 bg-background-darker py-4`}
+          style={{ height: '80px' }}
+        >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
-              <img
-                src="/images/pairly_logo.png"
-                alt="Pairly Logo"
-                className="w-24 h-24 mr-2" // Adjust the size as needed
-              />
+                             <img
+                 src="/images/pairly_logo.png"
+                 alt="Pairly Logo"
+                 className="w-12 h-12 mr-2 object-contain" // Square logo size with proper aspect ratio
+               />
               <span className="text-2xl font-montserrat-medium font-semibold bg-gradient-to-r from-[#e6915b] to-[#d4a574] bg-clip-text text-transparent">
                 Pairly
               </span>

@@ -109,7 +109,7 @@ export default function AdminOrdersView() {
       case 'active':
         return 'text-green-400 bg-green-400/10';
       case 'completed':
-        return 'text-blue-400 bg-blue-400/10';
+        return 'text-[#e6915b] bg-[#e6915b]/10';
       case 'cancelled':
         return 'text-red-400 bg-red-400/10';
       default:

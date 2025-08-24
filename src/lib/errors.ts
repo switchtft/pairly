@@ -5,9 +5,9 @@ import csrfTokenHandler from './csrfToken'; // <-- Importujemy handler CSRF
 
 export class ApiError extends Error {
   statusCode: number;
-  details?: Record<string, any> | any;
+  details?: Record<string, unknown> | unknown;
 
-  constructor(statusCode: number, message: string, details?: Record<string, any> | any) {
+  constructor(statusCode: number, message: string, details?: Record<string, unknown> | unknown) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
